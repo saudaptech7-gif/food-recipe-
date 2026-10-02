@@ -91,10 +91,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
       return res.status(401).json({
@@ -105,13 +102,13 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { userId: user._id.toString() },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -137,7 +134,7 @@ router.post("/login", async (req, res) => {
 router.get("/me", require("../middleware/authMiddleware"), async (req, res) => {
   try {
     const user = await User.findById(req.userId).select(
-      "_id name email favorites"
+      "_id name email favorites",
     );
 
     if (!user) {
@@ -168,7 +165,7 @@ router.post("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     path: "/",
   });
 
