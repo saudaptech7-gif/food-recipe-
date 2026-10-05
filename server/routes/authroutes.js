@@ -4,10 +4,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// =========================
 // SIGNUP
+// =========================
+
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -42,6 +46,7 @@ router.post("/signup", async (req, res) => {
       name: name.trim(),
       email: normalizedEmail,
       password: hashedPassword,
+      chef: "",
       favorites: [],
     });
 
@@ -51,6 +56,7 @@ router.post("/signup", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        chef: user.chef,
       },
     });
   } catch (error) {
@@ -68,7 +74,10 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+// =========================
 // LOGIN
+// =========================
+
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -119,6 +128,7 @@ router.post("/login", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        chef: user.chef,
       },
     });
   } catch (error) {
@@ -130,11 +140,14 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// =========================
 // GET CURRENT USER
-router.get("/me", require("../middleware/authMiddleware"), async (req, res) => {
+// =========================
+
+router.get("/me", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select(
-      "_id name email favorites",
+      "_id name email chef favorites",
     );
 
     if (!user) {
@@ -148,6 +161,7 @@ router.get("/me", require("../middleware/authMiddleware"), async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        chef: user.chef,
         favorites: user.favorites,
       },
     });
@@ -160,7 +174,81 @@ router.get("/me", require("../middleware/authMiddleware"), async (req, res) => {
   }
 });
 
+// =========================
+// UPDATE PROFILE
+// =========================
+
+router.put("/profile", authMiddleware, async (req, res) => {
+  try {
+    const { name, email, chef } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({
+        message: "Name and email are required",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+      _id: { $ne: req.userId },
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        message: "Email already exists",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      {
+        name: name.trim(),
+        email: normalizedEmail,
+        chef: chef ? chef.trim() : "",
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).select("_id name email chef favorites");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        chef: user.chef,
+        favorites: user.favorites,
+      },
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Email already exists",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to update profile",
+    });
+  }
+});
+
+// =========================
 // LOGOUT
+// =========================
+
 router.post("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,

@@ -1,16 +1,28 @@
 /* eslint-disable no-undef */
 const express = require("express");
+
 const Recipe = require("../models/Recipe");
 
 const upload = require("../middleware/uploadMiddleware");
-const { uploadRecipeImages } = require("../controllers/recipeController");
+
+const authMiddleware = require("../middleware/authMiddleware");
+
+const {
+  uploadRecipeImages,
+  createRecipe,
+} = require("../controllers/recipeController");
 
 const router = express.Router();
 
-// GET all archive recipes
+// =========================
+// GET ALL RECIPES
+// =========================
+
 router.get("/", async (req, res) => {
   try {
-    const recipes = await Recipe.find();
+    const recipes = await Recipe.find()
+      .populate("createdBy", "name chef")
+      .sort({ createdAt: -1 });
 
     return res.status(200).json(recipes);
   } catch (error) {
@@ -22,7 +34,16 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Upload recipe images
+// =========================
+// UPLOAD RECIPE IMAGES
+// =========================
+
 router.post("/upload-images", upload.array("images", 6), uploadRecipeImages);
+
+// =========================
+// CREATE COMMUNITY RECIPE
+// =========================
+
+router.post("/", authMiddleware, createRecipe);
 
 module.exports = router;

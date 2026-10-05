@@ -1,5 +1,9 @@
 const API_URL = `${import.meta.env.VITE_API_URL}/api/recipes`;
 
+// =========================
+// GET RECIPES
+// =========================
+
 export const getRecipes = async ({
   category = "",
   search = "",
@@ -43,6 +47,10 @@ export const getRecipes = async ({
   return response.json();
 };
 
+// =========================
+// GET RECIPE BY ID
+// =========================
+
 export const getRecipeById = async (id) => {
   const response = await fetch(`${API_URL}/${id}`);
 
@@ -53,6 +61,10 @@ export const getRecipeById = async (id) => {
   return response.json();
 };
 
+// =========================
+// GET FILTER OPTIONS
+// =========================
+
 export const getFilterOptions = async () => {
   const response = await fetch(`${API_URL}/filters/options`);
 
@@ -61,4 +73,56 @@ export const getFilterOptions = async () => {
   }
 
   return response.json();
+};
+
+// =========================
+// UPLOAD RECIPE IMAGES
+// =========================
+
+export const uploadRecipeImages = async (images) => {
+  const formData = new FormData();
+
+  images.forEach((image) => {
+    formData.append("images", image);
+  });
+
+  const response = await fetch(`${API_URL}/upload-images`, {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to upload images");
+  }
+
+  return data;
+};
+
+// =========================
+// CREATE COMMUNITY RECIPE
+// =========================
+
+export const createRecipe = async (recipeData) => {
+  const response = await fetch(API_URL, {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+    },
+
+    credentials: "include",
+
+    body: JSON.stringify(recipeData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to create recipe");
+  }
+
+  return data;
 };

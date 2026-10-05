@@ -10,6 +10,7 @@ import Signup from "./pages/Signup";
 import Favorites from "./pages/Favorite";
 import Profile from "./pages/Profile";
 import Cloudinarytest from "./pages/Cloudinarytest";
+import CreateRecipe from "./pages/CreateRecipe";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -69,6 +70,8 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         <Route path="/signup" element={<Signup />} />
+
+        {/* CLOUDINARY TEST */}
         <Route path="/cloudinary-test" element={<Cloudinarytest />} />
 
         {/* FAVORITES */}
@@ -87,6 +90,16 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* CREATE RECIPE */}
+        <Route
+          path="/create-recipe"
+          element={
+            <ProtectedRoute>
+              <CreateRecipe />
             </ProtectedRoute>
           }
         />

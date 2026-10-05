@@ -22,6 +22,12 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
+    chef: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     favorites: [
       {
         type: String,
