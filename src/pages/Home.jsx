@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -23,9 +24,26 @@ function Home() {
 
   const [cookingProgress, setCookingProgress] = useState(0);
 
-  const { recipes, loading, error, filters, pagination } = useSelector(
-    (state) => state.recipes,
-  );
+  const {
+    recipes = [],
+    loading,
+    error,
+    filters = {},
+    pagination = {},
+  } = useSelector((state) => state.recipes);
+
+  const safeFilters = {
+    category: "",
+    search: "",
+    difficulty: "",
+    subcategory: "",
+    dishType: "",
+    ...filters,
+  };
+
+  const currentPage = pagination.currentPage || 1;
+  const totalPages = pagination.totalPages || 1;
+  const totalRecipes = pagination.totalRecipes || 0;
 
   /* =====================================================
      SCROLL CONTROLLED COOKING ANIMATION
@@ -43,11 +61,15 @@ function Home() {
 
       const rect = section.getBoundingClientRect();
 
-      const scrollDistance = section.offsetHeight - window.innerHeight;
+      const scrollDistance =
+        section.offsetHeight - window.innerHeight;
 
       if (scrollDistance <= 0) return;
 
-      const progress = Math.min(Math.max(-rect.top / scrollDistance, 0), 1);
+      const progress = Math.min(
+        Math.max(-rect.top / scrollDistance, 0),
+        1
+      );
 
       setCookingProgress(progress);
     };
@@ -67,7 +89,10 @@ function Home() {
      FETCH RECIPES
   ===================================================== */
 
-  const fetchRecipes = async (currentFilters, page = 1) => {
+  const fetchRecipes = async (
+    currentFilters,
+    page = 1
+  ) => {
     try {
       dispatch(setLoading(true));
       dispatch(setError(null));
@@ -78,17 +103,47 @@ function Home() {
         limit: 9,
       });
 
-      dispatch(setRecipes(data.recipes));
+      // Backend currently returns an array directly
+      const recipeList = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.recipes)
+          ? data.recipes
+          : [];
+
+      dispatch(setRecipes(recipeList));
+
+      // Current backend returns an array,
+      // so pagination is handled safely here.
+      dispatch(
+        setPagination({
+          currentPage: page,
+          totalPages:
+            recipeList.length > 0
+              ? Math.ceil(recipeList.length / 9)
+              : 1,
+          totalRecipes: recipeList.length,
+        })
+      );
+    } catch (error) {
+      console.error("Fetch recipes error:", error);
+
+      dispatch(
+        setRecipes([])
+      );
 
       dispatch(
         setPagination({
-          currentPage: data.currentPage,
-          totalPages: data.totalPages,
-          totalRecipes: data.totalRecipes,
-        }),
+          currentPage: 1,
+          totalPages: 1,
+          totalRecipes: 0,
+        })
       );
-    } catch (error) {
-      dispatch(setError(error.message));
+
+      dispatch(
+        setError(
+          error.message || "Failed to fetch recipes"
+        )
+      );
     } finally {
       dispatch(setLoading(false));
     }
@@ -99,7 +154,10 @@ function Home() {
   ===================================================== */
 
   useEffect(() => {
-    fetchRecipes(filters, pagination.currentPage);
+    fetchRecipes(safeFilters, currentPage);
+
+    // Initial load only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* =====================================================
@@ -108,7 +166,7 @@ function Home() {
 
   const handleCategoryChange = (category) => {
     const newFilters = {
-      ...filters,
+      ...safeFilters,
       category,
     };
 
@@ -123,7 +181,7 @@ function Home() {
 
   const handleSearch = (search) => {
     const newFilters = {
-      ...filters,
+      ...safeFilters,
       search,
     };
 
@@ -138,7 +196,7 @@ function Home() {
 
   const handleFilterChange = (newFilterValues) => {
     const newFilters = {
-      ...filters,
+      ...safeFilters,
       ...newFilterValues,
     };
 
@@ -153,7 +211,7 @@ function Home() {
 
   const handleClearFilters = () => {
     const newFilters = {
-      ...filters,
+      ...safeFilters,
       difficulty: "",
       subcategory: "",
       dishType: "",
@@ -169,7 +227,9 @@ function Home() {
   ===================================================== */
 
   const handlePageChange = (page) => {
-    fetchRecipes(filters, page);
+    if (page < 1 || page > totalPages) return;
+
+    fetchRecipes(safeFilters, page);
   };
 
   /* =====================================================
@@ -177,32 +237,42 @@ function Home() {
   ===================================================== */
 
   const handleExploreRecipes = () => {
-    document.querySelector(".recipes-section")?.scrollIntoView({
-      behavior: "smooth",
-    });
+    document
+      .querySelector(".recipes-section")
+      ?.scrollIntoView({
+        behavior: "smooth",
+      });
   };
 
   return (
     <div className="home-page">
+
       {/* =================================================
           HEADER
       ================================================= */}
 
-      <Header onCategoryChange={handleCategoryChange} />
+      <Header
+        onCategoryChange={handleCategoryChange}
+      />
+
 
       {/* =================================================
           HERO SCROLL SECTION
       ================================================= */}
 
       <section className="hero-scroll-section">
+
         <div className="hero-sticky">
+
           <section className="hero-section">
-            {/* =================================================
-                HERO CONTENT
-            ================================================= */}
+
+            {/* HERO CONTENT */}
 
             <div className="hero-content">
-              <span className="hero-badge">🍳 Discover • Cook • Enjoy</span>
+
+              <span className="hero-badge">
+                🍳 Discover • Cook • Enjoy
+              </span>
 
               <h1>
                 Delicious recipes,
@@ -211,36 +281,51 @@ function Home() {
               </h1>
 
               <p>
-                Explore thousands of recipes for baking, healthy meals, quick
-                budgets and everyday inspiration.
+                Explore thousands of recipes for baking,
+                healthy meals, quick budgets and everyday
+                inspiration.
               </p>
 
-              <button className="hero-button" onClick={handleExploreRecipes}>
+              <button
+                className="hero-button"
+                onClick={handleExploreRecipes}
+              >
                 Explore Recipes
                 <span>→</span>
               </button>
+
             </div>
+
 
             {/* =================================================
                 PROFESSIONAL COOKING ANIMATION
             ================================================= */}
 
-            <div className="cooking-scene" ref={cookingSceneRef}>
+            <div
+              className="cooking-scene"
+              ref={cookingSceneRef}
+            >
+
               {/* Ambient glow */}
 
               <div
                 className="cook-glow"
                 style={{
-                  opacity: cookingProgress > 0 ? 1 : 0,
+                  opacity:
+                    cookingProgress > 0 ? 1 : 0,
                 }}
               />
+
 
               {/* Counter shadow */}
 
               <div
                 className="counter-shadow"
                 style={{
-                  opacity: cookingProgress > 0.05 ? 1 : 0,
+                  opacity:
+                    cookingProgress > 0.05
+                      ? 1
+                      : 0,
 
                   transform: `
                     translateX(-50%)
@@ -249,38 +334,52 @@ function Home() {
                 }}
               />
 
-              {/* =================================================
-                  PLATE
-              ================================================= */}
+
+              {/* PLATE */}
 
               <div
                 className="pro-plate"
                 style={{
-                  opacity: Math.min(cookingProgress / 0.12, 1),
+                  opacity:
+                    Math.min(
+                      cookingProgress / 0.12,
+                      1
+                    ),
 
                   transform: `
                     translate(-50%, -50%)
-                    scale(${0.72 + Math.min(cookingProgress / 0.12, 1) * 0.28})
+                    scale(
+                      ${
+                        0.72 +
+                        Math.min(
+                          cookingProgress / 0.12,
+                          1
+                        ) *
+                          0.28
+                      }
+                    )
                   `,
                 }}
               >
                 <div className="plate-rim"></div>
-
                 <div className="plate-center"></div>
               </div>
 
-              {/* =================================================
-                  CARROT
-              ================================================= */}
+
+              {/* CARROT */}
 
               <div
                 className="food-item carrot"
                 style={{
                   opacity:
-                    cookingProgress >= 0.12 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.12 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
 
                   transform:
-                    cookingProgress >= 0.12 && cookingProgress < 0.72
+                    cookingProgress >= 0.12 &&
+                    cookingProgress < 0.72
                       ? "translate(0,0) rotate(0deg)"
                       : "translate(-60px,-160px) rotate(-35deg)",
                 }}
@@ -288,18 +387,21 @@ function Home() {
                 <span></span>
               </div>
 
-              {/* =================================================
-                  TOMATO
-              ================================================= */}
+
+              {/* TOMATO */}
 
               <div
                 className="food-item tomato"
                 style={{
                   opacity:
-                    cookingProgress >= 0.18 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.18 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
 
                   transform:
-                    cookingProgress >= 0.18 && cookingProgress < 0.72
+                    cookingProgress >= 0.18 &&
+                    cookingProgress < 0.72
                       ? "translate(0,0) scale(1)"
                       : "translate(55px,-165px) scale(.55)",
                 }}
@@ -307,18 +409,21 @@ function Home() {
                 <span></span>
               </div>
 
-              {/* =================================================
-                  BROCCOLI
-              ================================================= */}
+
+              {/* BROCCOLI */}
 
               <div
                 className="food-item broccoli"
                 style={{
                   opacity:
-                    cookingProgress >= 0.24 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.24 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
 
                   transform:
-                    cookingProgress >= 0.24 && cookingProgress < 0.72
+                    cookingProgress >= 0.24 &&
+                    cookingProgress < 0.72
                       ? "translate(0,0) scale(1)"
                       : "translate(-70px,-145px) scale(.55)",
                 }}
@@ -326,18 +431,21 @@ function Home() {
                 <span></span>
               </div>
 
-              {/* =================================================
-                  LEAF
-              ================================================= */}
+
+              {/* LEAF */}
 
               <div
                 className="food-item leaf"
                 style={{
                   opacity:
-                    cookingProgress >= 0.3 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.3 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
 
                   transform:
-                    cookingProgress >= 0.3 && cookingProgress < 0.72
+                    cookingProgress >= 0.3 &&
+                    cookingProgress < 0.72
                       ? "translate(0,0) rotate(0deg)"
                       : "translate(70px,-150px) rotate(45deg)",
                 }}
@@ -345,36 +453,45 @@ function Home() {
                 <span></span>
               </div>
 
-              {/* =================================================
-                  PAN
-              ================================================= */}
+
+              {/* PAN */}
 
               <div
                 className="pro-pan"
                 style={{
                   opacity:
-                    cookingProgress >= 0.3 && cookingProgress < 0.82 ? 1 : 0,
+                    cookingProgress >= 0.3 &&
+                    cookingProgress < 0.82
+                      ? 1
+                      : 0,
 
                   transform: `
                     translate(-50%,-50%)
-                    scale(${cookingProgress >= 0.3 ? 1 : 0.72})
+                    scale(
+                      ${
+                        cookingProgress >= 0.3
+                          ? 1
+                          : 0.72
+                      }
+                    )
                   `,
                 }}
               >
                 <div className="pan-inside"></div>
-
                 <div className="pan-handle"></div>
               </div>
 
-              {/* =================================================
-                  FOOD INSIDE PAN
-              ================================================= */}
+
+              {/* FOOD INSIDE PAN */}
 
               <div
                 className="pan-food-visual"
                 style={{
                   opacity:
-                    cookingProgress >= 0.34 && cookingProgress < 0.78 ? 1 : 0,
+                    cookingProgress >= 0.34 &&
+                    cookingProgress < 0.78
+                      ? 1
+                      : 0,
                 }}
               >
                 <span className="food-dot dot-1"></span>
@@ -384,15 +501,17 @@ function Home() {
                 <span className="food-dot dot-5"></span>
               </div>
 
-              {/* =================================================
-                  LID
-              ================================================= */}
+
+              {/* LID */}
 
               <div
                 className="pro-lid"
                 style={{
                   opacity:
-                    cookingProgress >= 0.4 && cookingProgress < 0.8 ? 1 : 0,
+                    cookingProgress >= 0.4 &&
+                    cookingProgress < 0.8
+                      ? 1
+                      : 0,
 
                   transform:
                     cookingProgress < 0.4
@@ -405,19 +524,20 @@ function Home() {
                 }}
               >
                 <div className="lid-top"></div>
-
                 <div className="lid-handle"></div>
               </div>
 
-              {/* =================================================
-                  HEAT
-              ================================================= */}
+
+              {/* HEAT */}
 
               <div
                 className="heat-lines"
                 style={{
                   opacity:
-                    cookingProgress >= 0.55 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.55 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
                 }}
               >
                 <span></span>
@@ -425,21 +545,30 @@ function Home() {
                 <span></span>
               </div>
 
-              {/* =================================================
-                  FINAL DISH
-              ================================================= */}
+
+              {/* FINAL DISH */}
 
               <div
                 className="final-food"
                 style={{
                   opacity:
                     cookingProgress >= 0.72
-                      ? Math.min((cookingProgress - 0.72) / 0.1, 1)
+                      ? Math.min(
+                          (cookingProgress - 0.72) /
+                            0.1,
+                          1
+                        )
                       : 0,
 
                   transform: `
                     translate(-50%,-50%)
-                    scale(${cookingProgress >= 0.72 ? 1 : 0.45})
+                    scale(
+                      ${
+                        cookingProgress >= 0.72
+                          ? 1
+                          : 0.45
+                      }
+                    )
                   `,
                 }}
               >
@@ -455,16 +584,19 @@ function Home() {
                 </div>
               </div>
 
-              {/* =================================================
-                  STEAM
-              ================================================= */}
+
+              {/* STEAM */}
 
               <div
                 className="steam"
                 style={{
                   opacity:
                     cookingProgress >= 0.84
-                      ? Math.min((cookingProgress - 0.84) / 0.1, 1)
+                      ? Math.min(
+                          (cookingProgress - 0.84) /
+                            0.1,
+                          1
+                        )
                       : 0,
                 }}
               >
@@ -472,82 +604,136 @@ function Home() {
                 <span></span>
                 <span></span>
               </div>
+
             </div>
+
           </section>
+
         </div>
+
       </section>
+
 
       {/* =================================================
           RECIPES
       ================================================= */}
 
       <section className="recipes-section">
+
         <div className="section-heading">
+
           <div>
             <span>OUR COLLECTION</span>
 
             <h1>Explore Recipes</h1>
           </div>
 
-          <p>Find something delicious for every occasion.</p>
+          <p>
+            Find something delicious for every occasion.
+          </p>
+
         </div>
 
-        <SearchBar onSearch={handleSearch} />
+
+        <SearchBar
+          onSearch={handleSearch}
+        />
+
 
         <FilterBar
-          difficulty={filters.difficulty}
-          subcategory={filters.subcategory}
-          dishType={filters.dishType}
+          difficulty={safeFilters.difficulty}
+          subcategory={safeFilters.subcategory}
+          dishType={safeFilters.dishType}
           onFilterChange={handleFilterChange}
           onClear={handleClearFilters}
         />
 
+
         {loading && (
           <div className="recipes-loading">
+
             <div className="loading-spinner"></div>
 
-            <p>Finding delicious recipes...</p>
+            <p>
+              Finding delicious recipes...
+            </p>
+
           </div>
         )}
+
 
         {error && (
           <div className="recipe-error">
+
             <p>{error}</p>
+
           </div>
         )}
 
+
         {!loading && !error && (
           <>
+
             <div className="recipes-grid">
-              {recipes.map((recipe) => (
-                <RecipeCard key={recipe._id} recipe={recipe} />
-              ))}
+
+              {Array.isArray(recipes) &&
+                recipes.map((recipe) => (
+                  <RecipeCard
+                    key={
+                      recipe._id ||
+                      recipe.id
+                    }
+                    recipe={recipe}
+                  />
+                ))}
+
             </div>
 
-            <div className="pagination">
-              <button
-                type="button"
-                disabled={pagination.currentPage === 1}
-                onClick={() => handlePageChange(pagination.currentPage - 1)}
-              >
-                ← Previous
-              </button>
 
-              <span>
-                Page {pagination.currentPage} of {pagination.totalPages}
-              </span>
+            {recipes.length > 0 && (
+              <div className="pagination">
 
-              <button
-                type="button"
-                disabled={pagination.currentPage === pagination.totalPages}
-                onClick={() => handlePageChange(pagination.currentPage + 1)}
-              >
-                Next →
-              </button>
-            </div>
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() =>
+                    handlePageChange(
+                      currentPage - 1
+                    )
+                  }
+                >
+                  ← Previous
+                </button>
+
+
+                <span>
+                  Page {currentPage} of{" "}
+                  {totalPages}
+                </span>
+
+
+                <button
+                  type="button"
+                  disabled={
+                    currentPage === totalPages
+                  }
+                  onClick={() =>
+                    handlePageChange(
+                      currentPage + 1
+                    )
+                  }
+                >
+                  Next →
+                </button>
+
+              </div>
+            )}
+
           </>
         )}
+
       </section>
+
     </div>
   );
 }
