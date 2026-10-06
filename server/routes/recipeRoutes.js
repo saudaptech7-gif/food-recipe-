@@ -14,24 +14,37 @@ const {
 
 const router = express.Router();
 
+// =====================================
 // GET FILTER OPTIONS
-export const getFilterOptions = async () => {
-  const response = await fetch(`${API_URL}/filters/options`);
+// =====================================
 
-  const data = await response.json();
+router.get("/filters/options", async (req, res) => {
+  try {
+    const difficulties = await Recipe.distinct("difficulty", {
+      difficulty: { $exists: true, $ne: "" },
+    });
 
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch filter options");
+    const subcategories = await Recipe.distinct("subcategory", {
+      subcategory: { $exists: true, $ne: "" },
+    });
+
+    const dishTypes = await Recipe.distinct("dishType", {
+      dishType: { $exists: true, $ne: "" },
+    });
+
+    return res.status(200).json({
+      difficulties: difficulties.filter(Boolean).sort(),
+      subcategories: subcategories.filter(Boolean).sort(),
+      dishTypes: dishTypes.filter(Boolean).sort(),
+    });
+  } catch (error) {
+    console.error("Fetch filter options error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch filter options",
+    });
   }
-
-  return {
-    difficulties: Array.isArray(data.difficulties) ? data.difficulties : [],
-
-    subcategories: Array.isArray(data.subcategories) ? data.subcategories : [],
-
-    dishTypes: Array.isArray(data.dishTypes) ? data.dishTypes : [],
-  };
-};
+});
 
 // =====================================
 // GET ALL RECIPES
