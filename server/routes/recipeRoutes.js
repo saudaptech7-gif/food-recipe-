@@ -14,9 +14,28 @@ const {
 
 const router = express.Router();
 
-// =========================
+// GET FILTER OPTIONS
+export const getFilterOptions = async () => {
+  const response = await fetch(`${API_URL}/filters/options`);
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch filter options");
+  }
+
+  return {
+    difficulties: Array.isArray(data.difficulties) ? data.difficulties : [],
+
+    subcategories: Array.isArray(data.subcategories) ? data.subcategories : [],
+
+    dishTypes: Array.isArray(data.dishTypes) ? data.dishTypes : [],
+  };
+};
+
+// =====================================
 // GET ALL RECIPES
-// =========================
+// =====================================
 
 router.get("/", async (req, res) => {
   try {
@@ -34,15 +53,15 @@ router.get("/", async (req, res) => {
   }
 });
 
-// =========================
+// =====================================
 // UPLOAD RECIPE IMAGES
-// =========================
+// =====================================
 
 router.post("/upload-images", upload.array("images", 6), uploadRecipeImages);
 
-// =========================
+// =====================================
 // CREATE COMMUNITY RECIPE
-// =========================
+// =====================================
 
 router.post("/", authMiddleware, createRecipe);
 
