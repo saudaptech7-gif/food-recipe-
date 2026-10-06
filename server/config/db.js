@@ -1,17 +1,26 @@
-// eslint-disable-next-line no-undef
+/* eslint-disable no-undef */
 const mongoose = require("mongoose");
 
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return;
+  }
+
   try {
-    // eslint-disable-next-line no-undef
     await mongoose.connect(process.env.MONGO_URI);
+
+    isConnected = true;
+
     console.log("MongoDB connected successfully");
   } catch (error) {
+    isConnected = false;
+
     console.error("MongoDB connection failed:", error.message);
-    // eslint-disable-next-line no-undef
-    process.exit(1);
+
+    throw error;
   }
 };
 
-// eslint-disable-next-line no-undef
 module.exports = connectDB;

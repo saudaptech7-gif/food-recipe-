@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 dotenv.config();
 
 const connectDB = require("./config/db");
+
 const recipeRoutes = require("./routes/recipeRoutes");
 const authRoutes = require("./routes/authroutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
@@ -30,31 +31,59 @@ app.use(
     credentials: true,
   }),
 );
+
 app.use(express.json());
 app.use(cookieParser());
 
+// ===============================
+// MongoDB Connection
+// ===============================
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection error:", error.message);
+
+    return res.status(500).json({
+      message: "Database connection failed",
+    });
+  }
+});
+
+// ===============================
 // API Routes
+// ===============================
+
 app.use("/api/recipes", recipeRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/favorites", favoriteRoutes);
 
+// ===============================
 // Health Check
+// ===============================
+
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "Food API is running",
   });
 });
 
-// Local development
+// ===============================
+// Local Development
+// ===============================
+
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
-
-  connectDB();
 
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }
 
+// ===============================
 // Vercel
+// ===============================
+
 module.exports = app;
