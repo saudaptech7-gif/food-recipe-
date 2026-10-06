@@ -1,8 +1,8 @@
 const API_URL = `${import.meta.env.VITE_API_URL}/api/recipes`;
 
-// =========================
-// GET RECIPES
-// =========================
+// =====================================
+// GET ALL RECIPES
+// =====================================
 
 export const getRecipes = async ({
   category = "",
@@ -40,46 +40,77 @@ export const getRecipes = async ({
 
   const response = await fetch(`${API_URL}?${params.toString()}`);
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error("Failed to fetch recipes");
+    throw new Error(data.message || "Failed to fetch recipes");
   }
 
-  return response.json();
+  // Backend currently returns an array
+  // Make sure frontend always receives an array
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  // If backend later returns { recipes: [] }
+  if (Array.isArray(data.recipes)) {
+    return data.recipes;
+  }
+
+  return [];
 };
 
-// =========================
+// =====================================
 // GET RECIPE BY ID
-// =========================
+// =====================================
 
 export const getRecipeById = async (id) => {
   const response = await fetch(`${API_URL}/${id}`);
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error("Recipe not found");
+    throw new Error(data.message || "Recipe not found");
   }
 
-  return response.json();
+  return data;
 };
 
-// =========================
+// =====================================
 // GET FILTER OPTIONS
-// =========================
+// =====================================
 
 export const getFilterOptions = async () => {
   const response = await fetch(`${API_URL}/filters/options`);
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error("Failed to fetch filter options");
+    throw new Error(data.message || "Failed to fetch filter options");
   }
 
-  return response.json();
+  return {
+    difficulties: Array.isArray(data.difficulties) ? data.difficulties : [],
+
+    subcategories: Array.isArray(data.subcategories) ? data.subcategories : [],
+
+    dishTypes: Array.isArray(data.dishTypes) ? data.dishTypes : [],
+  };
 };
 
-// =========================
-// UPLOAD RECIPE IMAGES
-// =========================
+// =====================================
+// UPLOAD RECIPE IMAGES TO CLOUDINARY
+// =====================================
 
 export const uploadRecipeImages = async (images) => {
+  if (!images || images.length === 0) {
+    throw new Error("Please select at least one image");
+  }
+
+  if (images.length > 6) {
+    throw new Error("You can upload maximum 6 images");
+  }
+
   const formData = new FormData();
 
   images.forEach((image) => {
@@ -98,12 +129,15 @@ export const uploadRecipeImages = async (images) => {
     throw new Error(data.message || "Failed to upload images");
   }
 
-  return data;
+  return {
+    message: data.message,
+    images: Array.isArray(data.images) ? data.images : [],
+  };
 };
 
-// =========================
+// =====================================
 // CREATE COMMUNITY RECIPE
-// =========================
+// =====================================
 
 export const createRecipe = async (recipeData) => {
   const response = await fetch(API_URL, {
