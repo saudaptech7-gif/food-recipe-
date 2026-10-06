@@ -61,7 +61,11 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* HOME */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        } />
 
         {/* RECIPE DETAILS */}
         <Route path="/recipe/:id" element={<RecipeDetails />} />
