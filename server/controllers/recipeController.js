@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
+
 const mongoose = require("mongoose");
 const cloudinary = require("../config/cloudinary");
+
 const Recipe = require("../models/Recipe");
 
 // ===============================
@@ -55,6 +57,170 @@ const uploadRecipeImages = async (req, res) => {
 
     return res.status(500).json({
       message: error?.message || "Failed to upload recipe images.",
+    });
+  }
+};
+
+// ===============================
+// GET RECIPES
+// ARCHIVE RECIPES + FILTERS
+// ===============================
+const getRecipes = async (req, res) => {
+  try {
+    const {
+      category = "",
+      search = "",
+      difficulty = "",
+      subcategory = "",
+      dishType = "",
+      recipeType = "archive",
+      page = 1,
+      limit = 6,
+    } = req.query;
+
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const itemsPerPage = Math.max(Number(limit) || 6, 1);
+
+    const filter = {
+      recipeType,
+    };
+
+    if (category.trim()) {
+      filter.category = {
+        $regex: `^${category.trim()}$`,
+        $options: "i",
+      };
+    }
+
+    if (difficulty.trim()) {
+      filter.difficulty = {
+        $regex: `^${difficulty.trim()}$`,
+        $options: "i",
+      };
+    }
+
+    if (subcategory.trim()) {
+      filter.subcategory = {
+        $regex: `^${subcategory.trim()}$`,
+        $options: "i",
+      };
+    }
+
+    if (dishType.trim()) {
+      filter.dishType = {
+        $regex: `^${dishType.trim()}$`,
+        $options: "i",
+      };
+    }
+
+    if (search.trim()) {
+      filter.$or = [
+        {
+          name: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+        {
+          description: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+        {
+          author: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+        {
+          category: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+        {
+          mainCategory: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+        {
+          subcategory: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+        {
+          dishType: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+      ];
+    }
+
+    const totalRecipes = await Recipe.countDocuments(filter);
+
+    const totalPages = Math.max(Math.ceil(totalRecipes / itemsPerPage), 1);
+
+    const recipes = await Recipe.find(filter)
+      .sort({
+        createdAt: -1,
+        name: 1,
+      })
+      .skip((currentPage - 1) * itemsPerPage)
+      .limit(itemsPerPage)
+      .lean();
+
+    return res.status(200).json({
+      recipes,
+      currentPage,
+      totalPages,
+      totalRecipes,
+    });
+  } catch (error) {
+    console.error("Get recipes error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch recipes.",
+    });
+  }
+};
+
+// ===============================
+// FILTER OPTIONS
+// ===============================
+const getFilterOptions = async (req, res) => {
+  try {
+    const recipeType = req.query.recipeType || "archive";
+
+    const filter = {
+      recipeType,
+    };
+
+    const [difficulties, subcategories, dishTypes, categories] =
+      await Promise.all([
+        Recipe.distinct("difficulty", filter),
+        Recipe.distinct("subcategory", filter),
+        Recipe.distinct("dishType", filter),
+        Recipe.distinct("category", filter),
+      ]);
+
+    return res.status(200).json({
+      difficulties: difficulties.filter(Boolean).map(String).sort(),
+
+      subcategories: subcategories.filter(Boolean).map(String).sort(),
+
+      dishTypes: dishTypes.filter(Boolean).map(String).sort(),
+
+      categories: categories.filter(Boolean).map(String).sort(),
+    });
+  } catch (error) {
+    console.error("Get filter options error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch filter options.",
     });
   }
 };
@@ -209,13 +375,29 @@ const createRecipe = async (req, res) => {
 
 // ===============================
 // GET RECIPE BY ID
+// SUPPORTS:
+// - Archive UUID in `id`
+// - MongoDB ObjectId
 // ===============================
 const getRecipeById = async (req, res) => {
   try {
-    const recipe = await Recipe.findById(req.params.id).populate(
-      "createdBy",
-      "name email chef",
-    );
+    const recipeId = req.params.id;
+
+    let recipe = null;
+
+    // Archive recipes use the custom `id` field.
+    recipe = await Recipe.findOne({
+      id: recipeId,
+      recipeType: "archive",
+    }).populate("createdBy", "name email chef");
+
+    // Community recipes use MongoDB _id.
+    if (!recipe && mongoose.Types.ObjectId.isValid(recipeId)) {
+      recipe = await Recipe.findOne({
+        _id: recipeId,
+        recipeType: "community",
+      }).populate("createdBy", "name email chef");
+    }
 
     if (!recipe) {
       return res.status(404).json({
@@ -309,9 +491,9 @@ const rateRecipe = async (req, res) => {
     const averageRating = ratingCount > 0 ? totalRating / ratingCount : 0;
 
     recipe.averageRating = Number(averageRating.toFixed(1));
+
     recipe.ratingCount = ratingCount;
 
-    // Keep old fields synchronized as well.
     recipe.rating = recipe.averageRating;
     recipe.voteCount = ratingCount;
 
@@ -321,6 +503,7 @@ const rateRecipe = async (req, res) => {
       message: existingRating
         ? "Rating updated successfully."
         : "Rating added successfully.",
+
       averageRating: recipe.averageRating,
       ratingCount: recipe.ratingCount,
       rating: recipe.rating,
@@ -411,11 +594,13 @@ const updateRecipe = async (req, res) => {
 
     if (prepTime !== undefined) {
       recipe.prepTime = String(prepTime || "").trim();
+
       recipe.times.preparation = recipe.prepTime;
     }
 
     if (cookTime !== undefined) {
       recipe.cookTime = String(cookTime || "").trim();
+
       recipe.times.cooking = recipe.cookTime;
     }
 
@@ -576,6 +761,8 @@ const getUserRecipes = async (req, res) => {
 // ===============================
 module.exports = {
   uploadRecipeImages,
+  getRecipes,
+  getFilterOptions,
   createRecipe,
   getRecipeById,
   rateRecipe,
