@@ -1,249 +1,379 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
-import { uploadRecipeImages, createRecipe } from "../services/recipeApi";
+import Header from "../components/Header";
+
+import { createRecipe, uploadRecipeImages } from "../services/recipeApi";
+
+const initialNutrients = {
+  kcal: "",
+  fat: "",
+  saturates: "",
+  carbs: "",
+  sugars: "",
+  fibre: "",
+  protein: "",
+  salt: "",
+};
 
 function CreateRecipe() {
   const navigate = useNavigate();
 
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  const [category, setCategory] = useState("");
-  const [difficulty, setDifficulty] = useState("");
+  const [category, setCategory] = useState("Recipes");
+  const [difficulty, setDifficulty] = useState("Easy");
 
   const [prepTime, setPrepTime] = useState("");
   const [cookTime, setCookTime] = useState("");
   const [servings, setServings] = useState("");
 
   const [images, setImages] = useState([]);
+  const [previews, setPreviews] = useState([]);
 
   const [ingredients, setIngredients] = useState([""]);
   const [steps, setSteps] = useState([""]);
 
+  const [nutrients, setNutrients] = useState(initialNutrients);
+
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  // =========================
-  // IMAGE SELECT
-  // =========================
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate]);
 
-  const handleImageChange = (event) => {
-    const selectedFiles = Array.from(event.target.files);
+  // ===============================
+  // IMAGE SELECTION
+  // ===============================
+  const handleImages = (event) => {
+    const selected = Array.from(event.target.files || []);
 
-    if (selectedFiles.length > 6) {
-      setMessage("You can select maximum 6 images.");
+    if (selected.length === 0) {
       return;
     }
 
-    setImages(selectedFiles);
-    setMessage("");
+    if (selected.length > 6) {
+      setError("You can select maximum 6 images.");
+      event.target.value = "";
+      return;
+    }
+
+    for (const image of selected) {
+      if (!image.type.startsWith("image/")) {
+        setError("Only image files are allowed.");
+        event.target.value = "";
+        return;
+      }
+
+      if (image.size > 5 * 1024 * 1024) {
+        setError("Each image must be smaller than 5 MB.");
+        event.target.value = "";
+        return;
+      }
+    }
+
+    setError("");
+    setImages(selected);
+
+    const newPreviews = selected.map((image) => URL.createObjectURL(image));
+
+    setPreviews(newPreviews);
   };
 
-  // =========================
-  // REMOVE IMAGE
-  // =========================
-
-  const removeImage = (index) => {
-    setImages((currentImages) =>
-      currentImages.filter((_, imageIndex) => imageIndex !== index),
-    );
-  };
-
-  // =========================
+  // ===============================
   // INGREDIENTS
-  // =========================
-
-  const handleIngredientChange = (index, value) => {
-    const updatedIngredients = [...ingredients];
-
-    updatedIngredients[index] = value;
-
-    setIngredients(updatedIngredients);
+  // ===============================
+  const updateIngredient = (index, value) => {
+    setIngredients((previous) =>
+      previous.map((item, itemIndex) => (itemIndex === index ? value : item)),
+    );
   };
 
   const addIngredient = () => {
-    setIngredients([...ingredients, ""]);
+    setIngredients((previous) => [...previous, ""]);
   };
 
   const removeIngredient = (index) => {
-    if (ingredients.length === 1) {
-      return;
-    }
-
-    setIngredients(
-      ingredients.filter((_, ingredientIndex) => ingredientIndex !== index),
+    setIngredients((previous) =>
+      previous.filter((_, itemIndex) => itemIndex !== index),
     );
   };
 
-  // =========================
+  // ===============================
   // STEPS
-  // =========================
-
-  const handleStepChange = (index, value) => {
-    const updatedSteps = [...steps];
-
-    updatedSteps[index] = value;
-
-    setSteps(updatedSteps);
+  // ===============================
+  const updateStep = (index, value) => {
+    setSteps((previous) =>
+      previous.map((item, itemIndex) => (itemIndex === index ? value : item)),
+    );
   };
 
   const addStep = () => {
-    setSteps([...steps, ""]);
+    setSteps((previous) => [...previous, ""]);
   };
 
   const removeStep = (index) => {
-    if (steps.length === 1) {
-      return;
-    }
-
-    setSteps(steps.filter((_, stepIndex) => stepIndex !== index));
+    setSteps((previous) =>
+      previous.filter((_, itemIndex) => itemIndex !== index),
+    );
   };
 
-  // =========================
-  // SUBMIT
-  // =========================
+  // ===============================
+  // NUTRITION
+  // ===============================
+  const updateNutrient = (field, value) => {
+    setNutrients((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    setMessage("");
-
-    if (images.length === 0) {
-      setMessage("Please select at least one image.");
-      return;
+  // ===============================
+  // VALIDATION
+  // ===============================
+  const validate = () => {
+    if (!name.trim()) {
+      return "Recipe name is required.";
     }
 
-    if (images.length > 6) {
-      setMessage("You can upload maximum 6 images.");
-      return;
+    if (!description.trim()) {
+      return "Recipe description is required.";
+    }
+
+    if (!category.trim()) {
+      return "Please select a category.";
+    }
+
+    if (!difficulty.trim()) {
+      return "Please select difficulty.";
+    }
+
+    if (!prepTime.trim()) {
+      return "Preparation time is required.";
+    }
+
+    if (!cookTime.trim()) {
+      return "Cooking time is required.";
+    }
+
+    if (!servings || Number(servings) <= 0) {
+      return "Please enter valid servings.";
+    }
+
+    if (images.length === 0) {
+      return "Please upload at least one image.";
     }
 
     const cleanIngredients = ingredients
-      .map((ingredient) => ingredient.trim())
+      .map((item) => item.trim())
       .filter(Boolean);
 
-    const cleanSteps = steps.map((step) => step.trim()).filter(Boolean);
-
     if (cleanIngredients.length === 0) {
-      setMessage("Please add at least one ingredient.");
-      return;
+      return "Please add at least one ingredient.";
     }
 
+    const cleanSteps = steps.map((item) => item.trim()).filter(Boolean);
+
     if (cleanSteps.length === 0) {
-      setMessage("Please add at least one cooking step.");
+      return "Please add at least one step.";
+    }
+
+    return "";
+  };
+
+  // ===============================
+  // SUBMIT RECIPE
+  // ===============================
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const validationError = validate();
+
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     try {
       setLoading(true);
+      setError("");
 
-      // 1. Upload images to Cloudinary
-      const imageResponse = await uploadRecipeImages(images);
+      // --------------------------------
+      // STEP 1: Upload images
+      // --------------------------------
+      console.log("Uploading images...");
 
-      // 2. Save recipe in MongoDB
-      await createRecipe({
-        name,
-        description,
-        images: imageResponse.images,
+      const uploadResult = await uploadRecipeImages(images);
+
+      console.log("Cloudinary upload result:", uploadResult);
+
+      const uploadedImages = Array.isArray(uploadResult?.images)
+        ? uploadResult.images
+        : [];
+
+      if (uploadedImages.length === 0) {
+        throw new Error("Images uploaded nahi hui. Please try again.");
+      }
+
+      // --------------------------------
+      // STEP 2: Clean form data
+      // --------------------------------
+      const cleanIngredients = ingredients
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      const cleanSteps = steps.map((item) => item.trim()).filter(Boolean);
+
+      const cleanNutrients = {
+        kcal: nutrients.kcal.trim(),
+        fat: nutrients.fat.trim(),
+        saturates: nutrients.saturates.trim(),
+        carbs: nutrients.carbs.trim(),
+        sugars: nutrients.sugars.trim(),
+        fibre: nutrients.fibre.trim(),
+        protein: nutrients.protein.trim(),
+        salt: nutrients.salt.trim(),
+      };
+
+      // --------------------------------
+      // STEP 3: Prepare recipe data
+      // --------------------------------
+      const recipeData = {
+        name: name.trim(),
+
+        description: description.trim(),
+
+        category: category.trim(),
+
+        mainCategory: category.trim(),
+
+        difficulty: difficulty.trim(),
+
+        prepTime: prepTime.trim(),
+
+        cookTime: cookTime.trim(),
+
+        servings: Number(servings),
+
+        serves: Number(servings),
+
         ingredients: cleanIngredients,
+
         steps: cleanSteps,
-        category,
-        difficulty,
-        prepTime,
-        cookTime,
-        servings,
-      });
 
-      setMessage("Recipe published successfully!");
+        images: uploadedImages,
 
-      setTimeout(() => {
-        navigate("/home");
-      }, 1000);
-    } catch (error) {
-      console.error("Create recipe error:", error);
+        image: uploadedImages[0],
 
-      setMessage(error.message || "Failed to create recipe.");
+        nutrients: cleanNutrients,
+      };
+
+      console.log("Recipe data being sent to backend:", recipeData);
+
+      // --------------------------------
+      // STEP 4: Save recipe in MongoDB
+      // --------------------------------
+      const createdRecipe = await createRecipe(recipeData);
+
+      console.log("Recipe successfully created:", createdRecipe);
+
+      // --------------------------------
+      // STEP 5: Go to community page
+      // --------------------------------
+      navigate("/community");
+    } catch (submitError) {
+      console.error("Create recipe error:", submitError);
+
+      setError(
+        submitError?.message || "Failed to create recipe. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  if (!isLoggedIn) {
+    return null;
+  }
+
   return (
     <div className="create-recipe-page">
-      <div className="create-recipe-container">
-        {/* HEADER */}
+      <Header />
 
-        <div className="create-recipe-header">
-          <span className="create-recipe-badge">SHARE YOUR RECIPE</span>
+      <main className="create-recipe-container">
+        <button
+          type="button"
+          className="create-back-button"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
 
-          <h1>Create Your Recipe</h1>
+        <div className="create-recipe-heading">
+          <span>SHARE YOUR CREATION</span>
 
-          <p>Share your favorite recipe with the FoodRecipe community.</p>
+          <h1>Create a Recipe</h1>
+
+          <p>Share your favorite recipe with the Savorly community.</p>
         </div>
 
-        <form className="create-recipe-form" onSubmit={handleSubmit}>
-          {/* =========================
-              RECIPE INFORMATION
-          ========================= */}
+        {error && <div className="form-error">{error}</div>}
 
-          <section className="recipe-section">
-            <div className="section-heading">
-              <span className="section-number">01</span>
+        <form className="create-recipe-form" onSubmit={handleSubmit}>
+          {/* BASIC INFO */}
+
+          <section className="form-section">
+            <div className="form-section-heading">
+              <span>01</span>
 
               <div>
                 <h2>Recipe Information</h2>
-                <p>Tell us about your recipe.</p>
+                <p>Tell everyone what makes your recipe special.</p>
               </div>
             </div>
 
-            <div className="form-group">
-              <label>Recipe Name</label>
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label>Recipe Name</label>
 
-              <input
-                type="text"
-                placeholder="e.g. Creamy Chicken Pasta"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                required
-              />
-            </div>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="e.g. Creamy Garlic Pasta"
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Description</label>
+              <div className="form-group full-width">
+                <label>Description</label>
 
-              <textarea
-                placeholder="Tell people what makes your recipe special..."
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                required
-              />
-            </div>
+                <textarea
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="Describe your recipe..."
+                  rows="5"
+                />
+              </div>
 
-            <div className="form-grid three-columns">
               <div className="form-group">
                 <label>Category</label>
 
                 <select
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
-                  required
                 >
-                  <option value="">Select category</option>
-
-                  <option value="Breakfast">Breakfast</option>
-
-                  <option value="Lunch">Lunch</option>
-
-                  <option value="Dinner">Dinner</option>
-
-                  <option value="Dessert">Dessert</option>
-
-                  <option value="Snack">Snack</option>
-
-                  <option value="Drinks">Drinks</option>
-
+                  <option value="Recipes">Recipes</option>
                   <option value="Baking">Baking</option>
+                  <option value="Budget">Budget</option>
+                  <option value="Inspiration">Inspiration</option>
+                  <option value="Health">Health</option>
                 </select>
               </div>
 
@@ -253,42 +383,21 @@ function CreateRecipe() {
                 <select
                   value={difficulty}
                   onChange={(event) => setDifficulty(event.target.value)}
-                  required
                 >
-                  <option value="">Select difficulty</option>
-
                   <option value="Easy">Easy</option>
-
                   <option value="Medium">Medium</option>
-
                   <option value="Hard">Hard</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label>Servings</label>
-
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="4"
-                  value={servings}
-                  onChange={(event) => setServings(event.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-grid two-columns">
-              <div className="form-group">
                 <label>Preparation Time</label>
 
                 <input
                   type="text"
-                  placeholder="20 min"
                   value={prepTime}
                   onChange={(event) => setPrepTime(event.target.value)}
-                  required
+                  placeholder="20 mins"
                 />
               </div>
 
@@ -297,174 +406,221 @@ function CreateRecipe() {
 
                 <input
                   type="text"
-                  placeholder="40 min"
                   value={cookTime}
                   onChange={(event) => setCookTime(event.target.value)}
-                  required
+                  placeholder="30 mins"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Servings</label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={servings}
+                  onChange={(event) => setServings(event.target.value)}
+                  placeholder="4"
                 />
               </div>
             </div>
           </section>
 
-          {/* =========================
-              IMAGES
-          ========================= */}
+          {/* IMAGES */}
 
-          <section className="recipe-section">
-            <div className="section-heading">
-              <span className="section-number">02</span>
+          <section className="form-section">
+            <div className="form-section-heading">
+              <span>02</span>
 
               <div>
-                <h2>Recipe Photos</h2>
-                <p>Add up to 6 photos of your recipe.</p>
+                <h2>Recipe Images</h2>
+
+                <p>
+                  Upload up to 6 images. Your images are securely stored with
+                  Cloudinary.
+                </p>
               </div>
             </div>
 
-            <label className="upload-box">
-              <div className="upload-icon">+</div>
-
-              <strong>Choose recipe photos</strong>
-
-              <span>JPG, PNG or WEBP · Maximum 6 images</span>
-
+            <div className="image-upload-box">
               <input
+                id="recipe-images"
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={handleImageChange}
+                onChange={handleImages}
               />
-            </label>
 
-            {images.length > 0 && (
+              <label htmlFor="recipe-images">
+                <span className="upload-icon">☁️</span>
+
+                <strong>Choose recipe images</strong>
+
+                <small>JPG, PNG or WEBP · Max 5MB each</small>
+              </label>
+            </div>
+
+            {previews.length > 0 && (
               <div className="image-preview-grid">
-                {images.map((image, index) => (
-                  <div className="image-preview-card" key={index}>
-                    <img
-                      src={URL.createObjectURL(image)}
-                      alt={`Recipe ${index + 1}`}
-                    />
+                {previews.map((preview, index) => (
+                  <div className="image-preview" key={preview}>
+                    <img src={preview} alt={`Preview ${index + 1}`} />
 
-                    <button
-                      type="button"
-                      className="remove-image"
-                      onClick={() => removeImage(index)}
-                    >
-                      ×
-                    </button>
-
-                    {index === 0 && <span className="cover-label">Cover</span>}
+                    <span>{index === 0 ? "Main" : index + 1}</span>
                   </div>
                 ))}
               </div>
             )}
           </section>
 
-          {/* =========================
-              INGREDIENTS
-          ========================= */}
+          {/* INGREDIENTS */}
 
-          <section className="recipe-section">
-            <div className="section-heading">
-              <span className="section-number">03</span>
+          <section className="form-section">
+            <div className="form-section-heading">
+              <span>03</span>
 
               <div>
                 <h2>Ingredients</h2>
-                <p>List everything needed for your recipe.</p>
+                <p>Add everything needed for your recipe.</p>
               </div>
             </div>
 
             <div className="dynamic-list">
               {ingredients.map((ingredient, index) => (
-                <div className="dynamic-row" key={index}>
-                  <span className="item-number">{index + 1}</span>
+                <div className="dynamic-input-row" key={index}>
+                  <span>{index + 1}</span>
 
                   <input
                     type="text"
-                    placeholder={`Ingredient ${index + 1}`}
                     value={ingredient}
                     onChange={(event) =>
-                      handleIngredientChange(index, event.target.value)
+                      updateIngredient(index, event.target.value)
                     }
+                    placeholder={`Ingredient ${index + 1}`}
                   />
 
-                  <button
-                    type="button"
-                    className="delete-item"
-                    onClick={() => removeIngredient(index)}
-                  >
-                    ×
-                  </button>
+                  {ingredients.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeIngredient(index)}
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
 
             <button
               type="button"
-              className="add-button"
+              className="add-item-button"
               onClick={addIngredient}
             >
               + Add Ingredient
             </button>
           </section>
 
-          {/* =========================
-              STEPS
-          ========================= */}
+          {/* STEPS */}
 
-          <section className="recipe-section">
-            <div className="section-heading">
-              <span className="section-number">04</span>
+          <section className="form-section">
+            <div className="form-section-heading">
+              <span>04</span>
 
               <div>
-                <h2>Cooking Steps</h2>
-                <p>Explain how to prepare your recipe.</p>
+                <h2>Cooking Method</h2>
+
+                <p>Add your cooking steps in the correct order.</p>
               </div>
             </div>
 
             <div className="dynamic-list">
               {steps.map((step, index) => (
-                <div className="step-row" key={index}>
-                  <span className="step-number">{index + 1}</span>
+                <div className="step-input-row" key={index}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
 
                   <textarea
-                    placeholder={`Explain step ${index + 1}...`}
                     value={step}
-                    onChange={(event) =>
-                      handleStepChange(index, event.target.value)
-                    }
+                    onChange={(event) => updateStep(index, event.target.value)}
+                    placeholder={`Step ${index + 1}`}
+                    rows="3"
                   />
 
-                  <button
-                    type="button"
-                    className="delete-item"
-                    onClick={() => removeStep(index)}
-                  >
-                    ×
-                  </button>
+                  {steps.length > 1 && (
+                    <button type="button" onClick={() => removeStep(index)}>
+                      ×
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
 
-            <button type="button" className="add-button" onClick={addStep}>
+            <button type="button" className="add-item-button" onClick={addStep}>
               + Add Step
             </button>
           </section>
 
-          {/* MESSAGE */}
+          {/* NUTRITION */}
 
-          {message && <div className="recipe-message">{message}</div>}
+          <section className="form-section">
+            <div className="form-section-heading">
+              <span>05</span>
 
-          {/* SUBMIT */}
+              <div>
+                <h2>Nutrition</h2>
 
-          <div className="publish-area">
-            <button type="submit" className="publish-button" disabled={loading}>
-              {loading ? "Publishing Recipe..." : "Publish Recipe"}
+                <p>Add nutrition information per serving.</p>
+              </div>
+            </div>
+
+            <div className="nutrition-form-grid">
+              {[
+                ["kcal", "Calories", "e.g. 450"],
+                ["fat", "Fat", "e.g. 18g"],
+                ["saturates", "Saturates", "e.g. 7g"],
+                ["carbs", "Carbs", "e.g. 55g"],
+                ["sugars", "Sugars", "e.g. 12g"],
+                ["fibre", "Fibre", "e.g. 6g"],
+                ["protein", "Protein", "e.g. 22g"],
+                ["salt", "Salt", "e.g. 1.2g"],
+              ].map(([field, label, placeholder]) => (
+                <div className="form-group" key={field}>
+                  <label>{label}</label>
+
+                  <input
+                    type="text"
+                    value={nutrients[field]}
+                    onChange={(event) =>
+                      updateNutrient(field, event.target.value)
+                    }
+                    placeholder={placeholder}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ACTIONS */}
+
+          <div className="create-form-actions">
+            <button
+              type="button"
+              className="cancel-recipe-button"
+              onClick={() => navigate(-1)}
+              disabled={loading}
+            >
+              Cancel
             </button>
 
-            <p>Your recipe will be shared with the FoodRecipe community.</p>
+            <button
+              type="submit"
+              className="publish-recipe-button"
+              disabled={loading}
+            >
+              {loading ? "Publishing..." : "Publish Recipe →"}
+            </button>
           </div>
         </form>
-      </div>
+      </main>
     </div>
   );
 }

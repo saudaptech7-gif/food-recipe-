@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+
 const mongoose = require("mongoose");
 
 let isConnected = false;
@@ -6,6 +7,10 @@ let isConnected = false;
 const connectDB = async () => {
   if (isConnected && mongoose.connection.readyState === 1) {
     return;
+  }
+
+  if (!process.env.MONGO_URI) {
+    throw new Error("MONGO_URI is missing");
   }
 
   try {

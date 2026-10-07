@@ -1,7 +1,9 @@
+import { apiFetch } from "./apiFetch";
+
 const API_URL = `${import.meta.env.VITE_API_URL}/api/recipes`;
 
 // =====================================
-// GET ALL RECIPES
+// GET ARCHIVE / COMMUNITY RECIPES
 // =====================================
 
 export const getRecipes = async ({
@@ -10,35 +12,39 @@ export const getRecipes = async ({
   difficulty = "",
   subcategory = "",
   dishType = "",
+  recipeType = "archive",
   page = 1,
-  limit = 9,
+  limit = 6,
 } = {}) => {
   const params = new URLSearchParams();
 
-  if (category) {
-    params.append("category", category);
+  if (category.trim()) {
+    params.append("category", category.trim());
   }
 
-  if (search) {
-    params.append("search", search);
+  if (search.trim()) {
+    params.append("search", search.trim());
   }
 
-  if (difficulty) {
-    params.append("difficulty", difficulty);
+  if (difficulty.trim()) {
+    params.append("difficulty", difficulty.trim());
   }
 
-  if (subcategory) {
-    params.append("subcategory", subcategory);
+  if (subcategory.trim()) {
+    params.append("subcategory", subcategory.trim());
   }
 
-  if (dishType) {
-    params.append("dishType", dishType);
+  if (dishType.trim()) {
+    params.append("dishType", dishType.trim());
   }
 
-  params.append("page", page);
-  params.append("limit", limit);
+  params.append("recipeType", recipeType);
 
-  const response = await fetch(`${API_URL}?${params.toString()}`);
+  params.append("page", String(page));
+
+  params.append("limit", String(limit));
+
+  const response = await apiFetch(`${API_URL}?${params.toString()}`);
 
   const data = await response.json();
 
@@ -46,42 +52,39 @@ export const getRecipes = async ({
     throw new Error(data.message || "Failed to fetch recipes");
   }
 
-  // Backend currently returns an array
-  // Make sure frontend always receives an array
-  if (Array.isArray(data)) {
-    return data;
-  }
+  return {
+    recipes: Array.isArray(data.recipes) ? data.recipes : [],
 
-  // If backend later returns { recipes: [] }
-  if (Array.isArray(data.recipes)) {
-    return data.recipes;
-  }
+    currentPage: data.currentPage || page,
 
-  return [];
+    totalPages: data.totalPages || 1,
+
+    totalRecipes: data.totalRecipes || 0,
+  };
 };
 
 // =====================================
-// GET RECIPE BY ID
+// SINGLE RECIPE
 // =====================================
 
 export const getRecipeById = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`);
+  const response = await apiFetch(`${API_URL}/${id}`);
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || "Recipe not found");
+    throw new Error(data.message || "Failed to fetch recipe");
   }
 
   return data;
 };
 
 // =====================================
-// GET FILTER OPTIONS
+// FILTER OPTIONS
 // =====================================
 
 export const getFilterOptions = async () => {
-  const response = await fetch(`${API_URL}/filters/options`);
+  const response = await apiFetch(`${API_URL}/filters/options`);
 
   const data = await response.json();
 
@@ -95,32 +98,25 @@ export const getFilterOptions = async () => {
     subcategories: Array.isArray(data.subcategories) ? data.subcategories : [],
 
     dishTypes: Array.isArray(data.dishTypes) ? data.dishTypes : [],
+
+    categories: Array.isArray(data.categories) ? data.categories : [],
   };
 };
 
 // =====================================
-// UPLOAD RECIPE IMAGES TO CLOUDINARY
+// CLOUDINARY UPLOAD
 // =====================================
 
 export const uploadRecipeImages = async (images) => {
-  if (!images || images.length === 0) {
-    throw new Error("Please select at least one image");
-  }
-
-  if (images.length > 6) {
-    throw new Error("You can upload maximum 6 images");
-  }
-
   const formData = new FormData();
 
   images.forEach((image) => {
     formData.append("images", image);
   });
 
-  const response = await fetch(`${API_URL}/upload-images`, {
+  const response = await apiFetch(`${API_URL}/upload-images`, {
     method: "POST",
     body: formData,
-    credentials: "include",
   });
 
   const data = await response.json();
@@ -129,25 +125,20 @@ export const uploadRecipeImages = async (images) => {
     throw new Error(data.message || "Failed to upload images");
   }
 
-  return {
-    message: data.message,
-    images: Array.isArray(data.images) ? data.images : [],
-  };
+  return data;
 };
 
 // =====================================
-// CREATE COMMUNITY RECIPE
+// CREATE
 // =====================================
 
 export const createRecipe = async (recipeData) => {
-  const response = await fetch(API_URL, {
+  const response = await apiFetch(API_URL, {
     method: "POST",
 
     headers: {
       "Content-Type": "application/json",
     },
-
-    credentials: "include",
 
     body: JSON.stringify(recipeData),
   });
@@ -156,6 +147,115 @@ export const createRecipe = async (recipeData) => {
 
   if (!response.ok) {
     throw new Error(data.message || "Failed to create recipe");
+  }
+
+  return data;
+};
+
+// =====================================
+// UPDATE
+// =====================================
+
+export const updateRecipe = async (id, recipeData) => {
+  const response = await apiFetch(`${API_URL}/${id}`, {
+    method: "PUT",
+
+    headers: {
+      "Content-Type": "application/json",
+    },
+
+    body: JSON.stringify(recipeData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to update recipe");
+  }
+
+  return data;
+};
+
+// =====================================
+// MY RECIPES
+// =====================================
+
+export const getMyRecipes = async () => {
+  const response = await apiFetch(`${API_URL}/my`);
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch my recipes");
+  }
+
+  return Array.isArray(data)
+    ? data
+    : Array.isArray(data.recipes)
+      ? data.recipes
+      : [];
+};
+
+// =====================================
+// USER RECIPES
+// ALL COMMUNITY RECIPES
+// =====================================
+
+export const getUserRecipes = async () => {
+  const response = await apiFetch(`${API_URL}/community`);
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch user recipes");
+  }
+
+  return Array.isArray(data)
+    ? data
+    : Array.isArray(data.recipes)
+      ? data.recipes
+      : [];
+};
+
+// =====================================
+// RATING
+// =====================================
+
+export const rateRecipe = async (id, value) => {
+  const response = await apiFetch(`${API_URL}/${id}/rating`, {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+    },
+
+    body: JSON.stringify({
+      value,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to save rating");
+  }
+
+  return data;
+};
+
+// =====================================
+// DELETE
+// =====================================
+
+export const deleteRecipe = async (id) => {
+  const response = await apiFetch(`${API_URL}/${id}`, {
+    method: "DELETE",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to delete recipe");
   }
 
   return data;

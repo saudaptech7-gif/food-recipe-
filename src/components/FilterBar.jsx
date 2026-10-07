@@ -2,95 +2,117 @@ import { useEffect, useState } from "react";
 
 import { getFilterOptions } from "../services/recipeApi";
 
-function FilterBar({
-  difficulty,
-  subcategory,
-  dishType,
-  onFilterChange,
-  onClear,
-}) {
+function FilterBar({ filters, onFiltersChange, onClear }) {
   const [options, setOptions] = useState({
     difficulties: [],
     subcategories: [],
     dishTypes: [],
   });
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
+        setLoading(true);
+
         const data = await getFilterOptions();
 
-        setOptions(data);
+        setOptions({
+          difficulties: data?.difficulties || [],
+
+          subcategories: data?.subcategories || [],
+
+          dishTypes: data?.dishTypes || [],
+        });
       } catch (error) {
-        console.error(error.message);
+        console.error("Filter options error:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchFilterOptions();
   }, []);
 
+  const handleChange = (field, value) => {
+    onFiltersChange({
+      [field]: value,
+    });
+  };
+
+  const hasActiveFilters = Boolean(
+    filters?.difficulty || filters?.subcategory || filters?.dishType,
+  );
+
   return (
     <div className="filter-bar">
-      <select
-        value={difficulty}
-        onChange={(e) =>
-          onFilterChange({
-            difficulty: e.target.value,
-            subcategory,
-            dishType,
-          })
-        }
-      >
-        <option value="">All Difficulties</option>
+      <div className="filter-heading">
+        <span>FILTER RECIPES</span>
+      </div>
 
-        {options.difficulties.map((item) => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
+      <div className="filter-controls">
+        {/* DIFFICULTY */}
 
-      <select
-        value={subcategory}
-        onChange={(e) =>
-          onFilterChange({
-            difficulty,
-            subcategory: e.target.value,
-            dishType,
-          })
-        }
-      >
-        <option value="">All Subcategories</option>
+        <select
+          value={filters?.difficulty || ""}
+          onChange={(e) => handleChange("difficulty", e.target.value)}
+          disabled={loading}
+        >
+          <option value="">All Difficulties</option>
 
-        {options.subcategories.map((item) => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
+          {options.difficulties.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
 
-      <select
-        value={dishType}
-        onChange={(e) =>
-          onFilterChange({
-            difficulty,
-            subcategory,
-            dishType: e.target.value,
-          })
-        }
-      >
-        <option value="">All Dish Types</option>
+        {/* SUBCATEGORY */}
 
-        {options.dishTypes.map((item) => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
+        <select
+          value={filters?.subcategory || ""}
+          onChange={(e) => handleChange("subcategory", e.target.value)}
+          disabled={loading}
+        >
+          <option value="">All Subcategories</option>
 
-      <button type="button" onClick={onClear}>
-        Clear Filters
-      </button>
+          {options.subcategories.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+
+        {/* DISH TYPE */}
+
+        <select
+          value={filters?.dishType || ""}
+          onChange={(e) => handleChange("dishType", e.target.value)}
+          disabled={loading}
+        >
+          <option value="">All Dish Types</option>
+
+          {options.dishTypes.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+
+        {/* CLEAR */}
+
+        <button
+          type="button"
+          className={`filter-clear-button ${
+            hasActiveFilters ? "has-filters" : ""
+          }`}
+          onClick={onClear}
+          disabled={!hasActiveFilters}
+        >
+          Clear Filters
+        </button>
+      </div>
     </div>
   );
 }

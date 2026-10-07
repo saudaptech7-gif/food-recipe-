@@ -1,16 +1,18 @@
 /* eslint-disable no-undef */
+
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
+
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// =========================
+// =====================================
 // SIGNUP
-// =========================
+// =====================================
 
 router.post("/signup", async (req, res) => {
   try {
@@ -44,14 +46,19 @@ router.post("/signup", async (req, res) => {
 
     const user = await User.create({
       name: name.trim(),
+
       email: normalizedEmail,
+
       password: hashedPassword,
+
       chef: "",
+
       favorites: [],
     });
 
     return res.status(201).json({
       message: "Account created successfully",
+
       user: {
         id: user._id,
         name: user.name,
@@ -74,9 +81,9 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// =========================
+// =====================================
 // LOGIN
-// =========================
+// =====================================
 
 router.post("/login", async (req, res) => {
   try {
@@ -85,6 +92,14 @@ router.post("/login", async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required",
+      });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing");
+
+      return res.status(500).json({
+        message: "Authentication configuration error",
       });
     }
 
@@ -100,30 +115,41 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const passwordCorrect = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordCorrect) {
+    if (!passwordCorrect) {
       return res.status(401).json({
         message: "Invalid email or password",
       });
     }
 
     const token = jwt.sign(
-      { userId: user._id.toString() },
+      {
+        userId: user._id.toString(),
+      },
+
       process.env.JWT_SECRET,
-      { expiresIn: "1d" },
+
+      {
+        expiresIn: "1d",
+      },
     );
 
     res.cookie("token", token, {
       httpOnly: true,
+
       secure: process.env.NODE_ENV === "production",
+
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+
       maxAge: 24 * 60 * 60 * 1000,
+
       path: "/",
     });
 
     return res.status(200).json({
       message: "Login successful",
+
       user: {
         id: user._id,
         name: user.name,
@@ -140,9 +166,9 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// =========================
-// GET CURRENT USER
-// =========================
+// =====================================
+// CURRENT USER
+// =====================================
 
 router.get("/me", authMiddleware, async (req, res) => {
   try {
@@ -174,9 +200,9 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
-// =========================
+// =====================================
 // UPDATE PROFILE
-// =========================
+// =====================================
 
 router.put("/profile", authMiddleware, async (req, res) => {
   try {
@@ -192,7 +218,10 @@ router.put("/profile", authMiddleware, async (req, res) => {
 
     const existingUser = await User.findOne({
       email: normalizedEmail,
-      _id: { $ne: req.userId },
+
+      _id: {
+        $ne: req.userId,
+      },
     });
 
     if (existingUser) {
@@ -203,13 +232,18 @@ router.put("/profile", authMiddleware, async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       req.userId,
+
       {
         name: name.trim(),
+
         email: normalizedEmail,
+
         chef: chef ? chef.trim() : "",
       },
+
       {
         new: true,
+
         runValidators: true,
       },
     ).select("_id name email chef favorites");
@@ -222,6 +256,7 @@ router.put("/profile", authMiddleware, async (req, res) => {
 
     return res.status(200).json({
       message: "Profile updated successfully",
+
       user: {
         id: user._id,
         name: user.name,
@@ -233,27 +268,24 @@ router.put("/profile", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Profile update error:", error);
 
-    if (error.code === 11000) {
-      return res.status(409).json({
-        message: "Email already exists",
-      });
-    }
-
     return res.status(500).json({
       message: "Failed to update profile",
     });
   }
 });
 
-// =========================
+// =====================================
 // LOGOUT
-// =========================
+// =====================================
 
 router.post("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
+
     secure: process.env.NODE_ENV === "production",
+
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+
     path: "/",
   });
 

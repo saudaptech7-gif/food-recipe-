@@ -1,10 +1,11 @@
 /* eslint-disable no-undef */
+
 const multer = require("multer");
 
 const storage = multer.memoryStorage();
 
 const upload = multer({
-  storage: storage,
+  storage,
 
   limits: {
     fileSize: 5 * 1024 * 1024,
@@ -12,7 +13,7 @@ const upload = multer({
   },
 
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
+    if (file.mimetype && file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
       cb(new Error("Only image files are allowed"));

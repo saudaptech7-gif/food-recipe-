@@ -1,9 +1,13 @@
+import { apiFetch } from "./apiFetch";
+
 const API_URL = `${import.meta.env.VITE_API_URL}/api/favorites`;
 
+// =====================================
+// GET FAVORITES
+// =====================================
+
 export const getFavorites = async () => {
-  const response = await fetch(API_URL, {
-    credentials: "include",
-  });
+  const response = await apiFetch(API_URL);
 
   const data = await response.json();
 
@@ -14,11 +18,21 @@ export const getFavorites = async () => {
   return data;
 };
 
+// =====================================
+// ADD FAVORITE
+// =====================================
+
 export const addFavorite = async (recipeId) => {
-  const response = await fetch(`${API_URL}/${recipeId}`, {
-    method: "POST",
-    credentials: "include",
-  });
+  if (!recipeId) {
+    throw new Error("Recipe ID is required");
+  }
+
+  const response = await apiFetch(
+    `${API_URL}/${encodeURIComponent(String(recipeId))}`,
+    {
+      method: "POST",
+    },
+  );
 
   const data = await response.json();
 
@@ -29,11 +43,21 @@ export const addFavorite = async (recipeId) => {
   return data;
 };
 
+// =====================================
+// REMOVE FAVORITE
+// =====================================
+
 export const removeFavorite = async (recipeId) => {
-  const response = await fetch(`${API_URL}/${recipeId}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
+  if (!recipeId) {
+    throw new Error("Recipe ID is required");
+  }
+
+  const response = await apiFetch(
+    `${API_URL}/${encodeURIComponent(String(recipeId))}`,
+    {
+      method: "DELETE",
+    },
+  );
 
   const data = await response.json();
 

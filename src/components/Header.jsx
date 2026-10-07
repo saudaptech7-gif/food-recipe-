@@ -4,108 +4,235 @@ import { useNavigate } from "react-router-dom";
 
 import { logoutUser } from "../services/authApi";
 import { logout } from "../redux/authSlice";
-import { setFavorites } from "../redux/favoriteSlice";
+import { clearFavorites } from "../redux/favoriteSlice";
 
 function Header({ onCategoryChange }) {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const { user, isLoggedIn } = useSelector((state) => state.auth);
+  const [recipesOpen, setRecipesOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+
+  const currentUser = useSelector((state) => state.auth.user);
+
+  const categories = ["Baking", "Budget", "Recipes", "Inspiration", "Health"];
+
+  const closeMenus = () => {
+    setRecipesOpen(false);
+    setProfileOpen(false);
+    setMobileOpen(false);
+  };
+
+  const handleCategory = (category) => {
+    closeMenus();
+
+    if (onCategoryChange) {
+      onCategoryChange(category);
+      return;
+    }
+
+    navigate("/", {
+      state: {
+        category,
+      },
+    });
+  };
 
   const handleLogout = async () => {
     try {
       await logoutUser();
     } catch (error) {
-      console.error(error.message);
+      console.error("Logout error:", error);
     } finally {
       dispatch(logout());
-      dispatch(setFavorites([]));
-      navigate("/login");
+      dispatch(clearFavorites());
+
+      closeMenus();
+
+      navigate("/");
     }
   };
 
-  const handleCategory = (category) => {
-    onCategoryChange(category);
-    setMenuOpen(false);
-  };
-
-  const handleProfile = () => {
-    setMenuOpen(false);
-    navigate("/profile");
+  const goTo = (path) => {
+    closeMenus();
+    navigate(path);
   };
 
   return (
-    <header className="header">
+    <header className="main-header">
       <div className="header-container">
-        {/* LOGO */}
-        <button className="logo" onClick={() => navigate("/")}>
-          FoodRecipe
+        <button type="button" className="brand-logo" onClick={() => goTo("/")}>
+          <span className="brand-icon">🍽️</span>
+          <span>Savorly</span>
         </button>
 
-        {/* NAVIGATION */}
-        <nav className={`nav ${menuOpen ? "nav-open" : ""}`}>
-          <button onClick={() => handleCategory("")}>Home</button>
+        <button
+          type="button"
+          className="mobile-menu-button"
+          onClick={() => setMobileOpen((previous) => !previous)}
+          aria-label="Toggle menu"
+        >
+          ☰
+        </button>
 
-          <button onClick={() => navigate("/favorites")}>♥ Favorites</button>
-
-          <button onClick={() => handleCategory("baking")}>Baking</button>
-
-          <button onClick={() => handleCategory("budget")}>Budget</button>
-
-          <button onClick={() => handleCategory("recipes")}>Recipes</button>
-
-          <button onClick={() => handleCategory("inspiration")}>
-            Inspiration
+        <nav
+          className={`main-navigation ${
+            mobileOpen ? "mobile-navigation-open" : ""
+          }`}
+        >
+          <button type="button" className="nav-link" onClick={() => goTo("/")}>
+            Home
           </button>
 
-          <button onClick={() => handleCategory("health")}>Health</button>
+          <div className="nav-dropdown">
+            <button
+              type="button"
+              className={`nav-link ${recipesOpen ? "nav-link-active" : ""}`}
+              onClick={() => setRecipesOpen((previous) => !previous)}
+            >
+              Recipes
+              <span className="dropdown-arrow">↓</span>
+            </button>
+
+            {recipesOpen && (
+              <div className="recipes-dropdown">
+                <div className="dropdown-header">
+                  <span>EXPLORE</span>
+                  <strong>Recipe Collections</strong>
+                </div>
+
+                <button type="button" onClick={() => handleCategory("")}>
+                  <span>✨</span>
+                  All Recipes
+                </button>
+
+                {categories.map((category) => (
+                  <button
+                    type="button"
+                    key={category}
+                    onClick={() => handleCategory(category)}
+                  >
+                    <span>
+                      {category === "Baking"
+                        ? "🥐"
+                        : category === "Budget"
+                          ? "💰"
+                          : category === "Recipes"
+                            ? "🍽️"
+                            : category === "Inspiration"
+                              ? "💡"
+                              : "🥗"}
+                    </span>
+
+                    {category}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="nav-link"
+            onClick={() => goTo("/community")}
+          >
+            Community
+          </button>
         </nav>
 
-        {/* HEADER ACTIONS */}
         <div className="header-actions">
-          {isLoggedIn && user ? (
-            <>
-              {/* PROFILE */}
-              <button className="profile-button" onClick={handleProfile}>
+          {isLoggedIn && (
+            <button
+              type="button"
+              className="header-icon-button"
+              onClick={() => goTo("/favorites")}
+              aria-label="Favorites"
+            >
+              ♡
+            </button>
+          )}
+
+          {isLoggedIn ? (
+            <div className="profile-dropdown">
+              <button
+                type="button"
+                className="profile-button"
+                onClick={() => setProfileOpen((previous) => !previous)}
+              >
                 <span className="profile-avatar">
-                  {user.name?.charAt(0).toUpperCase()}
+                  {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
                 </span>
 
-                <span className="profile-name">{user.name}</span>
+                <span className="profile-name">
+                  {currentUser?.name || "User"}
+                </span>
+
+                <span className="dropdown-arrow">↓</span>
               </button>
 
-              {/* LOGOUT */}
-              <button className="logout-button" onClick={handleLogout}>
-                Logout
-              </button>
-            </>
+              {profileOpen && (
+                <div className="profile-menu">
+                  <div className="profile-menu-user">
+                    <span className="profile-avatar large">
+                      {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </span>
+
+                    <div>
+                      <strong>{currentUser?.name || "User"}</strong>
+
+                      <small>{currentUser?.email || ""}</small>
+                    </div>
+                  </div>
+
+                  <div className="profile-menu-divider" />
+
+                  <button type="button" onClick={() => goTo("/profile")}>
+                    👤 Profile
+                  </button>
+
+                  <button type="button" onClick={() => goTo("/community")}>
+                    👨‍🍳 My Recipes
+                  </button>
+
+                  <button type="button" onClick={() => goTo("/create-recipe")}>
+                    ＋ Create Recipe
+                  </button>
+
+                  <div className="profile-menu-divider" />
+
+                  <button
+                    type="button"
+                    className="logout-menu-button"
+                    onClick={handleLogout}
+                  >
+                    ↪ Logout
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
-              {/* LOGIN */}
               <button
+                type="button"
                 className="login-button"
-                onClick={() => navigate("/login")}
+                onClick={() => goTo("/login")}
               >
                 Login
               </button>
 
-              {/* SIGN UP */}
               <button
+                type="button"
                 className="signup-button"
-                onClick={() => navigate("/signup")}
+                onClick={() => goTo("/signup")}
               >
-                Sign Up
+                Get Started
               </button>
             </>
           )}
         </div>
-
-        {/* MOBILE MENU */}
-        <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)}>
-          ☰
-        </button>
       </div>
     </header>
   );

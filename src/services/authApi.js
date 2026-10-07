@@ -3,10 +3,13 @@ const API_URL = `${import.meta.env.VITE_API_URL}/api/auth`;
 export const signup = async (userData) => {
   const response = await fetch(`${API_URL}/signup`, {
     method: "POST",
+
     headers: {
       "Content-Type": "application/json",
     },
+
     credentials: "include",
+
     body: JSON.stringify(userData),
   });
 
@@ -22,10 +25,13 @@ export const signup = async (userData) => {
 export const login = async (userData) => {
   const response = await fetch(`${API_URL}/login`, {
     method: "POST",
+
     headers: {
       "Content-Type": "application/json",
     },
+
     credentials: "include",
+
     body: JSON.stringify(userData),
   });
 
@@ -45,6 +51,10 @@ export const getCurrentUser = async () => {
 
   const data = await response.json();
 
+  if (response.status === 401) {
+    window.dispatchEvent(new Event("auth-expired"));
+  }
+
   if (!response.ok) {
     throw new Error(data.message || "Not authenticated");
   }
@@ -55,6 +65,7 @@ export const getCurrentUser = async () => {
 export const logoutUser = async () => {
   const response = await fetch(`${API_URL}/logout`, {
     method: "POST",
+
     credentials: "include",
   });
 
