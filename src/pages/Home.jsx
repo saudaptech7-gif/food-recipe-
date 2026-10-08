@@ -15,6 +15,62 @@ import {
   getUserRecipes,
 } from "../services/recipeApi";
 
+// ======================================================
+// REMOVE DUPLICATE RECIPES
+// ======================================================
+
+const removeDuplicateRecipes = (recipes = []) => {
+  if (!Array.isArray(recipes)) {
+    return [];
+  }
+
+  const seen = new Set();
+
+  return recipes.filter((recipe) => {
+    if (!recipe) {
+      return false;
+    }
+
+    /*
+      Archive recipes normally have `id`.
+      Community recipes normally have `_id`.
+
+      We use both as fallback.
+    */
+
+    const uniqueKey =
+      recipe.id ||
+      recipe._id ||
+      `${recipe.name || ""}-${recipe.author || ""}-${recipe.image || ""}`;
+
+    const key = String(uniqueKey);
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+
+    return true;
+  });
+};
+
+// ======================================================
+// GET RECIPE KEY
+// ======================================================
+
+const getRecipeKey = (recipe, index) => {
+  if (!recipe) {
+    return `recipe-${index}`;
+  }
+
+  return recipe._id || recipe.id || `recipe-${index}`;
+};
+
+// ======================================================
+// HOME
+// ======================================================
+
 function Home() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,9 +95,13 @@ function Home() {
 
   const [filters, setFilters] = useState({
     category: location.state?.category || "",
+
     search: "",
+
     difficulty: "",
+
     subcategory: "",
+
     dishType: "",
   });
 
@@ -69,12 +129,15 @@ function Home() {
         limit: 6,
       });
 
-      // Backend already handles nutrition filtering.
-      // Do NOT filter recipes again here.
+      // =================================
+      // REMOVE DUPLICATES
+      // =================================
 
-      setRecipes(data.recipes || []);
+      const uniqueRecipes = removeDuplicateRecipes(data?.recipes || []);
 
-      setTotalPages(data.totalPages || 1);
+      setRecipes(uniqueRecipes);
+
+      setTotalPages(data?.totalPages || 1);
     } catch (loadError) {
       console.error("Archive recipes error:", loadError);
 
@@ -109,9 +172,49 @@ function Home() {
         getUserRecipes(),
       ]);
 
-      setMyRecipes(Array.isArray(myResult) ? myResult : []);
+      // =================================
+      // HANDLE API RESPONSE
+      // =================================
 
-      setUserRecipes(Array.isArray(userResult) ? userResult : []);
+      /*
+          Depending on recipeApi.js,
+          result can either be:
+
+          [
+            recipe1,
+            recipe2
+          ]
+
+          OR:
+
+          {
+            recipes: [...]
+          }
+        */
+
+      const myRecipeArray = Array.isArray(myResult)
+        ? myResult
+        : Array.isArray(myResult?.recipes)
+          ? myResult.recipes
+          : [];
+
+      const userRecipeArray = Array.isArray(userResult)
+        ? userResult
+        : Array.isArray(userResult?.recipes)
+          ? userResult.recipes
+          : [];
+
+      // =================================
+      // REMOVE DUPLICATES
+      // =================================
+
+      const uniqueMyRecipes = removeDuplicateRecipes(myRecipeArray);
+
+      const uniqueUserRecipes = removeDuplicateRecipes(userRecipeArray);
+
+      setMyRecipes(uniqueMyRecipes);
+
+      setUserRecipes(uniqueUserRecipes);
     } catch (loadError) {
       console.error("Community home error:", loadError);
 
@@ -204,9 +307,13 @@ function Home() {
   const clearFilters = () => {
     setFilters({
       category: "",
+
       search: "",
+
       difficulty: "",
+
       subcategory: "",
+
       dishType: "",
     });
 
@@ -270,6 +377,18 @@ function Home() {
             <button
               type="button"
               className="primary-button"
+              style={{
+                border: "none",
+                padding: "14px 22px",
+                borderRadius: "14px",
+                background: "linear-gradient(135deg, #f98654, #ef5d35)",
+                color: "#ffffff",
+                fontSize: "14px",
+                fontWeight: "700",
+                fontFamily: "inherit",
+                cursor: "pointer",
+                boxShadow: "0 10px 24px rgba(239, 93, 53, 0.25)",
+              }}
               onClick={() => navigate("/community")}
             >
               Explore Community
@@ -356,8 +475,11 @@ function Home() {
           {!loading && !error && recipes.length > 0 && (
             <>
               <div className="home-recipe-grid">
-                {recipes.map((recipe) => (
-                  <RecipeCard key={recipe._id || recipe.id} recipe={recipe} />
+                {recipes.map((recipe, index) => (
+                  <RecipeCard
+                    key={getRecipeKey(recipe, index)}
+                    recipe={recipe}
+                  />
                 ))}
               </div>
 
@@ -437,8 +559,11 @@ function Home() {
               </div>
             ) : (
               <div className="home-recipe-grid">
-                {myRecipes.slice(0, 6).map((recipe) => (
-                  <RecipeCard key={recipe._id || recipe.id} recipe={recipe} />
+                {myRecipes.slice(0, 6).map((recipe, index) => (
+                  <RecipeCard
+                    key={getRecipeKey(recipe, `my-${index}`)}
+                    recipe={recipe}
+                  />
                 ))}
               </div>
             )}
@@ -485,8 +610,11 @@ function Home() {
               </div>
             ) : (
               <div className="home-recipe-grid">
-                {userRecipes.slice(0, 6).map((recipe) => (
-                  <RecipeCard key={recipe._id || recipe.id} recipe={recipe} />
+                {userRecipes.slice(0, 6).map((recipe, index) => (
+                  <RecipeCard
+                    key={getRecipeKey(recipe, `user-${index}`)}
+                    recipe={recipe}
+                  />
                 ))}
               </div>
             )}

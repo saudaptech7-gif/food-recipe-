@@ -11,29 +11,59 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
 
   const [loading, setLoading] = useState(true);
 
+  // =====================================
+  // LOAD FILTER OPTIONS
+  // =====================================
+
   useEffect(() => {
+    let mounted = true;
+
     const fetchFilterOptions = async () => {
       try {
         setLoading(true);
 
         const data = await getFilterOptions();
 
+        if (!mounted) {
+          return;
+        }
+
+        const difficulties = Array.isArray(data?.difficulties)
+          ? data.difficulties
+          : [];
+
+        const subcategories = Array.isArray(data?.subcategories)
+          ? data.subcategories
+          : [];
+
+        const dishTypes = Array.isArray(data?.dishTypes)
+          ? data.dishTypes
+          : [];
+
         setOptions({
-          difficulties: data?.difficulties || [],
-
-          subcategories: data?.subcategories || [],
-
-          dishTypes: data?.dishTypes || [],
+          difficulties,
+          subcategories,
+          dishTypes,
         });
       } catch (error) {
         console.error("Filter options error:", error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchFilterOptions();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  // =====================================
+  // HANDLE CHANGE
+  // =====================================
 
   const handleChange = (field, value) => {
     onFiltersChange({
@@ -41,9 +71,27 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
     });
   };
 
+  // =====================================
+  // CLEAR FILTERS
+  // =====================================
+
   const hasActiveFilters = Boolean(
-    filters?.difficulty || filters?.subcategory || filters?.dishType,
+    filters?.difficulty ||
+      filters?.subcategory ||
+      filters?.dishType,
   );
+
+  // =====================================
+  // CURRENT VALUES
+  // =====================================
+
+  const currentDifficulty = filters?.difficulty || "";
+  const currentSubcategory = filters?.subcategory || "";
+  const currentDishType = filters?.dishType || "";
+
+  // =====================================
+  // RENDER
+  // =====================================
 
   return (
     <div className="filter-bar">
@@ -52,55 +100,89 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
       </div>
 
       <div className="filter-controls">
-        {/* DIFFICULTY */}
+
+        {/* ================================
+            DIFFICULTY
+        ================================= */}
 
         <select
-          value={filters?.difficulty || ""}
-          onChange={(e) => handleChange("difficulty", e.target.value)}
+          value={currentDifficulty}
+          onChange={(event) => {
+            const value = event.target.value;
+
+            console.log("Difficulty selected:", value);
+
+            handleChange("difficulty", value);
+          }}
           disabled={loading}
         >
           <option value="">All Difficulties</option>
 
           {options.difficulties.map((item) => (
-            <option key={item} value={item}>
+            <option
+              key={`difficulty-${item}`}
+              value={item}
+            >
               {item}
             </option>
           ))}
         </select>
 
-        {/* SUBCATEGORY */}
+        {/* ================================
+            SUBCATEGORY
+        ================================= */}
 
         <select
-          value={filters?.subcategory || ""}
-          onChange={(e) => handleChange("subcategory", e.target.value)}
+          value={currentSubcategory}
+          onChange={(event) => {
+            handleChange(
+              "subcategory",
+              event.target.value,
+            );
+          }}
           disabled={loading}
         >
           <option value="">All Subcategories</option>
 
           {options.subcategories.map((item) => (
-            <option key={item} value={item}>
+            <option
+              key={`subcategory-${item}`}
+              value={item}
+            >
               {item}
             </option>
           ))}
         </select>
 
-        {/* DISH TYPE */}
+        {/* ================================
+            DISH TYPE
+        ================================= */}
 
         <select
-          value={filters?.dishType || ""}
-          onChange={(e) => handleChange("dishType", e.target.value)}
+          value={currentDishType}
+          onChange={(event) => {
+            handleChange(
+              "dishType",
+              event.target.value,
+            );
+          }}
           disabled={loading}
         >
           <option value="">All Dish Types</option>
 
           {options.dishTypes.map((item) => (
-            <option key={item} value={item}>
+            <option
+              key={`dish-type-${item}`}
+              value={item}
+            >
               {item}
             </option>
           ))}
         </select>
 
-        {/* CLEAR */}
+        {/* ================================
+            CLEAR
+        ================================= */}
 
         <button
           type="button"
@@ -118,3 +200,4 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
 }
 
 export default FilterBar;
+
