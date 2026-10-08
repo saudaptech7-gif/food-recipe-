@@ -72,6 +72,7 @@ const recipeSchema = new mongoose.Schema(
   {
     id: {
       type: String,
+      trim: true,
       index: true,
     },
 
@@ -188,6 +189,10 @@ const recipeSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // ==================================================
+    // RECIPE TYPE
+    // ==================================================
+
     recipeType: {
       type: String,
       enum: ["archive", "community"],
@@ -195,12 +200,38 @@ const recipeSchema = new mongoose.Schema(
       index: true,
     },
 
+    // ==================================================
+    // PUBLISH STATUS
+    // ==================================================
+    //
+    // archive recipes:
+    // isPublished is not important
+    //
+    // community recipes:
+    // false = private draft
+    // true  = visible in Community
+    //
+
+    isPublished: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    // ==================================================
+    // RECIPE OWNER
+    // ==================================================
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
       index: true,
     },
+
+    // ==================================================
+    // RATING
+    // ==================================================
 
     rating: {
       type: Number,
@@ -237,6 +268,12 @@ const recipeSchema = new mongoose.Schema(
   },
 );
 
+/*
+|--------------------------------------------------------------------------
+| Text Search Index
+|--------------------------------------------------------------------------
+*/
+
 recipeSchema.index({
   name: "text",
   description: "text",
@@ -247,5 +284,34 @@ recipeSchema.index({
   dishType: "text",
   difficulty: "text",
 });
+
+/*
+|--------------------------------------------------------------------------
+| Prevent Duplicate Archive Recipe IDs
+|--------------------------------------------------------------------------
+|
+| Only archive recipes are affected.
+|
+| Example:
+|
+| archive + id = abc123
+| archive + id = abc123   ❌ not allowed
+|
+| community + no id       ✅ allowed
+|
+*/
+
+recipeSchema.index(
+  { id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      recipeType: "archive",
+      id: {
+        $type: "string",
+      },
+    },
+  },
+);
 
 module.exports = mongoose.model("Recipe", recipeSchema);

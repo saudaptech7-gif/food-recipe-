@@ -2,8 +2,6 @@
 
 const express = require("express");
 
-const Recipe = require("../models/Recipe");
-
 const upload = require("../middleware/uploadMiddleware");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -14,6 +12,7 @@ const {
   getRecipeById,
   rateRecipe,
   updateRecipe,
+  togglePublishRecipe,
   deleteRecipe,
   getMyRecipes,
   getUserRecipes,
@@ -23,28 +22,29 @@ const {
 
 const router = express.Router();
 
-/* =====================================================
-   FILTER OPTIONS
-   ONLY ARCHIVE RECIPES
-===================================================== */
+// =====================================================
+// FILTER OPTIONS
+// =====================================================
 
 router.get("/filters/options", getFilterOptions);
 
-/* =====================================================
-   MY RECIPES
-===================================================== */
+// =====================================================
+// MY RECIPES
+// Published + Unpublished
+// =====================================================
 
 router.get("/my", authMiddleware, getMyRecipes);
 
-/* =====================================================
-   ALL USER RECIPES
-===================================================== */
+// =====================================================
+// COMMUNITY RECIPES
+// Only Published recipes
+// =====================================================
 
 router.get("/community", authMiddleware, getUserRecipes);
 
-/* =====================================================
-   CLOUDINARY IMAGE UPLOAD
-===================================================== */
+// =====================================================
+// CLOUDINARY IMAGE UPLOAD
+// =====================================================
 
 router.post(
   "/upload-images",
@@ -53,41 +53,49 @@ router.post(
   uploadRecipeImages,
 );
 
-/* =====================================================
-   GET RECIPES
-   DEFAULT = ARCHIVE
-===================================================== */
+// =====================================================
+// GET RECIPES
+// Default = Archive
+// Community query returns only published
+// =====================================================
 
 router.get("/", getRecipes);
 
-/* =====================================================
-   CREATE RECIPE
-===================================================== */
+// =====================================================
+// CREATE RECIPE
+// New recipe starts as unpublished
+// =====================================================
 
 router.post("/", authMiddleware, createRecipe);
 
-/* =====================================================
-   RATE RECIPE
-===================================================== */
+// =====================================================
+// PUBLISH / UNPUBLISH RECIPE
+// =====================================================
+
+router.patch("/:id/publish", authMiddleware, togglePublishRecipe);
+
+// =====================================================
+// RATE RECIPE
+// =====================================================
 
 router.post("/:id/rating", authMiddleware, rateRecipe);
 
-/* =====================================================
-   UPDATE RECIPE
-===================================================== */
+// =====================================================
+// UPDATE RECIPE
+// =====================================================
 
 router.put("/:id", authMiddleware, updateRecipe);
 
-/* =====================================================
-   DELETE RECIPE
-===================================================== */
+// =====================================================
+// DELETE RECIPE
+// =====================================================
 
 router.delete("/:id", authMiddleware, deleteRecipe);
 
-/* =====================================================
-   SINGLE RECIPE
-   IMPORTANT: KEEP THIS LAST
-===================================================== */
+// =====================================================
+// GET SINGLE RECIPE
+// KEEP THIS LAST
+// =====================================================
 
 router.get("/:id", getRecipeById);
 
