@@ -1,12 +1,10 @@
+
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
 
 const express = require("express");
-
 const cors = require("cors");
-
 const dotenv = require("dotenv");
-
 const cookieParser = require("cookie-parser");
 
 dotenv.config();
@@ -14,11 +12,8 @@ dotenv.config();
 const connectDB = require("./config/db");
 
 const recipeRoutes = require("./routes/recipeRoutes");
-
 const authRoutes = require("./routes/authroutes");
-
 const favoriteRoutes = require("./routes/favoriteRoutes");
-
 const socialRoutes = require("./routes/socialroutes");
 
 const app = express();
@@ -27,32 +22,68 @@ const app = express();
 // ALLOWED FRONTENDS
 // =====================================
 
-const allowedOrigins = [
+const normalizeOrigin = (origin) =>
+  String(origin || "").trim().replace(/\/+$/, "");
+
+const allowedOrigins = new Set([
   "http://localhost:5173",
-
   "https://food-recipe-two-flax.vercel.app",
-];
+
+  // Optional Vercel environment variable.
+  ...(process.env.FRONTEND_URL || "")
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean),
+]);
 
 // =====================================
-// CORS
+// CORS CONFIGURATION
+// Must be before all routes.
 // =====================================
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Requests without an Origin header are allowed.
+    if (!origin) {
+      return callback(null, true);
+    }
 
-    credentials: true,
-  }),
-);
+    const normalizedOrigin = normalizeOrigin(origin);
+
+    if (allowedOrigins.has(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    console.warn("CORS origin rejected:", origin);
+
+    // Do not throw an error from the CORS callback.
+    return callback(null, false);
+  },
+
+  credentials: true,
+
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+  ],
+
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+  ],
+
+  optionsSuccessStatus: 204,
+};
+
+// Apply CORS before body parsing, database checks and routes.
+app.use(cors(corsOptions));
 
 // =====================================
-// BODY PARSER
+// BODY PARSERS
 // =====================================
 
 app.use(
@@ -69,22 +100,35 @@ app.use(
 );
 
 // =====================================
-// COOKIE
+// COOKIE PARSER
 // =====================================
 
 app.use(cookieParser());
 
 // =====================================
-// DATABASE
+// HEALTH CHECK
+// Does not require a database connection.
+// =====================================
+
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    message: "Food API is running",
+  });
+});
+
+// =====================================
+// DATABASE CONNECTION
 // =====================================
 
 app.use(async (req, res, next) => {
   try {
     await connectDB();
-
-    next();
+    return next();
   } catch (error) {
-    console.error("Database connection error:", error.message);
+    console.error(
+      "Database connection error:",
+      error.message,
+    );
 
     return res.status(500).json({
       message: "Database connection failed",
@@ -93,7 +137,7 @@ app.use(async (req, res, next) => {
 });
 
 // =====================================
-// ROUTES
+// API ROUTES
 // =====================================
 
 app.use("/api/recipes", recipeRoutes);
@@ -105,12 +149,12 @@ app.use("/api/favorites", favoriteRoutes);
 app.use("/api/social", socialRoutes);
 
 // =====================================
-// HEALTH CHECK
+// NOT FOUND
 // =====================================
 
-app.get("/", (req, res) => {
-  return res.status(200).json({
-    message: "Food API is running",
+app.use((req, res) => {
+  return res.status(404).json({
+    message: "API endpoint not found",
   });
 });
 
@@ -130,12 +174,6 @@ app.use((error, req, res, next) => {
   if (error.message === "Only image files are allowed") {
     return res.status(400).json({
       message: "Only image files are allowed",
-    });
-  }
-
-  if (error.message === "Not allowed by CORS") {
-    return res.status(403).json({
-      message: "CORS origin not allowed",
     });
   }
 
