@@ -1,17 +1,27 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import Header from "../components/Header";
 
-import { getRecipeById, rateRecipe, deleteRecipe } from "../services/recipeApi";
+import {
+  getRecipeById,
+  rateRecipe,
+  deleteRecipe,
+} from "../services/recipeApi";
 
-import { addFavorite, removeFavorite } from "../services/favoriteApi";
+import {
+  addFavorite,
+  removeFavorite,
+} from "../services/favoriteApi";
 
 import {
   addFavoriteToState,
   removeFavoriteFromState,
 } from "../redux/favoriteSlice";
+
+import "./RecipeDetails.css";
 
 function RecipeDetails() {
   const { id } = useParams();
@@ -20,9 +30,7 @@ function RecipeDetails() {
   const dispatch = useDispatch();
 
   const currentUser = useSelector((state) => state.auth.user);
-
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
-
   const favorites = useSelector((state) => state.favorites.favorites);
 
   const [recipe, setRecipe] = useState(null);
@@ -30,63 +38,36 @@ function RecipeDetails() {
   const [error, setError] = useState("");
 
   const [selectedRating, setSelectedRating] = useState(0);
-
   const [ratingLoading, setRatingLoading] = useState(false);
-
   const [favoriteLoading, setFavoriteLoading] = useState(false);
-
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  /*
-   * Recipe ID
-   *
-   * Community recipe:
-   * MongoDB _id
-   *
-   * Archive recipe:
-   * custom id
-   */
-  const recipeId = recipe?.id || recipe?._id || id;
+  // Ingredients checklist state
+  const [checkedIngredients, setCheckedIngredients] = useState({});
 
+  const recipeId = recipe?.id || recipe?._id || id;
   const isCommunityRecipe = recipe?.recipeType === "community";
 
-  /*
-   * Check whether current user owns recipe
-   */
   const isOwnRecipe = useMemo(() => {
-    if (!currentUser || !recipe?.createdBy) {
-      return false;
-    }
+    if (!currentUser || !recipe?.createdBy) return false;
 
     const currentUserId = currentUser.id || currentUser._id;
 
     const ownerId =
-      recipe.createdBy?.id || recipe.createdBy?._id || recipe.createdBy;
+      recipe.createdBy?.id ||
+      recipe.createdBy?._id ||
+      recipe.createdBy;
 
-    if (!currentUserId || !ownerId) {
-      return false;
-    }
+    if (!currentUserId || !ownerId) return false;
 
     return String(currentUserId) === String(ownerId);
   }, [currentUser, recipe]);
 
-  /*
-   * Favorites Redux mein IDs ki array hai.
-   *
-   * Example:
-   *
-   * [
-   *   "68abc123",
-   *   "68xyz456"
-   * ]
-   */
   const isFavorite = favorites?.some(
     (favoriteId) => String(favoriteId) === String(recipeId),
   );
 
-  /*
-   * GET RECIPE
-   */
+  // Fetch recipe
   useEffect(() => {
     let mounted = true;
 
@@ -96,43 +77,29 @@ function RecipeDetails() {
         setError("");
 
         const data = await getRecipeById(id);
-
-        console.log("RECIPE DETAILS API RESPONSE:", data);
-
-        /*
-         * Backend response:
-         *
-         * {
-         *   recipe: {...}
-         * }
-         */
         const recipeData = data?.recipe || data;
 
         if (!recipeData) {
           throw new Error("Recipe data was not returned by the server.");
         }
 
-        if (!mounted) {
-          return;
-        }
+        if (!mounted) return;
 
         setRecipe(recipeData);
 
         setSelectedRating(
-          Number(recipeData?.userRating || recipeData?.myRating || 0),
+          Number(recipeData.userRating || recipeData.myRating || 0),
         );
+
+        setCheckedIngredients({});
       } catch (fetchError) {
         console.error("Fetch recipe error:", fetchError);
 
-        if (!mounted) {
-          return;
-        }
-
-        setError(fetchError.message || "Failed to load recipe.");
-      } finally {
         if (mounted) {
-          setLoading(false);
+          setError(fetchError.message || "Failed to load recipe.");
         }
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
 
@@ -143,168 +110,122 @@ function RecipeDetails() {
     };
   }, [id]);
 
-  /*
-   * SAVE / UNSAVE RECIPE
-   */
+  // Toggle ingredient checkbox
+  const handleIngredientToggle = (index) => {
+    setCheckedIngredients((previous) => ({
+      ...previous,
+      [index]: !previous[index],
+    }));
+  };
+
+  // Save / unsave recipe
   const handleFavorite = async () => {
     if (!isLoggedIn) {
       navigate("/login");
       return;
     }
 
-    if (!recipeId) {
-      alert("Recipe ID not found.");
-      return;
-    }
-
-    if (favoriteLoading) {
-      return;
-    }
+    if (!recipeId || favoriteLoading) return;
 
     try {
       setFavoriteLoading(true);
 
       if (isFavorite) {
-        /*
-         * REMOVE FROM DATABASE
-         */
         await removeFavorite(recipeId);
-
-        /*
-         * REMOVE FROM REDUX
-         */
         dispatch(removeFavoriteFromState(String(recipeId)));
       } else {
-        /*
-         * ADD TO DATABASE
-         */
         await addFavorite(recipeId);
-
-        /*
-         * ADD TO REDUX
-         */
         dispatch(addFavoriteToState(String(recipeId)));
       }
     } catch (favoriteError) {
       console.error("Favorite error:", favoriteError);
-
       alert(favoriteError.message || "Failed to update favorite.");
     } finally {
       setFavoriteLoading(false);
     }
   };
 
-  /*
-   * RATE RECIPE
-   */
+  // Rate recipe
   const handleRating = async (value) => {
     if (!isLoggedIn) {
       navigate("/login");
       return;
     }
 
-    if (isOwnRecipe) {
-      return;
-    }
+    if (isOwnRecipe || ratingLoading) return;
 
     try {
       setRatingLoading(true);
 
       const data = await rateRecipe(recipeId, value);
 
-      setSelectedRating(Number(data?.userRating || value));
+      setSelectedRating(Number(data?.userRating ?? value));
 
       setRecipe((previous) => ({
         ...previous,
-
         averageRating:
           data?.averageRating ??
           previous?.averageRating ??
           previous?.rating ??
           0,
-
         ratingCount:
           data?.ratingCount ??
           previous?.ratingCount ??
           previous?.voteCount ??
           0,
-
         rating: data?.averageRating ?? previous?.rating ?? 0,
-
         voteCount: data?.ratingCount ?? previous?.voteCount ?? 0,
       }));
     } catch (ratingError) {
       console.error("Rating error:", ratingError);
-
       alert(ratingError.message || "Failed to save rating.");
     } finally {
       setRatingLoading(false);
     }
   };
 
-  /*
-   * DELETE OWN RECIPE
-   */
+  // Delete own recipe
   const handleDelete = async () => {
-    if (!isOwnRecipe) {
-      return;
-    }
+    if (!isOwnRecipe) return;
 
     const confirmed = window.confirm(
       "Are you sure you want to delete this recipe?",
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       setDeleteLoading(true);
-
       await deleteRecipe(recipeId);
-
       navigate("/community");
     } catch (deleteError) {
       console.error("Delete error:", deleteError);
-
       alert(deleteError.message || "Failed to delete recipe.");
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  /*
-   * LOADING
-   */
   if (loading) {
     return (
       <div className="recipe-details-page">
         <Header />
-
         <div className="details-loading">
           <div className="loading-spinner" />
-
           <p>Loading recipe...</p>
         </div>
       </div>
     );
   }
 
-  /*
-   * ERROR
-   */
   if (error || !recipe) {
     return (
       <div className="recipe-details-page">
         <Header />
-
         <div className="details-error">
           <span>🍽️</span>
-
           <h2>Recipe Not Found</h2>
-
           <p>{error || "This recipe could not be found."}</p>
-
           <button type="button" onClick={() => navigate("/")}>
             ← Back to Recipes
           </button>
@@ -313,9 +234,6 @@ function RecipeDetails() {
     );
   }
 
-  /*
-   * IMAGES
-   */
   const images =
     Array.isArray(recipe.images) && recipe.images.length > 0
       ? recipe.images
@@ -323,40 +241,24 @@ function RecipeDetails() {
         ? [recipe.image]
         : ["/fallback.jpg"];
 
-  /*
-   * NUTRIENTS
-   */
   const nutrients = recipe.nutrients || {};
 
-  /*
-   * INGREDIENTS
-   */
   const ingredients = Array.isArray(recipe.ingredients)
     ? recipe.ingredients
     : [];
 
-  /*
-   * STEPS
-   */
   const steps = Array.isArray(recipe.steps) ? recipe.steps : [];
 
-  /*
-   * RATING
-   */
   const rawAverageRating =
     recipe.averageRating ?? recipe.rating ?? recipe.rattings ?? 0;
 
   const averageRatingNumber = Number(rawAverageRating) || 0;
-
   const averageRating = averageRatingNumber.toFixed(1);
 
   const ratingCount =
     Number(recipe.ratingCount ?? recipe.voteCount ?? recipe.vote_count ?? 0) ||
     0;
 
-  /*
-   * CATEGORY
-   */
   const category =
     recipe.mainCategory ||
     recipe.maincategory ||
@@ -364,9 +266,6 @@ function RecipeDetails() {
     recipe.subcategory ||
     "Recipe";
 
-  /*
-   * TIME
-   */
   const preparationTime =
     recipe.times?.preparation ||
     recipe.times?.Preparation ||
@@ -374,30 +273,24 @@ function RecipeDetails() {
     "—";
 
   const cookingTime =
-    recipe.times?.cooking || recipe.times?.Cooking || recipe.cookTime || "—";
+    recipe.times?.cooking ||
+    recipe.times?.Cooking ||
+    recipe.cookTime ||
+    "—";
 
-  /*
-   * SERVINGS
-   */
   const servings = recipe.servings || recipe.serves || "—";
-
-  /*
-   * DIFFICULTY
-   */
-  const difficulty = recipe.difficulty || "—";
-
-  /*
-   * AUTHOR
-   */
+  const difficulty = recipe.difficulty || recipe.difficult || "—";
   const authorName = recipe.createdBy?.name || recipe.author || "Savorly";
+
+  const checkedCount = Object.values(checkedIngredients).filter(
+    Boolean,
+  ).length;
 
   return (
     <div className="recipe-details-page">
       <Header />
 
       <main className="recipe-details-container">
-        {/* BACK BUTTON */}
-
         <button
           type="button"
           className="details-back-button"
@@ -407,10 +300,7 @@ function RecipeDetails() {
         </button>
 
         {/* HERO */}
-
         <section className="recipe-hero-details">
-          {/* IMAGE */}
-
           <div className="recipe-image-gallery">
             <img
               src={images[0]}
@@ -421,15 +311,13 @@ function RecipeDetails() {
             />
 
             {images.length > 1 && (
-              <div className="recipe-image-count">+{images.length - 1}</div>
+              <div className="recipe-image-count">
+                +{images.length - 1}
+              </div>
             )}
           </div>
 
-          {/* DETAILS */}
-
           <div className="recipe-details-content">
-            {/* BADGES */}
-
             <div className="recipe-details-badges">
               <span className="recipe-category-badge">{category}</span>
 
@@ -442,28 +330,24 @@ function RecipeDetails() {
               </span>
             </div>
 
-            {/* TITLE */}
-
             <h1>{recipe.name || "Untitled Recipe"}</h1>
-
-            {/* DESCRIPTION */}
 
             <p className="recipe-details-description">
               {recipe.description || "No description available."}
             </p>
-
-            {/* RATING */}
 
             <div className="recipe-rating-summary">
               <div className="rating-stars-display">
                 {"★".repeat(
                   Math.min(Math.max(Math.round(averageRatingNumber), 0), 5),
                 )}
-
                 <span>
                   {"★".repeat(
                     5 -
-                      Math.min(Math.max(Math.round(averageRatingNumber), 0), 5),
+                      Math.min(
+                        Math.max(Math.round(averageRatingNumber), 0),
+                        5,
+                      ),
                   )}
                 </span>
               </div>
@@ -475,39 +359,29 @@ function RecipeDetails() {
               </small>
             </div>
 
-            {/* META */}
-
             <div className="recipe-meta-row">
               <div>
                 <span>PREP</span>
-
                 <strong>{preparationTime}</strong>
               </div>
 
               <div>
                 <span>COOK</span>
-
                 <strong>{cookingTime}</strong>
               </div>
 
               <div>
                 <span>SERVES</span>
-
                 <strong>{servings}</strong>
               </div>
 
               <div>
                 <span>LEVEL</span>
-
                 <strong>{difficulty}</strong>
               </div>
             </div>
 
-            {/* ACTION BUTTONS */}
-
             <div className="recipe-action-row">
-              {/* SAVE BUTTON */}
-
               <button
                 type="button"
                 className={`favorite-detail-button ${
@@ -522,8 +396,6 @@ function RecipeDetails() {
                     ? "♥ Saved"
                     : "♡ Save Recipe"}
               </button>
-
-              {/* EDIT / DELETE */}
 
               {isOwnRecipe && (
                 <>
@@ -549,8 +421,7 @@ function RecipeDetails() {
           </div>
         </section>
 
-        {/* RATING SECTION */}
-
+        {/* RATING */}
         <section className="recipe-rating-section">
           <div>
             <span className="section-eyebrow">YOUR EXPERIENCE</span>
@@ -591,40 +462,65 @@ function RecipeDetails() {
         </section>
 
         {/* INGREDIENTS + METHOD */}
-
         <section className="recipe-main-grid">
-          {/* INGREDIENTS */}
-
-          <div className="recipe-section">
+          <div className="recipe-section ingredients-section">
             <span className="section-eyebrow">WHAT YOU NEED</span>
 
-            <h2>Ingredients</h2>
+            <div className="ingredients-heading-row">
+              <h2>Ingredients</h2>
+
+              {ingredients.length > 0 && (
+                <span className="ingredients-progress">
+                  {checkedCount}/{ingredients.length} ready
+                </span>
+              )}
+            </div>
 
             {ingredients.length > 0 ? (
               <div className="ingredients-list">
-                {ingredients.map((ingredient, index) => (
-                  <label
-                    className="ingredient-item"
-                    key={`${String(ingredient)}-${index}`}
-                  >
-                    <input type="checkbox" />
+                {ingredients.map((ingredient, index) => {
+                  const ingredientText =
+                    typeof ingredient === "object" && ingredient !== null
+                      ? ingredient.name ||
+                        ingredient.ingredient ||
+                        JSON.stringify(ingredient)
+                      : ingredient;
 
-                    <span>
-                      {typeof ingredient === "object"
-                        ? ingredient.name ||
-                          ingredient.ingredient ||
-                          JSON.stringify(ingredient)
-                        : ingredient}
-                    </span>
-                  </label>
-                ))}
+                  const isChecked = Boolean(checkedIngredients[index]);
+
+                  return (
+                    <label
+                      className={`ingredient-item ${
+                        isChecked ? "ingredient-checked" : ""
+                      }`}
+                      key={`${String(ingredientText)}-${index}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleIngredientToggle(index)}
+                        aria-label={`Mark ${ingredientText} as ${
+                          isChecked ? "not ready" : "ready"
+                        }`}
+                      />
+
+                      <span className="ingredient-checkbox" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                          <path d="m5 12 4 4L19 6" />
+                        </svg>
+                      </span>
+
+                      <span className="ingredient-text">
+                        {ingredientText}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             ) : (
               <p>No ingredients available.</p>
             )}
           </div>
-
-          {/* METHOD */}
 
           <div className="recipe-section">
             <span className="section-eyebrow">LET'S COOK</span>
@@ -640,7 +536,7 @@ function RecipeDetails() {
                     </span>
 
                     <p>
-                      {typeof step === "object"
+                      {typeof step === "object" && step !== null
                         ? step.step ||
                           step.description ||
                           step.text ||
@@ -657,11 +553,9 @@ function RecipeDetails() {
         </section>
 
         {/* NUTRITION */}
-
         <section className="nutrition-section">
           <div>
             <span className="section-eyebrow">PER SERVING</span>
-
             <h2>Nutrition</h2>
           </div>
 
@@ -690,7 +584,6 @@ function RecipeDetails() {
         </section>
 
         {/* AUTHOR */}
-
         <footer className="recipe-author-footer">
           <div className="author-avatar">
             {authorName?.charAt(0)?.toUpperCase() || "S"}
@@ -698,7 +591,6 @@ function RecipeDetails() {
 
           <div>
             <small>RECIPE BY</small>
-
             <strong>{authorName}</strong>
           </div>
         </footer>
