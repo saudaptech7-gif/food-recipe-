@@ -1,29 +1,278 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 
 import { logoutUser } from "../services/authApi";
+import {
+  getMyProfile,
+  clearMyProfileCache,
+} from "../services/socialApi";
+
 import { logout } from "../redux/authSlice";
 import { clearFavorites } from "../redux/favoriteSlice";
+
+const SESSION_CACHE_DURATION = 15000;
+
+let sessionCache = {
+  status: "unknown",
+  profile: null,
+  checkedAt: 0,
+};
+
+let sessionPromise = null;
+
+function cacheSession(status, profile = null) {
+  sessionCache = {
+    status,
+    profile,
+    checkedAt: Date.now(),
+  };
+
+  return sessionCache;
+}
+
+function isSessionCacheFresh() {
+  return (
+    sessionCache.status !== "unknown" &&
+    Date.now() - sessionCache.checkedAt < SESSION_CACHE_DURATION
+  );
+}
+
+function clearHeaderSession() {
+  cacheSession("anonymous");
+  sessionPromise = null;
+}
+
+function extractProfile(result) {
+  return (
+    result?.profile ||
+    result?.data?.profile ||
+    result?.user ||
+    result?.data ||
+    null
+  );
+}
+
+function checkSession(force = false) {
+  if (!force && isSessionCacheFresh()) {
+    return Promise.resolve(sessionCache);
+  }
+
+  if (!force && sessionPromise) {
+    return sessionPromise;
+  }
+
+  if (force) {
+    sessionPromise = null;
+  }
+
+  const promise = getMyProfile()
+    .then((result) => {
+      const profile = extractProfile(result);
+
+      if (
+        !profile ||
+        typeof profile !== "object" ||
+        !(
+          profile._id ||
+          profile.id ||
+          profile.email ||
+          profile.chef ||
+          profile.chefName
+        )
+      ) {
+        throw new Error("Invalid profile response.");
+      }
+
+      return cacheSession("authenticated", profile);
+    })
+    .catch((error) => {
+      if (error?.status === 401) {
+        return cacheSession("anonymous");
+      }
+
+      throw error;
+    })
+    .finally(() => {
+      if (sessionPromise === promise) {
+        sessionPromise = null;
+      }
+    });
+
+  sessionPromise = promise;
+  return promise;
+}
 
 function Header({ onCategoryChange }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const auth = useSelector((state) => state.auth || {});
+
+  const user =
+    auth.user ||
+    auth.currentUser ||
+    auth.profile ||
+    null;
+
+  const reduxIsLoggedIn = Boolean(
+    auth.isAuthenticated ||
+      auth.isLoggedIn ||
+      auth.token ||
+      user,
+  );
+
   const [recipesOpen, setRecipesOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
-  const currentUser = useSelector((state) => state.auth.user);
+  const [chefNameOverride, setChefNameOverride] = useState(
+    sessionCache.profile?.chef ||
+      sessionCache.profile?.chefName ||
+      "",
+  );
+
+  const [sessionStatus, setSessionStatus] = useState(() => {
+    if (reduxIsLoggedIn) return "authenticated";
+
+    return isSessionCacheFresh()
+      ? sessionCache.status
+      : "checking";
+  });
+
+  const isLoggedIn =
+    reduxIsLoggedIn ||
+    sessionStatus === "authenticated";
 
   const categories = [
-    { name: "Baking", icon: "🥐" },
-    { name: "Budget", icon: "💰" },
-    { name: "Recipes", icon: "🍝" },
-    { name: "Inspiration", icon: "✨" },
-    { name: "Health", icon: "🥗" },
+    "Baking",
+    "Budget",
+    "Recipes",
+    "Inspiration",
+    "Health",
   ];
+
+  const displayName =
+    chefNameOverride ||
+    user?.chef ||
+    user?.chefName ||
+    user?.name ||
+    user?.username ||
+    "Chef";
+
+  useEffect(() => {
+    let active = true;
+
+    const handleUserUpdated = (event) => {
+      const updated =
+        event.detail?.profile ||
+        event.detail?.user ||
+        event.detail?.data?.profile ||
+        event.detail?.data ||
+        event.detail;
+
+      if (!updated || typeof updated !== "object") return;
+
+      const updatedProfile = {
+        ...(sessionCache.profile || {}),
+        ...updated,
+      };
+
+      cacheSession("authenticated", updatedProfile);
+
+      setChefNameOverride(
+        updatedProfile.chef ||
+          updatedProfile.chefName ||
+          "",
+      );
+
+      setSessionStatus("authenticated");
+    };
+
+    const loadSession = async () => {
+      if (reduxIsLoggedIn) {
+        setSessionStatus("authenticated");
+
+        if (
+          isSessionCacheFresh() &&
+          sessionCache.status === "authenticated"
+        ) {
+          setChefNameOverride(
+            sessionCache.profile?.chef ||
+              sessionCache.profile?.chefName ||
+              "",
+          );
+
+          return;
+        }
+
+        clearMyProfileCache();
+      } else if (!isSessionCacheFresh()) {
+        setSessionStatus("checking");
+      } else {
+        setSessionStatus(sessionCache.status);
+      }
+
+      try {
+        const result = await checkSession(reduxIsLoggedIn);
+
+        if (!active) return;
+
+        if (result.status === "authenticated") {
+          setChefNameOverride(
+            result.profile?.chef ||
+              result.profile?.chefName ||
+              "",
+          );
+
+          setSessionStatus("authenticated");
+        } else {
+          setChefNameOverride("");
+          setSessionStatus("anonymous");
+
+          if (reduxIsLoggedIn) {
+            clearMyProfileCache();
+            clearHeaderSession();
+
+            dispatch(logout());
+            dispatch(clearFavorites());
+
+            window.dispatchEvent(
+              new Event("savorly:logout"),
+            );
+          }
+        }
+      } catch (error) {
+        if (!active) return;
+
+        console.error("Header session check failed:", error);
+
+        if (reduxIsLoggedIn) {
+          setSessionStatus("authenticated");
+        } else {
+          cacheSession("anonymous");
+          setSessionStatus("anonymous");
+          setChefNameOverride("");
+        }
+      }
+    };
+
+    loadSession();
+
+    window.addEventListener(
+      "savorly:user-updated",
+      handleUserUpdated,
+    );
+
+    return () => {
+      active = false;
+
+      window.removeEventListener(
+        "savorly:user-updated",
+        handleUserUpdated,
+      );
+    };
+  }, [reduxIsLoggedIn, dispatch]);
 
   const closeMenus = () => {
     setRecipesOpen(false);
@@ -31,7 +280,7 @@ function Header({ onCategoryChange }) {
     setMobileOpen(false);
   };
 
-  const handleCategory = (category) => {
+  const handleCategorySelect = (category) => {
     closeMenus();
 
     if (onCategoryChange) {
@@ -41,265 +290,260 @@ function Header({ onCategoryChange }) {
 
     navigate("/", {
       state: {
-        category,
+        selectedCategory: category,
       },
     });
-  };
-
-  const goTo = (path) => {
-    closeMenus();
-    navigate(path);
   };
 
   const handleLogout = async () => {
     try {
       await logoutUser();
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Logout request failed:", error);
     } finally {
+      clearMyProfileCache();
+      clearHeaderSession();
+
       dispatch(logout());
       dispatch(clearFavorites());
 
+      window.dispatchEvent(
+        new Event("savorly:logout"),
+      );
+
+      setChefNameOverride("");
+      setSessionStatus("anonymous");
+
       closeMenus();
-      navigate("/");
+
+      navigate("/login", { replace: true });
     }
   };
 
-  const userInitial = currentUser?.name?.charAt(0)?.toUpperCase() || "U";
+  const navLinkClass = ({ isActive }) =>
+    `savorly-nav-link${isActive ? " active" : ""}`;
 
   return (
-    <header className="main-header">
-      <div className="header-container">
-        {/* ================= LOGO ================= */}
-        <button type="button" className="brand-logo" onClick={() => goTo("/")}>
-          <span className="brand-icon-wrapper">
-            <span className="brand-icon">🍴</span>
-          </span>
-
-          <span className="brand-text">
-            <span className="brand-name">Savorly</span>
-            <span className="brand-tagline">Taste. Create. Share.</span>
-          </span>
-        </button>
-
-        {/* ================= MOBILE MENU ================= */}
+    <header
+      className={`savorly-header${
+        sessionStatus === "checking" && !reduxIsLoggedIn
+          ? " savorly-header-checking"
+          : ""
+      }`}
+    >
+      <div className="savorly-header-inner">
         <button
           type="button"
-          className={`mobile-menu-button ${
-            mobileOpen ? "mobile-menu-active" : ""
-          }`}
+          className="savorly-brand"
           onClick={() => {
-            setMobileOpen((previous) => !previous);
-            setRecipesOpen(false);
-            setProfileOpen(false);
+            closeMenus();
+            navigate("/");
           }}
-          aria-label="Toggle menu"
+          aria-label="Savorly home"
         >
-          <span></span>
-          <span></span>
-          <span></span>
+          <span
+            className="savorly-brand-icon"
+            aria-hidden="true"
+          >
+            ✦
+          </span>
+
+          <span>Savorly</span>
         </button>
 
-        {/* ================= NAVIGATION ================= */}
         <nav
-          className={`main-navigation ${
-            mobileOpen ? "mobile-navigation-open" : ""
+          className={`savorly-nav${
+            mobileOpen ? " mobile-open" : ""
           }`}
+          aria-label="Main navigation"
         >
-          <button type="button" className="nav-link" onClick={() => goTo("/")}>
-            <span className="nav-icon">⌂</span>
+          <NavLink
+            to="/"
+            end
+            className={navLinkClass}
+            onClick={closeMenus}
+          >
             Home
-          </button>
+          </NavLink>
 
-          {/* Recipes Dropdown */}
-          <div className="nav-dropdown">
+          <div className="savorly-dropdown">
             <button
               type="button"
-              className={`nav-link ${recipesOpen ? "nav-link-active" : ""}`}
+              className={`savorly-nav-link savorly-dropdown-trigger${
+                recipesOpen ? " active" : ""
+              }`}
               onClick={() => {
-                setRecipesOpen((previous) => !previous);
+                setRecipesOpen((open) => !open);
                 setProfileOpen(false);
               }}
+              aria-expanded={recipesOpen}
+              aria-haspopup="true"
             >
-              <span className="nav-icon">🍳</span>
               Recipes
+
               <span
-                className={`dropdown-arrow ${recipesOpen ? "arrow-open" : ""}`}
+                className="savorly-chevron"
+                aria-hidden="true"
               >
-                ⌄
+                ▾
               </span>
             </button>
 
             {recipesOpen && (
-              <div className="recipes-dropdown">
-                <div className="dropdown-top">
-                  <div>
-                    <span className="dropdown-eyebrow">EXPLORE</span>
-
-                    <strong>Find your next favorite</strong>
-                  </div>
-
-                  <span className="dropdown-sparkle">✨</span>
-                </div>
-
-                <button
-                  type="button"
-                  className="dropdown-all"
-                  onClick={() => handleCategory("")}
-                >
-                  <span className="dropdown-item-icon all-icon">🍽️</span>
-
-                  <span>
-                    <strong>All Recipes</strong>
-                    <small>Explore everything</small>
-                  </span>
-
-                  <span className="dropdown-item-arrow">→</span>
-                </button>
-
-                <div className="dropdown-items">
-                  {categories.map((category) => (
-                    <button
-                      type="button"
-                      className="dropdown-item"
-                      key={category.name}
-                      onClick={() => handleCategory(category.name)}
-                    >
-                      <span className="dropdown-item-icon">
-                        {category.icon}
-                      </span>
-
-                      <span>{category.name}</span>
-
-                      <span className="dropdown-item-arrow">→</span>
-                    </button>
-                  ))}
-                </div>
+              <div className="savorly-dropdown-menu">
+                {categories.map((category) => (
+                  <button
+                    type="button"
+                    key={category}
+                    className="savorly-dropdown-item"
+                    onClick={() => handleCategorySelect(category)}
+                  >
+                    {category}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          <button
-            type="button"
-            className="nav-link"
-            onClick={() => goTo("/community")}
+          <NavLink
+            to="/community"
+            className={navLinkClass}
+            onClick={closeMenus}
           >
-            <span className="nav-icon">👨‍🍳</span>
             Community
-          </button>
+          </NavLink>
+
+          {isLoggedIn && (
+            <NavLink
+              to="/my-recipes"
+              className={navLinkClass}
+              onClick={closeMenus}
+            >
+              My Kitchen
+            </NavLink>
+          )}
         </nav>
 
-        {/* ================= RIGHT ACTIONS ================= */}
-        <div className="header-actions">
-          {isLoggedIn && (
-            <button
-              type="button"
-              className="header-icon-button"
-              onClick={() => goTo("/favorites")}
-              aria-label="Saved recipes"
-            >
-              <span>♡</span>
-            </button>
-          )}
-
-          {/* ================= LOGGED IN ================= */}
+        <div className="savorly-header-actions">
           {isLoggedIn ? (
-            <div className="profile-dropdown">
+            <div className="savorly-dropdown savorly-profile-dropdown">
               <button
                 type="button"
-                className={`profile-button ${
-                  profileOpen ? "profile-button-active" : ""
-                }`}
+                className="savorly-profile-trigger"
                 onClick={() => {
-                  setProfileOpen((previous) => !previous);
+                  setProfileOpen((open) => !open);
                   setRecipesOpen(false);
                 }}
+                aria-expanded={profileOpen}
+                aria-haspopup="true"
               >
-                <span className="profile-avatar">{userInitial}</span>
+                <span
+                  className="savorly-avatar"
+                  aria-hidden="true"
+                >
+                  {displayName.charAt(0).toUpperCase()}
+                </span>
 
-                <span className="profile-name">
-                  {currentUser?.name || "User"}
+                <span className="savorly-profile-name">
+                  {displayName}
                 </span>
 
                 <span
-                  className={`profile-arrow ${
-                    profileOpen ? "profile-arrow-open" : ""
-                  }`}
+                  className="savorly-chevron"
+                  aria-hidden="true"
                 >
-                  ⌄
+                  ▾
                 </span>
               </button>
 
               {profileOpen && (
-                <div className="profile-menu">
-                  <div className="profile-menu-user">
-                    <span className="profile-avatar profile-avatar-large">
-                      {userInitial}
+                <div className="savorly-dropdown-menu savorly-profile-menu">
+                  <div className="savorly-profile-menu-heading">
+                    <span className="savorly-profile-menu-label">
+                      Signed in as
                     </span>
 
-                    <div className="profile-menu-user-info">
-                      <strong>{currentUser?.name || "User"}</strong>
-
-                      <small>{currentUser?.email || ""}</small>
-                    </div>
+                    <strong>{displayName}</strong>
                   </div>
-
-                  <div className="profile-menu-divider"></div>
-
-                  <button type="button" onClick={() => goTo("/profile")}>
-                    <span>👤</span>
-                    <span>My Profile</span>
-                  </button>
-
-                  <button type="button" onClick={() => goTo("/favorites")}>
-                    <span>♡</span>
-                    <span>Saved Recipes</span>
-                  </button>
-
-                  <button type="button" onClick={() => goTo("/community")}>
-                    <span>👨‍🍳</span>
-                    <span>My Recipes</span>
-                  </button>
-
-                  <button type="button" onClick={() => goTo("/create-recipe")}>
-                    <span className="create-menu-icon">＋</span>
-                    <span>Create Recipe</span>
-                  </button>
-
-                  <div className="profile-menu-divider"></div>
 
                   <button
                     type="button"
-                    className="logout-menu-button"
+                    className="savorly-dropdown-item"
+                    onClick={() => {
+                      closeMenus();
+                      navigate("/profile");
+                    }}
+                  >
+                    👤 My Profile
+                  </button>
+
+                  <button
+                    type="button"
+                    className="savorly-dropdown-item"
+                    onClick={() => {
+                      closeMenus();
+                      navigate("/liked-recipes");
+                    }}
+                  >
+                    ❤️ Liked Recipes
+                  </button>
+
+                  <button
+                    type="button"
+                    className="savorly-dropdown-item"
+                    onClick={() => {
+                      closeMenus();
+                      navigate("/favorites");
+                    }}
+                  >
+                    🔖 Favorites
+                  </button>
+
+                  <button
+                    type="button"
+                    className="savorly-dropdown-item savorly-logout-item"
                     onClick={handleLogout}
                   >
-                    <span>↪</span>
-                    <span>Logout</span>
+                    Log Out
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            /* ================= GUEST ================= */
-            <div className="guest-actions">
+            <div className="savorly-auth-actions">
               <button
                 type="button"
-                className="login-button"
-                onClick={() => goTo("/login")}
+                className="savorly-login-button"
+                onClick={() => {
+                  closeMenus();
+                  navigate("/login");
+                }}
               >
-                Login
+                Log In
               </button>
 
               <button
                 type="button"
-                className="signup-button"
-                onClick={() => goTo("/signup")}
+                className="savorly-signup-button"
+                onClick={() => {
+                  closeMenus();
+                  navigate("/signup");
+                }}
               >
-                <span>Get Started</span>
-                <span className="signup-arrow">→</span>
+                Sign Up
               </button>
             </div>
           )}
+
+          <button
+            type="button"
+            className="savorly-mobile-toggle"
+            onClick={() => setMobileOpen((open) => !open)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? "✕" : "☰"}
+          </button>
         </div>
       </div>
     </header>

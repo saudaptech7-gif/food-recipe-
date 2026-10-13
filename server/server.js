@@ -19,6 +19,8 @@ const authRoutes = require("./routes/authroutes");
 
 const favoriteRoutes = require("./routes/favoriteRoutes");
 
+const socialRoutes = require("./routes/socialroutes");
+
 const app = express();
 
 // =====================================
@@ -99,6 +101,8 @@ app.use("/api/recipes", recipeRoutes);
 app.use("/api/auth", authRoutes);
 
 app.use("/api/favorites", favoriteRoutes);
+
+app.use("/api/social", socialRoutes);
 
 // =====================================
 // HEALTH CHECK

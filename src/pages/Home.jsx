@@ -1,13 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-
-import Header from "../components/Header";
-import SearchBar from "../components/SearchBar";
-import FilterBar from "../components/FilterBar";
-import RecipeCard from "../components/RecipeCard";
+import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import {
   getRecipes,
@@ -15,263 +11,325 @@ import {
   getUserRecipes,
 } from "../services/recipeApi";
 
-// ======================================================
-// REMOVE DUPLICATE RECIPES
-// ======================================================
+import {
+  setRecipes,
+  setPagination,
+  setLoading,
+  setError,
+  setFilters,
+} from "../redux/recipeSlice";
 
-const removeDuplicateRecipes = (recipes = []) => {
-  if (!Array.isArray(recipes)) {
-    return [];
+import Header from "../components/Header";
+import RecipeCard from "../components/RecipeCard";
+import SearchBar from "../components/SearchBar";
+import FilterBar from "../components/FilterBar";
+import Footer from "../components/Footer";
+
+// =====================================
+// NORMALIZE RECIPE API RESPONSE
+// =====================================
+
+function extractRecipes(response) {
+  const payload = response?.data ?? response;
+
+  if (Array.isArray(payload)) {
+    return {
+      recipes: payload,
+      meta: {},
+    };
   }
 
-  const seen = new Set();
+  const possibleLists = [
+    payload?.recipes,
+    payload?.data?.recipes,
+    payload?.results,
+    payload?.items,
+    payload?.data,
+  ];
 
-  return recipes.filter((recipe) => {
-    if (!recipe) {
-      return false;
-    }
+  const recipes = possibleLists.find(Array.isArray) || [];
 
-    /*
-      Archive recipes normally have `id`.
-      Community recipes normally have `_id`.
+  return {
+    recipes,
+    meta: payload?.pagination || payload?.data?.pagination || payload || {},
+  };
+}
 
-      We use both as fallback.
-    */
+// =====================================
+// COMMUNITY API RESPONSE
+// =====================================
 
-    const uniqueKey =
-      recipe.id ||
-      recipe._id ||
-      `${recipe.name || ""}-${recipe.author || ""}-${recipe.image || ""}`;
+function normalizeRecipeList(response) {
+  return extractRecipes(response).recipes;
+}
 
-    const key = String(uniqueKey);
+// =====================================
+// NUTRITION CHECK
+// Recipes without a nutrition field are not
+// hidden accidentally when the API omits it.
+// Explicitly empty nutrition objects are hidden.
+// =====================================
 
-    if (seen.has(key)) {
-      return false;
-    }
+function hasNutritionData(recipe) {
+  const nutrition =
+    recipe?.nutrients ?? recipe?.nutrition ?? recipe?.nutritionalInfo;
 
-    seen.add(key);
-
+  // If the API doesn't include this field,
+  // don't hide the recipe just because it's absent.
+  if (nutrition === undefined || nutrition === null) {
     return true;
-  });
-};
-
-// ======================================================
-// GET RECIPE KEY
-// ======================================================
-
-const getRecipeKey = (recipe, index) => {
-  if (!recipe) {
-    return `recipe-${index}`;
   }
 
-  return recipe._id || recipe.id || `recipe-${index}`;
-};
+  if (Array.isArray(nutrition)) {
+    return nutrition.some((item) => {
+      if (item === null || item === undefined) return false;
 
-// ======================================================
+      if (typeof item === "object") {
+        return Object.values(item).some(
+          (value) =>
+            value !== null &&
+            value !== undefined &&
+            String(value).trim() !== "",
+        );
+      }
+
+      return String(item).trim() !== "";
+    });
+  }
+
+  if (typeof nutrition === "object") {
+    return Object.values(nutrition).some((value) => {
+      if (value === null || value === undefined) return false;
+
+      if (typeof value === "object") {
+        return Object.values(value).some(
+          (nested) =>
+            nested !== null &&
+            nested !== undefined &&
+            String(nested).trim() !== "",
+        );
+      }
+
+      return String(value).trim() !== "";
+    });
+  }
+
+  return String(nutrition).trim() !== "";
+}
+
+// =====================================
 // HOME
-// ======================================================
+// =====================================
 
 function Home() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
+
+  const cookingSceneRef = useRef(null);
+
+  const [cookingProgress, setCookingProgress] = useState(0);
+  const [homeTab, setHomeTab] = useState("our");
+
+  const [myRecipes, setMyRecipes] = useState([]);
+  const [userRecipes, setUserRecipes] = useState([]);
+
+  const [communityLoading, setCommunityLoading] = useState(false);
+  const [communityError, setCommunityError] = useState("");
+
+  // =====================================
+  // REDUX STATE
+  // =====================================
+
+  const recipesState = useSelector((state) => state.recipes);
+
+  const recipes = Array.isArray(recipesState?.recipes)
+    ? recipesState.recipes
+    : [];
+
+  const loading = recipesState?.loading || false;
+  const error = recipesState?.error || null;
+
+  const filters = recipesState?.filters || {
+    category: "",
+    search: "",
+    difficulty: "",
+    subcategory: "",
+    dishType: "",
+  };
+
+  const pagination = recipesState?.pagination || {
+    currentPage: 1,
+    totalPages: 1,
+    totalRecipes: 0,
+  };
+
+  const visibleRecipes = recipes.filter(hasNutritionData);
 
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
 
   // =====================================
-  // STATES
+  // SCROLL COOKING ANIMATION
   // =====================================
 
-  const [recipes, setRecipes] = useState([]);
+  useEffect(() => {
+    const handleScroll = () => {
+      const scene = cookingSceneRef.current;
 
-  const [myRecipes, setMyRecipes] = useState([]);
+      if (!scene) return;
 
-  const [userRecipes, setUserRecipes] = useState([]);
+      const section = scene.closest(".hero-scroll-section");
 
-  const [loading, setLoading] = useState(true);
+      if (!section) return;
 
-  const [communityLoading, setCommunityLoading] = useState(false);
+      const scrollDistance = section.offsetHeight - window.innerHeight;
 
-  const [error, setError] = useState("");
+      if (scrollDistance <= 0) return;
 
-  const [filters, setFilters] = useState({
-    category: location.state?.category || "",
+      const rect = section.getBoundingClientRect();
 
-    search: "",
+      const progress = Math.min(Math.max(-rect.top / scrollDistance, 0), 1);
 
-    difficulty: "",
+      setCookingProgress(progress);
+    };
 
-    subcategory: "",
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
 
-    dishType: "",
-  });
+    handleScroll();
 
-  const [page, setPage] = useState(1);
-
-  const [totalPages, setTotalPages] = useState(1);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   // =====================================
-  // LOAD ARCHIVE RECIPES
+  // FETCH ARCHIVE RECIPES
   // =====================================
 
-  const loadArchiveRecipes = async (currentFilters, currentPage) => {
+  const fetchRecipes = async (currentFilters, page = 1) => {
     try {
-      setLoading(true);
+      dispatch(setLoading(true));
+      dispatch(setError(null));
 
-      setError("");
-
-      const data = await getRecipes({
+      const response = await getRecipes({
         ...currentFilters,
-
         recipeType: "archive",
-
-        page: currentPage,
-
-        limit: 6,
+        page,
+        limit: 9,
       });
 
-      // =================================
-      // REMOVE DUPLICATES
-      // =================================
+      const result = extractRecipes(response);
+      const meta = result.meta;
 
-      const uniqueRecipes = removeDuplicateRecipes(data?.recipes || []);
+      dispatch(setRecipes(result.recipes));
 
-      setRecipes(uniqueRecipes);
+      dispatch(
+        setPagination({
+          currentPage: Number(meta.currentPage ?? meta.page) || page,
 
-      setTotalPages(data?.totalPages || 1);
-    } catch (loadError) {
-      console.error("Archive recipes error:", loadError);
+          totalPages: Number(meta.totalPages ?? meta.pages) || 1,
 
-      setError(loadError.message || "Failed to fetch recipes.");
+          totalRecipes:
+            Number(meta.totalRecipes ?? meta.total) || result.recipes.length,
+        }),
+      );
+    } catch (fetchError) {
+      console.error("Failed to fetch archive recipes:", fetchError);
 
-      setRecipes([]);
-
-      setTotalPages(1);
+      dispatch(setError(fetchError.message || "Failed to load recipes."));
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
   // =====================================
-  // LOAD COMMUNITY RECIPES
+  // INITIAL FETCH
   // =====================================
 
-  const loadCommunityRecipes = async () => {
-    if (!isLoggedIn) {
-      setMyRecipes([]);
+  useEffect(() => {
+    fetchRecipes(filters, 1);
+  }, []);
 
-      setUserRecipes([]);
+  // =====================================
+  // FETCH COMMUNITY RECIPES
+  // =====================================
 
-      return;
-    }
+  useEffect(() => {
+    let cancelled = false;
 
-    try {
+    const loadCommunityRecipes = async () => {
+      if (!isLoggedIn) {
+        setMyRecipes([]);
+        setUserRecipes([]);
+        setCommunityError("");
+        setCommunityLoading(false);
+        return;
+      }
+
       setCommunityLoading(true);
+      setCommunityError("");
 
-      const [myResult, userResult] = await Promise.all([
-        getMyRecipes(),
-        getUserRecipes(),
-      ]);
+      try {
+        const [myResponse, usersResponse] = await Promise.all([
+          getMyRecipes(),
+          getUserRecipes(),
+        ]);
 
-      // =================================
-      // HANDLE API RESPONSE
-      // =================================
+        if (cancelled) return;
 
-      /*
-          Depending on recipeApi.js,
-          result can either be:
+        setMyRecipes(normalizeRecipeList(myResponse));
+        setUserRecipes(normalizeRecipeList(usersResponse));
+      } catch (fetchError) {
+        if (!cancelled) {
+          console.error("Failed to load community recipes:", fetchError);
 
-          [
-            recipe1,
-            recipe2
-          ]
+          setCommunityError(
+            fetchError.message || "Unable to load community recipes.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setCommunityLoading(false);
+        }
+      }
+    };
 
-          OR:
-
-          {
-            recipes: [...]
-          }
-        */
-
-      const myRecipeArray = Array.isArray(myResult)
-        ? myResult
-        : Array.isArray(myResult?.recipes)
-          ? myResult.recipes
-          : [];
-
-      const userRecipeArray = Array.isArray(userResult)
-        ? userResult
-        : Array.isArray(userResult?.recipes)
-          ? userResult.recipes
-          : [];
-
-      // =================================
-      // REMOVE DUPLICATES
-      // =================================
-
-      const uniqueMyRecipes = removeDuplicateRecipes(myRecipeArray);
-
-      const uniqueUserRecipes = removeDuplicateRecipes(userRecipeArray);
-
-      setMyRecipes(uniqueMyRecipes);
-
-      setUserRecipes(uniqueUserRecipes);
-    } catch (loadError) {
-      console.error("Community home error:", loadError);
-
-      setMyRecipes([]);
-
-      setUserRecipes([]);
-    } finally {
-      setCommunityLoading(false);
-    }
-  };
-
-  // =====================================
-  // ARCHIVE RECIPES EFFECT
-  // =====================================
-
-  useEffect(() => {
-    loadArchiveRecipes(filters, page);
-  }, [filters, page]);
-
-  // =====================================
-  // COMMUNITY RECIPES EFFECT
-  // =====================================
-
-  useEffect(() => {
     loadCommunityRecipes();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isLoggedIn]);
 
   // =====================================
-  // CATEGORY FROM HEADER
+  // SCROLL TO COLLECTIONS
   // =====================================
 
-  useEffect(() => {
-    const category = location.state?.category;
-
-    if (category !== undefined && category !== filters.category) {
-      setFilters((previous) => ({
-        ...previous,
-        category,
-      }));
-
-      setPage(1);
-
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [location.state]);
+  const scrollToCollections = () => {
+    window.setTimeout(() => {
+      document.querySelector(".home-collections-section")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
+  };
 
   // =====================================
-  // CATEGORY CHANGE
+  // CATEGORY
   // =====================================
 
   const handleCategoryChange = (category) => {
-    setFilters((previous) => ({
-      ...previous,
+    const newFilters = {
+      ...filters,
       category,
-    }));
+    };
 
-    setPage(1);
+    setHomeTab("our");
+    dispatch(setFilters(newFilters));
+
+    fetchRecipes(newFilters, 1);
+    scrollToCollections();
   };
 
   // =====================================
@@ -279,71 +337,61 @@ function Home() {
   // =====================================
 
   const handleSearch = (search) => {
-    setFilters((previous) => ({
-      ...previous,
+    const newFilters = {
+      ...filters,
       search,
-    }));
+    };
 
-    setPage(1);
+    dispatch(setFilters(newFilters));
+    fetchRecipes(newFilters, 1);
   };
 
   // =====================================
-  // FILTER CHANGE
+  // FILTERS
   // =====================================
 
-  const handleFiltersChange = (newFilters) => {
-    setFilters((previous) => ({
-      ...previous,
-      ...newFilters,
-    }));
+  const handleFilterChange = (newFilterValues) => {
+    const newFilters = {
+      ...filters,
+      ...newFilterValues,
+    };
 
-    setPage(1);
+    dispatch(setFilters(newFilters));
+    fetchRecipes(newFilters, 1);
   };
 
   // =====================================
   // CLEAR FILTERS
   // =====================================
 
-  const clearFilters = () => {
-    setFilters({
-      category: "",
-
-      search: "",
-
+  const handleClearFilters = () => {
+    const newFilters = {
+      ...filters,
       difficulty: "",
-
       subcategory: "",
-
       dishType: "",
-    });
+    };
 
-    setPage(1);
+    dispatch(setFilters(newFilters));
+    fetchRecipes(newFilters, 1);
   };
 
   // =====================================
   // PAGINATION
   // =====================================
 
-  const handlePreviousPage = () => {
-    if (page > 1) {
-      setPage((previous) => previous - 1);
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
+  const handlePageChange = (page) => {
+    fetchRecipes(filters, page);
+    scrollToCollections();
   };
 
-  const handleNextPage = () => {
-    if (page < totalPages) {
-      setPage((previous) => previous + 1);
+  // =====================================
+  // HERO BUTTON
+  // =====================================
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
+  const handleExploreRecipes = () => {
+    setHomeTab("our");
+    scrollToCollections();
   };
 
   // =====================================
@@ -354,273 +402,542 @@ function Home() {
     <div className="home-page">
       <Header onCategoryChange={handleCategoryChange} />
 
-      <main>
-        {/* =================================
-            HERO
-        ================================= */}
+      {/* =====================================
+          HERO + COOKING ANIMATION
+      ===================================== */}
 
-        <section className="home-hero">
-          <div className="home-hero-content">
-            <span className="home-hero-eyebrow">WELCOME TO SAVORLY</span>
+      <section className="hero-scroll-section">
+        <div className="hero-sticky">
+          <section className="hero-section">
+            <div className="hero-content">
+              <span className="hero-badge">🍳 Discover • Cook • Enjoy</span>
 
-            <h1>
-              Discover recipes
-              <br />
-              worth sharing.
-            </h1>
+              <h1>
+                Delicious recipes,
+                <br />
+                made for you.
+              </h1>
 
-            <p>
-              Explore delicious recipes, discover new flavours and share your
-              own creations with the Savorly community.
-            </p>
-
-            <button
-              type="button"
-              className="primary-button"
-              style={{
-                border: "none",
-                padding: "14px 22px",
-                borderRadius: "14px",
-                background: "linear-gradient(135deg, #f98654, #ef5d35)",
-                color: "#ffffff",
-                fontSize: "14px",
-                fontWeight: "700",
-                fontFamily: "inherit",
-                cursor: "pointer",
-                boxShadow: "0 10px 24px rgba(239, 93, 53, 0.25)",
-              }}
-              onClick={() => navigate("/community")}
-            >
-              Explore Community
-            </button>
-          </div>
-
-          <div className="hero-food-art">
-            <div className="hero-food-circle">🍲</div>
-          </div>
-        </section>
-
-        {/* =================================
-            SEARCH + FILTERS
-        ================================= */}
-
-        <section className="recipe-discovery-section">
-          <SearchBar onSearch={handleSearch} />
-
-          <FilterBar
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            onClear={clearFilters}
-          />
-        </section>
-
-        {/* =================================
-            OUR RECIPES
-        ================================= */}
-
-        <section id="our-recipes" className="home-recipe-section">
-          <div className="section-heading">
-            <div>
-              <span className="section-eyebrow">SAVORLY COLLECTION</span>
-
-              <h2>Our Recipes</h2>
-
-              <p>Carefully selected recipes from our archive.</p>
-            </div>
-          </div>
-
-          {/* LOADING */}
-
-          {loading && (
-            <div className="recipe-loading">
-              <div className="loading-spinner"></div>
-
-              <p>Discovering delicious recipes...</p>
-            </div>
-          )}
-
-          {/* ERROR */}
-
-          {!loading && error && (
-            <div className="recipe-error">
-              <p>{error}</p>
+              <p>
+                Explore delicious recipes for baking, healthy meals, quick
+                budgets and everyday inspiration.
+              </p>
 
               <button
                 type="button"
-                onClick={() => loadArchiveRecipes(filters, page)}
+                className="hero-button"
+                onClick={handleExploreRecipes}
               >
-                Try Again
+                Explore Recipes <span>→</span>
               </button>
             </div>
-          )}
 
-          {/* EMPTY */}
+            <div className="cooking-scene" ref={cookingSceneRef}>
+              <div
+                className="cook-glow"
+                style={{
+                  opacity: cookingProgress > 0 ? 1 : 0,
+                }}
+              />
 
-          {!loading && !error && recipes.length === 0 && (
-            <div className="recipe-empty">
-              <div className="recipe-empty-icon">🍽️</div>
+              <div
+                className="counter-shadow"
+                style={{
+                  opacity: cookingProgress > 0.05 ? 1 : 0,
+                  transform: `translateX(-50%) scaleX(${
+                    0.7 + cookingProgress * 0.3
+                  })`,
+                }}
+              />
 
-              <h3>No recipes found</h3>
-
-              <p>Try changing your search or filters.</p>
-
-              <button type="button" onClick={clearFilters}>
-                Clear Filters
-              </button>
-            </div>
-          )}
-
-          {/* RECIPE GRID */}
-
-          {!loading && !error && recipes.length > 0 && (
-            <>
-              <div className="home-recipe-grid">
-                {recipes.map((recipe, index) => (
-                  <RecipeCard
-                    key={getRecipeKey(recipe, index)}
-                    recipe={recipe}
-                  />
-                ))}
+              <div
+                className="pro-plate"
+                style={{
+                  opacity: Math.min(cookingProgress / 0.12, 1),
+                  transform: `translate(-50%, -50%) scale(${
+                    0.72 + Math.min(cookingProgress / 0.12, 1) * 0.28
+                  })`,
+                }}
+              >
+                <div className="plate-rim" />
+                <div className="plate-center" />
               </div>
 
-              {/* PAGINATION */}
+              <div
+                className="food-item carrot"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.12 && cookingProgress < 0.72 ? 1 : 0,
 
-              {totalPages > 1 && (
-                <div className="recipe-pagination">
-                  <button
-                    type="button"
-                    onClick={handlePreviousPage}
-                    disabled={page === 1}
-                  >
-                    ← Previous
-                  </button>
+                  transform:
+                    cookingProgress >= 0.12 && cookingProgress < 0.72
+                      ? "translate(0,0) rotate(0deg)"
+                      : "translate(-60px,-160px) rotate(-35deg)",
+                }}
+              >
+                <span />
+              </div>
 
-                  <span>
-                    Page {page} of {totalPages}
-                  </span>
+              <div
+                className="food-item tomato"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.18 && cookingProgress < 0.72 ? 1 : 0,
 
-                  <button
-                    type="button"
-                    onClick={handleNextPage}
-                    disabled={page === totalPages}
-                  >
-                    Next →
-                  </button>
+                  transform:
+                    cookingProgress >= 0.18 && cookingProgress < 0.72
+                      ? "translate(0,0) scale(1)"
+                      : "translate(55px,-165px) scale(.55)",
+                }}
+              >
+                <span />
+              </div>
+
+              <div
+                className="food-item broccoli"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.24 && cookingProgress < 0.72 ? 1 : 0,
+
+                  transform:
+                    cookingProgress >= 0.24 && cookingProgress < 0.72
+                      ? "translate(0,0) scale(1)"
+                      : "translate(-70px,-145px) scale(.55)",
+                }}
+              >
+                <span />
+              </div>
+
+              <div
+                className="food-item leaf"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.3 && cookingProgress < 0.72 ? 1 : 0,
+
+                  transform:
+                    cookingProgress >= 0.3 && cookingProgress < 0.72
+                      ? "translate(0,0) rotate(0deg)"
+                      : "translate(70px,-150px) rotate(45deg)",
+                }}
+              >
+                <span />
+              </div>
+
+              <div
+                className="pro-pan"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.3 && cookingProgress < 0.82 ? 1 : 0,
+
+                  transform: `translate(-50%,-50%) scale(${
+                    cookingProgress >= 0.3 ? 1 : 0.72
+                  })`,
+                }}
+              >
+                <div className="pan-inside" />
+                <div className="pan-handle" />
+              </div>
+
+              <div
+                className="pan-food-visual"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.34 && cookingProgress < 0.78 ? 1 : 0,
+                }}
+              >
+                <span className="food-dot dot-1" />
+                <span className="food-dot dot-2" />
+                <span className="food-dot dot-3" />
+                <span className="food-dot dot-4" />
+                <span className="food-dot dot-5" />
+              </div>
+
+              <div
+                className="pro-lid"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.4 && cookingProgress < 0.8 ? 1 : 0,
+
+                  transform:
+                    cookingProgress < 0.4
+                      ? "translate(-50%,-220px) rotate(-12deg)"
+                      : cookingProgress < 0.7
+                        ? "translate(-50%,0) rotate(0deg)"
+                        : "translate(-50%,-220px) rotate(12deg)",
+                }}
+              >
+                <div className="lid-top" />
+                <div className="lid-handle" />
+              </div>
+
+              <div
+                className="heat-lines"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.55 && cookingProgress < 0.72 ? 1 : 0,
+                }}
+              >
+                <span />
+                <span />
+                <span />
+              </div>
+
+              <div
+                className="final-food"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.72
+                      ? Math.min((cookingProgress - 0.72) / 0.1, 1)
+                      : 0,
+
+                  transform: `translate(-50%,-50%) scale(${
+                    cookingProgress >= 0.72 ? 1 : 0.45
+                  })`,
+                }}
+              >
+                <div className="dish-food">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <i />
+                  <i />
                 </div>
-              )}
-            </>
-          )}
-        </section>
+              </div>
 
-        {/* =================================
-            MY RECIPES
-        ================================= */}
+              <div
+                className="steam"
+                style={{
+                  opacity:
+                    cookingProgress >= 0.84
+                      ? Math.min((cookingProgress - 0.84) / 0.1, 1)
+                      : 0,
+                }}
+              >
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
 
-        {isLoggedIn && (
-          <section className="home-recipe-section community-home-section">
+      {/* =====================================
+          COLLECTION TABS
+      ===================================== */}
+
+      <section className="home-collections-section">
+        <div
+          className="home-collection-tabs"
+          role="tablist"
+          aria-label="Recipe collections"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={homeTab === "our"}
+            className={`home-collection-tab ${
+              homeTab === "our" ? "active" : ""
+            }`}
+            onClick={() => setHomeTab("our")}
+          >
+            <span>🍽️</span> Our Recipes
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={homeTab === "my"}
+            className={`home-collection-tab ${
+              homeTab === "my" ? "active" : ""
+            }`}
+            onClick={() => setHomeTab("my")}
+          >
+            <span>👨‍🍳</span> My Recipes
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={homeTab === "users"}
+            className={`home-collection-tab ${
+              homeTab === "users" ? "active" : ""
+            }`}
+            onClick={() => setHomeTab("users")}
+          >
+            <span>🌎</span> User Recipes
+          </button>
+        </div>
+
+        {/* =====================================
+            OUR RECIPES
+        ===================================== */}
+
+        {homeTab === "our" && (
+          <section className="recipes-section home-tab-content" role="tabpanel">
             <div className="section-heading">
               <div>
-                <span className="section-eyebrow">YOUR COLLECTION</span>
-
-                <h2>My Recipes</h2>
-
-                <p>Recipes you have created on Savorly.</p>
+                <span>OUR COLLECTION</span>
+                <h1>Our Recipes</h1>
               </div>
 
-              <button
-                type="button"
-                className="section-action-button"
-                onClick={() => navigate("/community")}
-              >
-                View All
-              </button>
+              <p>Find something delicious for every occasion.</p>
             </div>
 
-            {communityLoading ? (
-              <div className="recipe-loading">
-                <div className="loading-spinner"></div>
+            <SearchBar onSearch={handleSearch} />
 
-                <p>Loading your recipes...</p>
+            <FilterBar
+              difficulty={filters.difficulty}
+              subcategory={filters.subcategory}
+              dishType={filters.dishType}
+              onFilterChange={handleFilterChange}
+              onClear={handleClearFilters}
+            />
+
+            {loading && (
+              <div className="recipes-loading">
+                <div className="loading-spinner" />
+                <p>Finding delicious recipes...</p>
               </div>
-            ) : myRecipes.length === 0 ? (
-              <div className="recipe-empty compact">
-                <div className="recipe-empty-icon">👨‍🍳</div>
+            )}
 
-                <h3>No recipes yet</h3>
+            {error && (
+              <div className="recipe-error">
+                <p>{error}</p>
+              </div>
+            )}
 
-                <p>Create your first recipe and share it with the community.</p>
+            {!loading && !error && (
+              <>
+                {visibleRecipes.length > 0 ? (
+                  <div className="recipes-grid">
+                    {visibleRecipes.map((recipe, index) => (
+                      <RecipeCard
+                        key={recipe._id || recipe.id || recipe.url || index}
+                        recipe={recipe}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-recipes">
+                    <h3>No recipes found</h3>
+                    <p>Try changing your search or filters.</p>
+                  </div>
+                )}
 
+                {pagination.totalPages > 1 && (
+                  <div className="pagination">
+                    <button
+                      type="button"
+                      disabled={pagination.currentPage === 1}
+                      onClick={() =>
+                        handlePageChange(pagination.currentPage - 1)
+                      }
+                    >
+                      ← Previous
+                    </button>
+
+                    <span>
+                      Page {pagination.currentPage} of {pagination.totalPages}
+                    </span>
+
+                    <button
+                      type="button"
+                      disabled={
+                        pagination.currentPage === pagination.totalPages
+                      }
+                      onClick={() =>
+                        handlePageChange(pagination.currentPage + 1)
+                      }
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
+
+        {/* =====================================
+            MY RECIPES
+        ===================================== */}
+
+        {homeTab === "my" && (
+          <section
+            className="community-subsection home-tab-content"
+            role="tabpanel"
+          >
+            <div className="community-subsection-heading home-tab-heading">
+              <div>
+                <span>YOUR CREATIONS</span>
+                <h2>My Recipes</h2>
+                <p>All the delicious recipes you have created.</p>
+              </div>
+
+              {isLoggedIn && (
                 <button
                   type="button"
+                  className="create-recipe-button"
                   onClick={() => navigate("/create-recipe")}
                 >
-                  Create Recipe
+                  + Create Recipe
                 </button>
-              </div>
-            ) : (
-              <div className="home-recipe-grid">
-                {myRecipes.slice(0, 6).map((recipe, index) => (
-                  <RecipeCard
-                    key={getRecipeKey(recipe, `my-${index}`)}
-                    recipe={recipe}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* =================================
-            USER RECIPES
-        ================================= */}
-
-        {isLoggedIn && (
-          <section className="home-recipe-section community-home-section">
-            <div className="section-heading">
-              <div>
-                <span className="section-eyebrow">COMMUNITY</span>
-
-                <h2>User Recipes</h2>
-
-                <p>Discover recipes created by the Savorly community.</p>
-              </div>
-
-              <button
-                type="button"
-                className="section-action-button"
-                onClick={() => navigate("/community")}
-              >
-                View All
-              </button>
+              )}
             </div>
 
-            {communityLoading ? (
-              <div className="recipe-loading">
-                <div className="loading-spinner"></div>
-
-                <p>Loading community recipes...</p>
+            {!isLoggedIn ? (
+              <div className="empty-recipes home-community-message">
+                <h3>Sign in to see your recipes</h3>
+                <p>Log in to create and manage your own recipes.</p>
+                <button
+                  type="button"
+                  className="create-recipe-button"
+                  onClick={() => navigate("/login")}
+                >
+                  Login to Continue →
+                </button>
               </div>
-            ) : userRecipes.length === 0 ? (
-              <div className="recipe-empty compact">
-                <div className="recipe-empty-icon">🌎</div>
-
-                <h3>No community recipes</h3>
-
-                <p>Be the first to share your recipe.</p>
+            ) : communityLoading ? (
+              <div className="recipes-loading">
+                <div className="loading-spinner" />
+                <p>Loading your recipes...</p>
               </div>
+            ) : communityError ? (
+              <div className="recipe-error">
+                <p>{communityError}</p>
+              </div>
+            ) : myRecipes.length > 0 ? (
+              <>
+                <div className="recipes-grid">
+                  {myRecipes.slice(0, 3).map((recipe, index) => (
+                    <RecipeCard
+                      key={recipe._id || recipe.id || index}
+                      recipe={recipe}
+                    />
+                  ))}
+                </div>
+
+                <div className="home-view-all">
+                  <button
+                    type="button"
+                    className="home-view-all-button"
+                    onClick={() => navigate("/community?tab=my")}
+                  >
+                    View All My Recipes →
+                  </button>
+                </div>
+              </>
             ) : (
-              <div className="home-recipe-grid">
-                {userRecipes.slice(0, 6).map((recipe, index) => (
-                  <RecipeCard
-                    key={getRecipeKey(recipe, `user-${index}`)}
-                    recipe={recipe}
-                  />
-                ))}
+              <div className="empty-recipes home-community-message">
+                <h3>Your collection starts here</h3>
+                <p>Share your favourite dish by creating your first recipe.</p>
+                <button
+                  type="button"
+                  className="create-recipe-button"
+                  onClick={() => navigate("/create-recipe")}
+                >
+                  + Create Your First Recipe
+                </button>
               </div>
             )}
           </section>
         )}
-      </main>
+
+        {/* =====================================
+            USER RECIPES
+            Added user-recipes-tab class for
+            compact card styling only.
+        ===================================== */}
+
+        {homeTab === "users" && (
+          <section
+            className="community-subsection home-tab-content user-recipes-tab"
+            role="tabpanel"
+          >
+            <div className="community-subsection-heading home-tab-heading">
+              <div>
+                <span>FROM OUR COMMUNITY</span>
+                <h2>User Recipes</h2>
+                <p>Discover recipes shared by other home chefs.</p>
+              </div>
+
+              {isLoggedIn && (
+                <button
+                  type="button"
+                  className="create-recipe-button"
+                  onClick={() => navigate("/create-recipe")}
+                >
+                  + Share a Recipe
+                </button>
+              )}
+            </div>
+
+            {!isLoggedIn ? (
+              <div className="empty-recipes home-community-message">
+                <h3>Join the Savorly community</h3>
+                <p>
+                  Log in to explore community recipes and share your own
+                  creations.
+                </p>
+                <button
+                  type="button"
+                  className="create-recipe-button"
+                  onClick={() => navigate("/login")}
+                >
+                  Login to Continue →
+                </button>
+              </div>
+            ) : communityLoading ? (
+              <div className="recipes-loading">
+                <div className="loading-spinner" />
+                <p>Discovering community recipes...</p>
+              </div>
+            ) : communityError ? (
+              <div className="recipe-error">
+                <p>{communityError}</p>
+              </div>
+            ) : userRecipes.length > 0 ? (
+              <>
+                <div className="recipes-grid">
+                  {userRecipes.slice(0, 3).map((recipe, index) => (
+                    <RecipeCard
+                      key={recipe._id || recipe.id || index}
+                      recipe={recipe}
+                    />
+                  ))}
+                </div>
+
+                <div className="home-view-all">
+                  <button
+                    type="button"
+                    className="home-view-all-button"
+                    onClick={() => navigate("/community?tab=users")}
+                  >
+                    View All User Recipes →
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="empty-recipes home-community-message">
+                <h3>No community recipes yet</h3>
+                <p>Be one of the first chefs to share a recipe.</p>
+                <button
+                  type="button"
+                  className="create-recipe-button"
+                  onClick={() => navigate("/create-recipe")}
+                >
+                  + Share a Recipe
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+      </section>
+
+      <Footer />
     </div>
   );
 }

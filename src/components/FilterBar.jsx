@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
-
 import { getFilterOptions } from "../services/recipeApi";
 
-function FilterBar({ filters, onFiltersChange, onClear }) {
+function FilterBar({
+  filters,
+  onFiltersChange,
+  onClear,
+  difficulty = "",
+  subcategory = "",
+  dishType = "",
+  onFilterChange,
+}) {
   const [options, setOptions] = useState({
     difficulties: [],
     subcategories: [],
@@ -10,6 +17,17 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
   });
 
   const [loading, setLoading] = useState(true);
+
+  // Support both the current Home.jsx props
+  // and the previous filters/onFiltersChange props.
+  const currentFilters = filters || {
+    difficulty,
+    subcategory,
+    dishType,
+  };
+
+  const changeFilters =
+    onFiltersChange || onFilterChange;
 
   // =====================================
   // LOAD FILTER OPTIONS
@@ -20,30 +38,22 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
 
     const fetchFilterOptions = async () => {
       try {
-        setLoading(true);
-
         const data = await getFilterOptions();
 
-        if (!mounted) {
-          return;
-        }
-
-        const difficulties = Array.isArray(data?.difficulties)
-          ? data.difficulties
-          : [];
-
-        const subcategories = Array.isArray(data?.subcategories)
-          ? data.subcategories
-          : [];
-
-        const dishTypes = Array.isArray(data?.dishTypes)
-          ? data.dishTypes
-          : [];
+        if (!mounted) return;
 
         setOptions({
-          difficulties,
-          subcategories,
-          dishTypes,
+          difficulties: Array.isArray(data?.difficulties)
+            ? data.difficulties
+            : [],
+
+          subcategories: Array.isArray(data?.subcategories)
+            ? data.subcategories
+            : [],
+
+          dishTypes: Array.isArray(data?.dishTypes)
+            ? data.dishTypes
+            : [],
         });
       } catch (error) {
         console.error("Filter options error:", error);
@@ -66,28 +76,36 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
   // =====================================
 
   const handleChange = (field, value) => {
-    onFiltersChange({
+    if (typeof changeFilters !== "function") {
+      console.error(
+        "FilterBar: onFilterChange callback is missing."
+      );
+      return;
+    }
+
+    changeFilters({
       [field]: value,
     });
   };
 
   // =====================================
-  // CLEAR FILTERS
-  // =====================================
-
-  const hasActiveFilters = Boolean(
-    filters?.difficulty ||
-      filters?.subcategory ||
-      filters?.dishType,
-  );
-
-  // =====================================
   // CURRENT VALUES
   // =====================================
 
-  const currentDifficulty = filters?.difficulty || "";
-  const currentSubcategory = filters?.subcategory || "";
-  const currentDishType = filters?.dishType || "";
+  const currentDifficulty =
+    currentFilters?.difficulty || "";
+
+  const currentSubcategory =
+    currentFilters?.subcategory || "";
+
+  const currentDishType =
+    currentFilters?.dishType || "";
+
+  const hasActiveFilters = Boolean(
+    currentDifficulty ||
+    currentSubcategory ||
+    currentDishType
+  );
 
   // =====================================
   // RENDER
@@ -100,20 +118,16 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
       </div>
 
       <div className="filter-controls">
-
-        {/* ================================
-            DIFFICULTY
-        ================================= */}
+        {/* DIFFICULTY */}
 
         <select
           value={currentDifficulty}
-          onChange={(event) => {
-            const value = event.target.value;
-
-            console.log("Difficulty selected:", value);
-
-            handleChange("difficulty", value);
-          }}
+          onChange={(event) =>
+            handleChange(
+              "difficulty",
+              event.target.value
+            )
+          }
           disabled={loading}
         >
           <option value="">All Difficulties</option>
@@ -128,18 +142,16 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
           ))}
         </select>
 
-        {/* ================================
-            SUBCATEGORY
-        ================================= */}
+        {/* SUBCATEGORY */}
 
         <select
           value={currentSubcategory}
-          onChange={(event) => {
+          onChange={(event) =>
             handleChange(
               "subcategory",
-              event.target.value,
-            );
-          }}
+              event.target.value
+            )
+          }
           disabled={loading}
         >
           <option value="">All Subcategories</option>
@@ -154,18 +166,16 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
           ))}
         </select>
 
-        {/* ================================
-            DISH TYPE
-        ================================= */}
+        {/* DISH TYPE */}
 
         <select
           value={currentDishType}
-          onChange={(event) => {
+          onChange={(event) =>
             handleChange(
               "dishType",
-              event.target.value,
-            );
-          }}
+              event.target.value
+            )
+          }
           disabled={loading}
         >
           <option value="">All Dish Types</option>
@@ -180,9 +190,7 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
           ))}
         </select>
 
-        {/* ================================
-            CLEAR
-        ================================= */}
+        {/* CLEAR FILTERS */}
 
         <button
           type="button"
@@ -200,4 +208,3 @@ function FilterBar({ filters, onFiltersChange, onClear }) {
 }
 
 export default FilterBar;
-

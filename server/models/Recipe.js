@@ -1,3 +1,4 @@
+
 /* eslint-disable no-undef */
 const mongoose = require("mongoose");
 
@@ -23,45 +24,14 @@ const ratingSchema = new mongoose.Schema(
 
 const nutrientSchema = new mongoose.Schema(
   {
-    kcal: {
-      type: String,
-      default: "",
-    },
-
-    fat: {
-      type: String,
-      default: "",
-    },
-
-    saturates: {
-      type: String,
-      default: "",
-    },
-
-    carbs: {
-      type: String,
-      default: "",
-    },
-
-    sugars: {
-      type: String,
-      default: "",
-    },
-
-    fibre: {
-      type: String,
-      default: "",
-    },
-
-    protein: {
-      type: String,
-      default: "",
-    },
-
-    salt: {
-      type: String,
-      default: "",
-    },
+    kcal: { type: String, default: "" },
+    fat: { type: String, default: "" },
+    saturates: { type: String, default: "" },
+    carbs: { type: String, default: "" },
+    sugars: { type: String, default: "" },
+    fibre: { type: String, default: "" },
+    protein: { type: String, default: "" },
+    salt: { type: String, default: "" },
   },
   {
     _id: false,
@@ -189,9 +159,7 @@ const recipeSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // ==================================================
     // RECIPE TYPE
-    // ==================================================
 
     recipeType: {
       type: String,
@@ -200,17 +168,7 @@ const recipeSchema = new mongoose.Schema(
       index: true,
     },
 
-    // ==================================================
     // PUBLISH STATUS
-    // ==================================================
-    //
-    // archive recipes:
-    // isPublished is not important
-    //
-    // community recipes:
-    // false = private draft
-    // true  = visible in Community
-    //
 
     isPublished: {
       type: Boolean,
@@ -218,9 +176,7 @@ const recipeSchema = new mongoose.Schema(
       index: true,
     },
 
-    // ==================================================
     // RECIPE OWNER
-    // ==================================================
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -229,9 +185,7 @@ const recipeSchema = new mongoose.Schema(
       index: true,
     },
 
-    // ==================================================
     // RATING
-    // ==================================================
 
     rating: {
       type: Number,
@@ -268,11 +222,7 @@ const recipeSchema = new mongoose.Schema(
   },
 );
 
-/*
-|--------------------------------------------------------------------------
-| Text Search Index
-|--------------------------------------------------------------------------
-*/
+// Text Search Index
 
 recipeSchema.index({
   name: "text",
@@ -285,21 +235,7 @@ recipeSchema.index({
   difficulty: "text",
 });
 
-/*
-|--------------------------------------------------------------------------
-| Prevent Duplicate Archive Recipe IDs
-|--------------------------------------------------------------------------
-|
-| Only archive recipes are affected.
-|
-| Example:
-|
-| archive + id = abc123
-| archive + id = abc123   ❌ not allowed
-|
-| community + no id       ✅ allowed
-|
-*/
+// Prevent Duplicate Archive Recipe IDs
 
 recipeSchema.index(
   { id: 1 },

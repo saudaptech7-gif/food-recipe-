@@ -1,39 +1,71 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+// =====================================
+// NORMALIZE FAVORITE ID
+// =====================================
+
+function getFavoriteId(item) {
+  if (item === null || item === undefined) {
+    return "";
+  }
+
+  if (typeof item === "string" || typeof item === "number") {
+    return String(item).trim();
+  }
+
+  if (typeof item === "object") {
+    if (item.recipe !== undefined) {
+      return getFavoriteId(item.recipe);
+    }
+
+    const id = item._id ?? item.id ?? item.recipeId;
+
+    return id === undefined || id === null ? "" : String(id).trim();
+  }
+
+  return "";
+}
+
+function normalizeFavoriteIds(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return [...new Set(items.map(getFavoriteId).filter(Boolean))];
+}
+
+// =====================================
+// INITIAL STATE
+// =====================================
+
 const initialState = {
   favorites: [],
   loading: false,
+  loaded: false,
   error: null,
 };
 
+// =====================================
+// FAVORITE SLICE
+// =====================================
+
 const favoriteSlice = createSlice({
   name: "favorites",
-
   initialState,
 
   reducers: {
-    // =====================================
-    // SET ALL FAVORITES
-    // =====================================
-
     setFavorites: (state, action) => {
-      const favorites = Array.isArray(action.payload) ? action.payload : [];
+      state.favorites = normalizeFavoriteIds(action.payload);
 
-      state.favorites = favorites.filter(Boolean).map((id) => String(id));
-
+      state.loaded = true;
+      state.loading = false;
       state.error = null;
     },
 
-    // =====================================
-    // ADD FAVORITE
-    // =====================================
-
     addFavoriteToState: (state, action) => {
-      if (!action.payload) {
-        return;
-      }
+      const favoriteId = getFavoriteId(action.payload);
 
-      const favoriteId = String(action.payload);
+      if (!favoriteId) return;
 
       if (!state.favorites.includes(favoriteId)) {
         state.favorites.push(favoriteId);
@@ -42,47 +74,28 @@ const favoriteSlice = createSlice({
       state.error = null;
     },
 
-    // =====================================
-    // REMOVE FAVORITE
-    // =====================================
-
     removeFavoriteFromState: (state, action) => {
-      if (!action.payload) {
-        return;
-      }
+      const favoriteId = getFavoriteId(action.payload);
 
-      const favoriteId = String(action.payload);
+      if (!favoriteId) return;
 
-      state.favorites = state.favorites.filter(
-        (id) => String(id) !== favoriteId,
-      );
+      state.favorites = state.favorites.filter((id) => id !== favoriteId);
 
       state.error = null;
     },
-
-    // =====================================
-    // LOADING
-    // =====================================
 
     setFavoriteLoading: (state, action) => {
       state.loading = Boolean(action.payload);
     },
 
-    // =====================================
-    // ERROR
-    // =====================================
-
     setFavoriteError: (state, action) => {
       state.error = action.payload || null;
     },
 
-    // =====================================
-    // CLEAR FAVORITES
-    // =====================================
-
     clearFavorites: (state) => {
       state.favorites = [];
       state.loading = false;
+      state.loaded = false;
       state.error = null;
     },
   },
