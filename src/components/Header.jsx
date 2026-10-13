@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -119,17 +120,20 @@ function Header({ onCategoryChange }) {
     auth.isAuthenticated ||
       auth.isLoggedIn ||
       auth.token ||
-      user,
+      user
   );
 
   const [recipesOpen, setRecipesOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const recipesDropdownRef = useRef(null);
+  const profileDropdownRef = useRef(null);
+
   const [chefNameOverride, setChefNameOverride] = useState(
     sessionCache.profile?.chef ||
       sessionCache.profile?.chefName ||
-      "",
+      ""
   );
 
   const [sessionStatus, setSessionStatus] = useState(() => {
@@ -160,6 +164,51 @@ function Header({ onCategoryChange }) {
     user?.username ||
     "Chef";
 
+  // Close dropdowns when clicking or touching outside.
+  useEffect(() => {
+    const handleOutsideInteraction = (event) => {
+      const target = event.target;
+
+      if (
+        recipesDropdownRef.current &&
+        !recipesDropdownRef.current.contains(target)
+      ) {
+        setRecipesOpen(false);
+      }
+
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(target)
+      ) {
+        setProfileOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setRecipesOpen(false);
+        setProfileOpen(false);
+        setMobileOpen(false);
+      }
+    };
+
+    document.addEventListener(
+      "pointerdown",
+      handleOutsideInteraction
+    );
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener(
+        "pointerdown",
+        handleOutsideInteraction
+      );
+
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -183,7 +232,7 @@ function Header({ onCategoryChange }) {
       setChefNameOverride(
         updatedProfile.chef ||
           updatedProfile.chefName ||
-          "",
+          ""
       );
 
       setSessionStatus("authenticated");
@@ -200,7 +249,7 @@ function Header({ onCategoryChange }) {
           setChefNameOverride(
             sessionCache.profile?.chef ||
               sessionCache.profile?.chefName ||
-              "",
+              ""
           );
 
           return;
@@ -222,7 +271,7 @@ function Header({ onCategoryChange }) {
           setChefNameOverride(
             result.profile?.chef ||
               result.profile?.chefName ||
-              "",
+              ""
           );
 
           setSessionStatus("authenticated");
@@ -238,7 +287,7 @@ function Header({ onCategoryChange }) {
             dispatch(clearFavorites());
 
             window.dispatchEvent(
-              new Event("savorly:logout"),
+              new Event("savorly:logout")
             );
           }
         }
@@ -261,7 +310,7 @@ function Header({ onCategoryChange }) {
 
     window.addEventListener(
       "savorly:user-updated",
-      handleUserUpdated,
+      handleUserUpdated
     );
 
     return () => {
@@ -269,7 +318,7 @@ function Header({ onCategoryChange }) {
 
       window.removeEventListener(
         "savorly:user-updated",
-        handleUserUpdated,
+        handleUserUpdated
       );
     };
   }, [reduxIsLoggedIn, dispatch]);
@@ -308,7 +357,7 @@ function Header({ onCategoryChange }) {
       dispatch(clearFavorites());
 
       window.dispatchEvent(
-        new Event("savorly:logout"),
+        new Event("savorly:logout")
       );
 
       setChefNameOverride("");
@@ -332,6 +381,7 @@ function Header({ onCategoryChange }) {
       }`}
     >
       <div className="savorly-header-inner">
+        {/* Brand */}
         <button
           type="button"
           className="savorly-brand"
@@ -351,6 +401,7 @@ function Header({ onCategoryChange }) {
           <span>Savorly</span>
         </button>
 
+        {/* Navigation */}
         <nav
           className={`savorly-nav${
             mobileOpen ? " mobile-open" : ""
@@ -366,7 +417,11 @@ function Header({ onCategoryChange }) {
             Home
           </NavLink>
 
-          <div className="savorly-dropdown">
+          {/* Recipes dropdown */}
+          <div
+            className="savorly-dropdown"
+            ref={recipesDropdownRef}
+          >
             <button
               type="button"
               className={`savorly-nav-link savorly-dropdown-trigger${
@@ -396,7 +451,9 @@ function Header({ onCategoryChange }) {
                     type="button"
                     key={category}
                     className="savorly-dropdown-item"
-                    onClick={() => handleCategorySelect(category)}
+                    onClick={() =>
+                      handleCategorySelect(category)
+                    }
                   >
                     {category}
                   </button>
@@ -424,9 +481,13 @@ function Header({ onCategoryChange }) {
           )}
         </nav>
 
+        {/* Header actions */}
         <div className="savorly-header-actions">
           {isLoggedIn ? (
-            <div className="savorly-dropdown savorly-profile-dropdown">
+            <div
+              className="savorly-dropdown savorly-profile-dropdown"
+              ref={profileDropdownRef}
+            >
               <button
                 type="button"
                 className="savorly-profile-trigger"
@@ -535,11 +596,16 @@ function Header({ onCategoryChange }) {
             </div>
           )}
 
+          {/* Mobile menu button */}
           <button
             type="button"
             className="savorly-mobile-toggle"
-            onClick={() => setMobileOpen((open) => !open)}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            onClick={() =>
+              setMobileOpen((open) => !open)
+            }
+            aria-label={
+              mobileOpen ? "Close menu" : "Open menu"
+            }
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? "✕" : "☰"}

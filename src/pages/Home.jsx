@@ -1,3 +1,4 @@
+
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 
@@ -27,17 +28,14 @@ import Footer from "../components/Footer";
 import Loading from "../components/Loading";
 
 // =====================================
-// NORMALIZE RECIPE API RESPONSE
+// NORMALIZE API RESPONSE
 // =====================================
 
 function extractRecipes(response) {
   const payload = response?.data ?? response;
 
   if (Array.isArray(payload)) {
-    return {
-      recipes: payload,
-      meta: {},
-    };
+    return { recipes: payload, meta: {} };
   }
 
   const possibleLists = [
@@ -52,13 +50,13 @@ function extractRecipes(response) {
 
   return {
     recipes,
-    meta: payload?.pagination || payload?.data?.pagination || payload || {},
+    meta:
+      payload?.pagination ||
+      payload?.data?.pagination ||
+      payload ||
+      {},
   };
 }
-
-// =====================================
-// COMMUNITY API RESPONSE
-// =====================================
 
 function normalizeRecipeList(response) {
   return extractRecipes(response).recipes;
@@ -70,7 +68,9 @@ function normalizeRecipeList(response) {
 
 function hasNutritionData(recipe) {
   const nutrition =
-    recipe?.nutrients ?? recipe?.nutrition ?? recipe?.nutritionalInfo;
+    recipe?.nutrients ??
+    recipe?.nutrition ??
+    recipe?.nutritionalInfo;
 
   if (nutrition === undefined || nutrition === null) {
     return true;
@@ -114,7 +114,7 @@ function hasNutritionData(recipe) {
 }
 
 // =====================================
-// HOME
+// HOME PAGE
 // =====================================
 
 function Home() {
@@ -132,9 +132,7 @@ function Home() {
   const [communityLoading, setCommunityLoading] = useState(false);
   const [communityError, setCommunityError] = useState("");
 
-  // =====================================
-  // REDUX STATE
-  // =====================================
+  // Redux state
 
   const recipesState = useSelector((state) => state.recipes);
 
@@ -161,29 +159,33 @@ function Home() {
 
   const visibleRecipes = recipes.filter(hasNutritionData);
 
-  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const isLoggedIn = useSelector(
+    (state) => state.auth.isLoggedIn,
+  );
 
   // =====================================
-  // SCROLL COOKING ANIMATION
+  // COOKING SCROLL ANIMATION
   // =====================================
 
   useEffect(() => {
     const handleScroll = () => {
       const scene = cookingSceneRef.current;
-
       if (!scene) return;
 
       const section = scene.closest(".hero-scroll-section");
-
       if (!section) return;
 
-      const scrollDistance = section.offsetHeight - window.innerHeight;
+      const scrollDistance =
+        section.offsetHeight - window.innerHeight;
 
       if (scrollDistance <= 0) return;
 
       const rect = section.getBoundingClientRect();
 
-      const progress = Math.min(Math.max(-rect.top / scrollDistance, 0), 1);
+      const progress = Math.min(
+        Math.max(-rect.top / scrollDistance, 0),
+        1,
+      );
 
       setCookingProgress(progress);
     };
@@ -222,24 +224,32 @@ function Home() {
 
       dispatch(
         setPagination({
-          currentPage: Number(meta.currentPage ?? meta.page) || page,
-          totalPages: Number(meta.totalPages ?? meta.pages) || 1,
+          currentPage:
+            Number(meta.currentPage ?? meta.page) || page,
+          totalPages:
+            Number(meta.totalPages ?? meta.pages) || 1,
           totalRecipes:
-            Number(meta.totalRecipes ?? meta.total) || result.recipes.length,
+            Number(meta.totalRecipes ?? meta.total) ||
+            result.recipes.length,
         }),
       );
     } catch (fetchError) {
-      console.error("Failed to fetch archive recipes:", fetchError);
+      console.error(
+        "Failed to fetch archive recipes:",
+        fetchError,
+      );
 
-      dispatch(setError(fetchError.message || "Failed to load recipes."));
+      dispatch(
+        setError(
+          fetchError.message || "Failed to load recipes.",
+        ),
+      );
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  // =====================================
-  // INITIAL FETCH
-  // =====================================
+  // Initial archive fetch
 
   useEffect(() => {
     fetchRecipes(filters, 1);
@@ -276,10 +286,14 @@ function Home() {
         setUserRecipes(normalizeRecipeList(usersResponse));
       } catch (fetchError) {
         if (!cancelled) {
-          console.error("Failed to load community recipes:", fetchError);
+          console.error(
+            "Failed to load community recipes:",
+            fetchError,
+          );
 
           setCommunityError(
-            fetchError.message || "Unable to load community recipes.",
+            fetchError.message ||
+              "Unable to load community recipes.",
           );
         }
       } finally {
@@ -302,15 +316,17 @@ function Home() {
 
   const scrollToCollections = () => {
     window.setTimeout(() => {
-      document.querySelector(".home-collections-section")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      document
+        .querySelector(".home-collections-section")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
     }, 100);
   };
 
   // =====================================
-  // CATEGORY
+  // CATEGORY CHANGE
   // =====================================
 
   const handleCategoryChange = (category) => {
@@ -321,7 +337,6 @@ function Home() {
 
     setHomeTab("our");
     dispatch(setFilters(newFilters));
-
     fetchRecipes(newFilters, 1);
     scrollToCollections();
   };
@@ -353,10 +368,6 @@ function Home() {
     dispatch(setFilters(newFilters));
     fetchRecipes(newFilters, 1);
   };
-
-  // =====================================
-  // CLEAR FILTERS
-  // =====================================
 
   const handleClearFilters = () => {
     const newFilters = {
@@ -396,13 +407,15 @@ function Home() {
     <div className="home-page">
       <Header onCategoryChange={handleCategoryChange} />
 
-      {/* HERO + COOKING ANIMATION */}
+      {/* HERO AND COOKING ANIMATION */}
 
       <section className="hero-scroll-section">
         <div className="hero-sticky">
           <section className="hero-section">
             <div className="hero-content">
-              <span className="hero-badge">🍳 Discover • Cook • Enjoy</span>
+              <span className="hero-badge">
+                🍳 Discover • Cook • Enjoy
+              </span>
 
               <h1>
                 Delicious recipes,
@@ -411,8 +424,8 @@ function Home() {
               </h1>
 
               <p>
-                Explore delicious recipes for baking, healthy meals, quick
-                budgets and everyday inspiration.
+                Explore delicious recipes for baking, healthy meals,
+                quick budgets and everyday inspiration.
               </p>
 
               <button
@@ -424,7 +437,10 @@ function Home() {
               </button>
             </div>
 
-            <div className="cooking-scene" ref={cookingSceneRef}>
+            <div
+              className="cooking-scene"
+              ref={cookingSceneRef}
+            >
               <div
                 className="cook-glow"
                 style={{
@@ -447,7 +463,8 @@ function Home() {
                 style={{
                   opacity: Math.min(cookingProgress / 0.12, 1),
                   transform: `translate(-50%, -50%) scale(${
-                    0.72 + Math.min(cookingProgress / 0.12, 1) * 0.28
+                    0.72 +
+                    Math.min(cookingProgress / 0.12, 1) * 0.28
                   })`,
                 }}
               >
@@ -459,9 +476,13 @@ function Home() {
                 className="food-item carrot"
                 style={{
                   opacity:
-                    cookingProgress >= 0.12 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.12 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
                   transform:
-                    cookingProgress >= 0.12 && cookingProgress < 0.72
+                    cookingProgress >= 0.12 &&
+                    cookingProgress < 0.72
                       ? "translate(0,0) rotate(0deg)"
                       : "translate(-60px,-160px) rotate(-35deg)",
                 }}
@@ -473,9 +494,13 @@ function Home() {
                 className="food-item tomato"
                 style={{
                   opacity:
-                    cookingProgress >= 0.18 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.18 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
                   transform:
-                    cookingProgress >= 0.18 && cookingProgress < 0.72
+                    cookingProgress >= 0.18 &&
+                    cookingProgress < 0.72
                       ? "translate(0,0) scale(1)"
                       : "translate(55px,-165px) scale(.55)",
                 }}
@@ -487,9 +512,13 @@ function Home() {
                 className="food-item broccoli"
                 style={{
                   opacity:
-                    cookingProgress >= 0.24 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.24 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
                   transform:
-                    cookingProgress >= 0.24 && cookingProgress < 0.72
+                    cookingProgress >= 0.24 &&
+                    cookingProgress < 0.72
                       ? "translate(0,0) scale(1)"
                       : "translate(-70px,-145px) scale(.55)",
                 }}
@@ -501,9 +530,13 @@ function Home() {
                 className="food-item leaf"
                 style={{
                   opacity:
-                    cookingProgress >= 0.3 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.3 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
                   transform:
-                    cookingProgress >= 0.3 && cookingProgress < 0.72
+                    cookingProgress >= 0.3 &&
+                    cookingProgress < 0.72
                       ? "translate(0,0) rotate(0deg)"
                       : "translate(70px,-150px) rotate(45deg)",
                 }}
@@ -515,7 +548,10 @@ function Home() {
                 className="pro-pan"
                 style={{
                   opacity:
-                    cookingProgress >= 0.3 && cookingProgress < 0.82 ? 1 : 0,
+                    cookingProgress >= 0.3 &&
+                    cookingProgress < 0.82
+                      ? 1
+                      : 0,
                   transform: `translate(-50%,-50%) scale(${
                     cookingProgress >= 0.3 ? 1 : 0.72
                   })`,
@@ -529,7 +565,10 @@ function Home() {
                 className="pan-food-visual"
                 style={{
                   opacity:
-                    cookingProgress >= 0.34 && cookingProgress < 0.78 ? 1 : 0,
+                    cookingProgress >= 0.34 &&
+                    cookingProgress < 0.78
+                      ? 1
+                      : 0,
                 }}
               >
                 <span className="food-dot dot-1" />
@@ -543,7 +582,10 @@ function Home() {
                 className="pro-lid"
                 style={{
                   opacity:
-                    cookingProgress >= 0.4 && cookingProgress < 0.8 ? 1 : 0,
+                    cookingProgress >= 0.4 &&
+                    cookingProgress < 0.8
+                      ? 1
+                      : 0,
                   transform:
                     cookingProgress < 0.4
                       ? "translate(-50%,-220px) rotate(-12deg)"
@@ -560,7 +602,10 @@ function Home() {
                 className="heat-lines"
                 style={{
                   opacity:
-                    cookingProgress >= 0.55 && cookingProgress < 0.72 ? 1 : 0,
+                    cookingProgress >= 0.55 &&
+                    cookingProgress < 0.72
+                      ? 1
+                      : 0,
                 }}
               >
                 <span />
@@ -573,7 +618,10 @@ function Home() {
                 style={{
                   opacity:
                     cookingProgress >= 0.72
-                      ? Math.min((cookingProgress - 0.72) / 0.1, 1)
+                      ? Math.min(
+                          (cookingProgress - 0.72) / 0.1,
+                          1,
+                        )
                       : 0,
                   transform: `translate(-50%,-50%) scale(${
                     cookingProgress >= 0.72 ? 1 : 0.45
@@ -596,7 +644,10 @@ function Home() {
                 style={{
                   opacity:
                     cookingProgress >= 0.84
-                      ? Math.min((cookingProgress - 0.84) / 0.1, 1)
+                      ? Math.min(
+                          (cookingProgress - 0.84) / 0.1,
+                          1,
+                        )
                       : 0,
                 }}
               >
@@ -609,9 +660,34 @@ function Home() {
         </div>
       </section>
 
-      {/* COLLECTION TABS */}
+      {/* RECIPE COLLECTIONS */}
 
       <section className="home-collections-section">
+        {/* BEAUTIFUL MAIN HEADING */}
+
+        <div className="home-section-intro">
+          <span className="home-section-eyebrow">
+            DISCOVER YOUR NEXT FAVORITE
+          </span>
+
+          <h2>
+            Explore Our <span>Recipes</span>
+          </h2>
+
+          <p>
+            From everyday meals to special treats, discover delicious
+            ideas for every occasion.
+          </p>
+
+          <div className="home-section-divider">
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+
+        {/* COLLECTION TABS */}
+
         <div
           className="home-collection-tabs"
           role="tablist"
@@ -626,7 +702,8 @@ function Home() {
             }`}
             onClick={() => setHomeTab("our")}
           >
-            <span>🍽️</span> Our Recipes
+            <span className="home-tab-icon">🍽️</span>
+            <span>Our Recipes</span>
           </button>
 
           <button
@@ -638,7 +715,8 @@ function Home() {
             }`}
             onClick={() => setHomeTab("my")}
           >
-            <span>👨‍🍳</span> My Recipes
+            <span className="home-tab-icon">👨‍🍳</span>
+            <span>My Recipes</span>
           </button>
 
           <button
@@ -650,21 +728,28 @@ function Home() {
             }`}
             onClick={() => setHomeTab("users")}
           >
-            <span>🌎</span> User Recipes
+            <span className="home-tab-icon">🌎</span>
+            <span>User Recipes</span>
           </button>
         </div>
 
         {/* OUR RECIPES */}
 
         {homeTab === "our" && (
-          <section className="recipes-section home-tab-content" role="tabpanel">
+          <section
+            className="recipes-section home-tab-content"
+            role="tabpanel"
+          >
             <div className="section-heading">
               <div>
-                <span>OUR COLLECTION</span>
-                <h1>Our Recipes</h1>
+                <span>HANDPICKED FOR YOU</span>
+                <h2>Our Recipes</h2>
               </div>
 
-              <p>Find something delicious for every occasion.</p>
+              <p>
+                Delicious ideas, inspiring flavors, and meals
+                worth sharing.
+              </p>
             </div>
 
             <SearchBar onSearch={handleSearch} />
@@ -695,7 +780,12 @@ function Home() {
                   <div className="recipes-grid">
                     {visibleRecipes.map((recipe, index) => (
                       <RecipeCard
-                        key={recipe._id || recipe.id || recipe.url || index}
+                        key={
+                          recipe._id ||
+                          recipe.id ||
+                          recipe.url ||
+                          index
+                        }
                         recipe={recipe}
                       />
                     ))}
@@ -713,23 +803,29 @@ function Home() {
                       type="button"
                       disabled={pagination.currentPage === 1}
                       onClick={() =>
-                        handlePageChange(pagination.currentPage - 1)
+                        handlePageChange(
+                          pagination.currentPage - 1,
+                        )
                       }
                     >
                       ← Previous
                     </button>
 
                     <span>
-                      Page {pagination.currentPage} of {pagination.totalPages}
+                      Page {pagination.currentPage} of{" "}
+                      {pagination.totalPages}
                     </span>
 
                     <button
                       type="button"
                       disabled={
-                        pagination.currentPage === pagination.totalPages
+                        pagination.currentPage ===
+                        pagination.totalPages
                       }
                       onClick={() =>
-                        handlePageChange(pagination.currentPage + 1)
+                        handlePageChange(
+                          pagination.currentPage + 1,
+                        )
                       }
                     >
                       Next →
@@ -770,6 +866,7 @@ function Home() {
               <div className="empty-recipes home-community-message">
                 <h3>Sign in to see your recipes</h3>
                 <p>Log in to create and manage your own recipes.</p>
+
                 <button
                   type="button"
                   className="create-recipe-button"
@@ -801,7 +898,9 @@ function Home() {
                   <button
                     type="button"
                     className="home-view-all-button"
-                    onClick={() => navigate("/community?tab=my")}
+                    onClick={() =>
+                      navigate("/community?tab=my")
+                    }
                   >
                     View All My Recipes →
                   </button>
@@ -810,7 +909,11 @@ function Home() {
             ) : (
               <div className="empty-recipes home-community-message">
                 <h3>Your collection starts here</h3>
-                <p>Share your favourite dish by creating your first recipe.</p>
+                <p>
+                  Share your favourite dish by creating your first
+                  recipe.
+                </p>
+
                 <button
                   type="button"
                   className="create-recipe-button"
@@ -834,7 +937,9 @@ function Home() {
               <div>
                 <span>FROM OUR COMMUNITY</span>
                 <h2>User Recipes</h2>
-                <p>Discover recipes shared by other home chefs.</p>
+                <p>
+                  Discover recipes shared by other home chefs.
+                </p>
               </div>
 
               {isLoggedIn && (
@@ -852,9 +957,10 @@ function Home() {
               <div className="empty-recipes home-community-message">
                 <h3>Join the Savorly community</h3>
                 <p>
-                  Log in to explore community recipes and share your own
-                  creations.
+                  Log in to explore community recipes and share your
+                  own creations.
                 </p>
+
                 <button
                   type="button"
                   className="create-recipe-button"
@@ -886,7 +992,9 @@ function Home() {
                   <button
                     type="button"
                     className="home-view-all-button"
-                    onClick={() => navigate("/community?tab=users")}
+                    onClick={() =>
+                      navigate("/community?tab=users")
+                    }
                   >
                     View All User Recipes →
                   </button>
@@ -895,7 +1003,10 @@ function Home() {
             ) : (
               <div className="empty-recipes home-community-message">
                 <h3>No community recipes yet</h3>
-                <p>Be one of the first chefs to share a recipe.</p>
+                <p>
+                  Be one of the first chefs to share a recipe.
+                </p>
+
                 <button
                   type="button"
                   className="create-recipe-button"
