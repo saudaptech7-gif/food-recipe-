@@ -46,10 +46,8 @@ function extractRecipes(response) {
     payload?.data,
   ];
 
-  const recipes = possibleLists.find(Array.isArray) || [];
-
   return {
-    recipes,
+    recipes: possibleLists.find(Array.isArray) || [],
     meta:
       payload?.pagination ||
       payload?.data?.pagination ||
@@ -64,6 +62,7 @@ function normalizeRecipeList(response) {
 
 // =====================================
 // NUTRITION CHECK
+// Archive recipes without nutrition are hidden.
 // =====================================
 
 function hasNutritionData(recipe) {
@@ -72,45 +71,34 @@ function hasNutritionData(recipe) {
     recipe?.nutrition ??
     recipe?.nutritionalInfo;
 
-  if (nutrition === undefined || nutrition === null) {
-    return true;
+  if (
+    nutrition === undefined ||
+    nutrition === null ||
+    typeof nutrition !== "object"
+  ) {
+    return false;
   }
 
-  if (Array.isArray(nutrition)) {
-    return nutrition.some((item) => {
-      if (item === null || item === undefined) return false;
+  const values = Array.isArray(nutrition)
+    ? nutrition
+    : Object.values(nutrition);
 
-      if (typeof item === "object") {
-        return Object.values(item).some(
-          (value) =>
-            value !== null &&
-            value !== undefined &&
-            String(value).trim() !== "",
-        );
-      }
+  return values.some((value) => {
+    if (value === null || value === undefined) {
+      return false;
+    }
 
-      return String(item).trim() !== "";
-    });
-  }
+    if (typeof value === "object") {
+      return Object.values(value).some(
+        (nested) =>
+          nested !== null &&
+          nested !== undefined &&
+          String(nested).trim() !== "",
+      );
+    }
 
-  if (typeof nutrition === "object") {
-    return Object.values(nutrition).some((value) => {
-      if (value === null || value === undefined) return false;
-
-      if (typeof value === "object") {
-        return Object.values(value).some(
-          (nested) =>
-            nested !== null &&
-            nested !== undefined &&
-            String(nested).trim() !== "",
-        );
-      }
-
-      return String(value).trim() !== "";
-    });
-  }
-
-  return String(nutrition).trim() !== "";
+    return String(value).trim() !== "";
+  });
 }
 
 // =====================================
@@ -132,7 +120,9 @@ function Home() {
   const [communityLoading, setCommunityLoading] = useState(false);
   const [communityError, setCommunityError] = useState("");
 
-  // Redux state
+  // =====================================
+  // REDUX STATE
+  // =====================================
 
   const recipesState = useSelector((state) => state.recipes);
 
@@ -164,21 +154,30 @@ function Home() {
   );
 
   // =====================================
-  // COOKING SCROLL ANIMATION
+  // OPTIMIZED COOKING SCROLL ANIMATION
   // =====================================
 
   useEffect(() => {
-    const handleScroll = () => {
+    let animationFrame = null;
+
+    const updateCookingProgress = () => {
+      animationFrame = null;
+
       const scene = cookingSceneRef.current;
+
       if (!scene) return;
 
       const section = scene.closest(".hero-scroll-section");
+
       if (!section) return;
 
       const scrollDistance =
         section.offsetHeight - window.innerHeight;
 
-      if (scrollDistance <= 0) return;
+      if (scrollDistance <= 0) {
+        setCookingProgress(0);
+        return;
+      }
 
       const rect = section.getBoundingClientRect();
 
@@ -187,17 +186,38 @@ function Home() {
         1,
       );
 
-      setCookingProgress(progress);
+      setCookingProgress((previous) => {
+        if (Math.abs(previous - progress) < 0.002) {
+          return previous;
+        }
+
+        return progress;
+      });
+    };
+
+    const handleScroll = () => {
+      if (animationFrame !== null) return;
+
+      animationFrame = window.requestAnimationFrame(
+        updateCookingProgress,
+      );
     };
 
     window.addEventListener("scroll", handleScroll, {
       passive: true,
     });
 
-    handleScroll();
+    window.addEventListener("resize", handleScroll);
+
+    updateCookingProgress();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
+      }
     };
   }, []);
 
@@ -226,8 +246,10 @@ function Home() {
         setPagination({
           currentPage:
             Number(meta.currentPage ?? meta.page) || page,
+
           totalPages:
             Number(meta.totalPages ?? meta.pages) || 1,
+
           totalRecipes:
             Number(meta.totalRecipes ?? meta.total) ||
             result.recipes.length,
@@ -480,6 +502,7 @@ function Home() {
                     cookingProgress < 0.72
                       ? 1
                       : 0,
+
                   transform:
                     cookingProgress >= 0.12 &&
                     cookingProgress < 0.72
@@ -498,6 +521,7 @@ function Home() {
                     cookingProgress < 0.72
                       ? 1
                       : 0,
+
                   transform:
                     cookingProgress >= 0.18 &&
                     cookingProgress < 0.72
@@ -516,6 +540,7 @@ function Home() {
                     cookingProgress < 0.72
                       ? 1
                       : 0,
+
                   transform:
                     cookingProgress >= 0.24 &&
                     cookingProgress < 0.72
@@ -534,6 +559,7 @@ function Home() {
                     cookingProgress < 0.72
                       ? 1
                       : 0,
+
                   transform:
                     cookingProgress >= 0.3 &&
                     cookingProgress < 0.72
@@ -552,6 +578,7 @@ function Home() {
                     cookingProgress < 0.82
                       ? 1
                       : 0,
+
                   transform: `translate(-50%,-50%) scale(${
                     cookingProgress >= 0.3 ? 1 : 0.72
                   })`,
@@ -586,6 +613,7 @@ function Home() {
                     cookingProgress < 0.8
                       ? 1
                       : 0,
+
                   transform:
                     cookingProgress < 0.4
                       ? "translate(-50%,-220px) rotate(-12deg)"
@@ -623,6 +651,7 @@ function Home() {
                           1,
                         )
                       : 0,
+
                   transform: `translate(-50%,-50%) scale(${
                     cookingProgress >= 0.72 ? 1 : 0.45
                   })`,
@@ -663,8 +692,6 @@ function Home() {
       {/* RECIPE COLLECTIONS */}
 
       <section className="home-collections-section">
-        {/* BEAUTIFUL MAIN HEADING */}
-
         <div className="home-section-intro">
           <span className="home-section-eyebrow">
             DISCOVER YOUR NEXT FAVORITE
@@ -793,7 +820,9 @@ function Home() {
                 ) : (
                   <div className="empty-recipes">
                     <h3>No recipes found</h3>
-                    <p>Try changing your search or filters.</p>
+                    <p>
+                      Try changing your search or filters.
+                    </p>
                   </div>
                 )}
 
@@ -848,7 +877,9 @@ function Home() {
               <div>
                 <span>YOUR CREATIONS</span>
                 <h2>My Recipes</h2>
-                <p>All the delicious recipes you have created.</p>
+                <p>
+                  All the delicious recipes you have created.
+                </p>
               </div>
 
               {isLoggedIn && (
@@ -865,7 +896,9 @@ function Home() {
             {!isLoggedIn ? (
               <div className="empty-recipes home-community-message">
                 <h3>Sign in to see your recipes</h3>
-                <p>Log in to create and manage your own recipes.</p>
+                <p>
+                  Log in to create and manage your own recipes.
+                </p>
 
                 <button
                   type="button"
