@@ -16976,3 +16976,444 @@ ol {
     padding: 13px;
   }
 }
+/* =====================================
+   SAVORLY LOADING ANIMATION
+===================================== */
+
+.recipes-loading {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0;
+}
+
+.savorly-loader {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--background-color, #fffaf3);
+  text-align: center;
+}
+
+.savorly-loader-visual {
+  width: 118px;
+  height: 118px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+
+.loader-plate {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 5px solid #e9e1d5;
+  box-shadow:
+    0 7px 18px rgba(80, 56, 32, 0.12),
+    inset 0 0 0 3px #f8f1e7;
+  animation: savorly-plate-bounce 1.8s ease-in-out infinite;
+  z-index: 2;
+}
+
+.loader-plate-inner {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fff3d9;
+  border: 2px solid #f2dfb9;
+}
+
+.loader-food {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+}
+
+.loader-food-one {
+  width: 17px;
+  height: 17px;
+  left: 7px;
+  top: 8px;
+  background: #ef7652;
+  box-shadow: inset -3px -3px 0 rgba(140, 48, 22, 0.12);
+  animation: savorly-food-pulse 1.3s ease-in-out infinite;
+}
+
+.loader-food-two {
+  width: 15px;
+  height: 15px;
+  right: 6px;
+  top: 12px;
+  background: #76a95d;
+  animation: savorly-food-pulse 1.3s ease-in-out 0.2s infinite;
+}
+
+.loader-food-three {
+  width: 18px;
+  height: 18px;
+  left: 17px;
+  bottom: 5px;
+  background: #f0bc54;
+  animation: savorly-food-pulse 1.3s ease-in-out 0.4s infinite;
+}
+
+.loader-leaf {
+  position: absolute;
+  top: -3px;
+  right: 3px;
+  color: #477c45;
+  font-size: 12px;
+}
+
+.loader-orbit {
+  position: absolute;
+  width: 105px;
+  height: 105px;
+  border: 2px dashed rgba(218, 145, 74, 0.42);
+  border-radius: 50%;
+}
+
+.loader-orbit-one {
+  animation: savorly-orbit 8s linear infinite;
+}
+
+.loader-orbit-two {
+  width: 90px;
+  height: 90px;
+  border-color: rgba(105, 145, 81, 0.3);
+  animation: savorly-orbit 6s linear infinite reverse;
+}
+
+.loader-spark {
+  position: absolute;
+  color: #d99a45;
+  font-size: 20px;
+  animation: savorly-sparkle 1.5s ease-in-out infinite;
+}
+
+.loader-spark-one {
+  top: 4px;
+  right: 5px;
+}
+
+.loader-spark-two {
+  left: 5px;
+  bottom: 10px;
+  color: #78a65d;
+  animation-delay: 0.6s;
+}
+
+.savorly-loader-title {
+  margin: 0;
+  color: var(--heading-color, #433326);
+  font-size: 25px;
+  font-weight: 750;
+  letter-spacing: 1px;
+}
+
+.savorly-loader-text {
+  margin: 0;
+  color: var(--text-color, #817365);
+  font-size: 14px;
+}
+
+.savorly-loader-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.savorly-loader-dots span {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary-color, #d99a45);
+  animation: savorly-dot-bounce 1s ease-in-out infinite;
+}
+
+.savorly-loader-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.savorly-loader-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes savorly-plate-bounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-5px) rotate(5deg);
+  }
+}
+
+@keyframes savorly-food-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.82);
+  }
+}
+
+@keyframes savorly-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes savorly-sparkle {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.8) rotate(0deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(20deg);
+  }
+}
+
+@keyframes savorly-dot-bounce {
+  0%,
+  60%,
+  100% {
+    opacity: 0.45;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
+}
+
+@media (max-width: 600px) {
+  .recipes-loading,
+  .savorly-loader {
+    min-height: 250px;
+  }
+
+  .savorly-loader-visual {
+    transform: scale(0.9);
+  }
+
+  .savorly-loader-title {
+    font-size: 22px;
+  }
+
+  .savorly-loader-text {
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .savorly-loader *,
+  .savorly-loader *::before,
+  .savorly-loader *::after {
+    animation-duration: 2.5s !important;
+  }
+}
+/* =========================================
+   SAVORLY HOME PAGE — UI IMPROVEMENTS
+========================================= */
+
+/* 1. Hero ke baad extra spacing */
+.hero-scroll-section {
+  margin-bottom: 0 !important;
+}
+
+.hero-sticky {
+  margin-bottom: 0;
+}
+
+/* Hero content ki spacing */
+.hero-section {
+  margin-bottom: 0;
+}
+
+/* 2. Hero aur collection tabs ke darmiyan gap */
+.home-collections-section {
+  margin-top: 0 !important;
+  padding-top: 18px;
+  padding-bottom: 56px;
+}
+
+/* 3. Tabs container */
+.home-collection-tabs {
+  width: min(92%, 760px);
+  margin: 0 auto 30px;
+  padding: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(120, 100, 75, 0.15);
+  border-radius: 16px;
+  background: var(--card-background, #fff);
+  box-shadow: 0 8px 26px rgba(40, 30, 15, 0.06);
+}
+
+/* 4. Individual tabs */
+.home-collection-tab {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-color, #65594d);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+
+.home-collection-tab:hover {
+  background: rgba(217, 154, 69, 0.1);
+  transform: translateY(-1px);
+}
+
+.home-collection-tab.active {
+  background: var(--primary-color, #d99a45);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(180, 115, 43, 0.2);
+}
+
+.home-collection-tab span {
+  font-size: 17px;
+}
+
+/* 5. Consistent content width */
+.home-tab-content {
+  width: min(1200px, calc(100% - 48px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 6. Section heading spacing */
+.home-tab-content .section-heading {
+  margin-top: 0;
+  margin-bottom: 22px;
+}
+
+.home-tab-heading {
+  margin-bottom: 24px;
+}
+
+/* 7. Search aur filters ke baad cards se gap */
+.home-tab-content .recipes-grid {
+  margin-top: 28px;
+}
+
+/* Filter bar ke neeche halka space */
+.home-tab-content .filter-bar {
+  margin-bottom: 26px;
+}
+
+/* Agar FilterBar ka outer wrapper alag class use karta ho */
+.home-tab-content .filters-container {
+  margin-bottom: 26px;
+}
+
+/* 8. Recipe cards ka polished hover */
+.home-tab-content .recipes-grid > * {
+  min-width: 0;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.home-tab-content .recipes-grid > *:hover {
+  transform: translateY(-4px);
+}
+
+/* 9. Pagination spacing */
+.home-tab-content .pagination {
+  margin-top: 32px;
+}
+
+/* 10. Mobile responsive UI */
+@media (max-width: 600px) {
+  .home-collections-section {
+    padding-top: 10px;
+    padding-bottom: 36px;
+  }
+
+  .home-collection-tabs {
+    width: calc(100% - 24px);
+    margin-bottom: 22px;
+    padding: 5px;
+    gap: 3px;
+    border-radius: 13px;
+  }
+
+  .home-collection-tab {
+    min-height: 44px;
+    padding: 10px 4px;
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .home-collection-tab span {
+    font-size: 14px;
+  }
+
+  .home-tab-content {
+    width: calc(100% - 28px);
+  }
+
+  .home-tab-content .recipes-grid {
+    margin-top: 22px;
+  }
+
+  .home-tab-content .filter-bar,
+  .home-tab-content .filters-container {
+    margin-bottom: 20px;
+  }
+
+  .home-tab-heading {
+    margin-bottom: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-collection-tab,
+  .home-tab-content .recipes-grid > * {
+    transition: none;
+  }
+}

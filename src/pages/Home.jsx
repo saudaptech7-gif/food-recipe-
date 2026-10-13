@@ -24,6 +24,7 @@ import RecipeCard from "../components/RecipeCard";
 import SearchBar from "../components/SearchBar";
 import FilterBar from "../components/FilterBar";
 import Footer from "../components/Footer";
+import Loading from "../components/Loading";
 
 // =====================================
 // NORMALIZE RECIPE API RESPONSE
@@ -65,17 +66,12 @@ function normalizeRecipeList(response) {
 
 // =====================================
 // NUTRITION CHECK
-// Recipes without a nutrition field are not
-// hidden accidentally when the API omits it.
-// Explicitly empty nutrition objects are hidden.
 // =====================================
 
 function hasNutritionData(recipe) {
   const nutrition =
     recipe?.nutrients ?? recipe?.nutrition ?? recipe?.nutritionalInfo;
 
-  // If the API doesn't include this field,
-  // don't hide the recipe just because it's absent.
   if (nutrition === undefined || nutrition === null) {
     return true;
   }
@@ -227,9 +223,7 @@ function Home() {
       dispatch(
         setPagination({
           currentPage: Number(meta.currentPage ?? meta.page) || page,
-
           totalPages: Number(meta.totalPages ?? meta.pages) || 1,
-
           totalRecipes:
             Number(meta.totalRecipes ?? meta.total) || result.recipes.length,
         }),
@@ -402,9 +396,7 @@ function Home() {
     <div className="home-page">
       <Header onCategoryChange={handleCategoryChange} />
 
-      {/* =====================================
-          HERO + COOKING ANIMATION
-      ===================================== */}
+      {/* HERO + COOKING ANIMATION */}
 
       <section className="hero-scroll-section">
         <div className="hero-sticky">
@@ -468,7 +460,6 @@ function Home() {
                 style={{
                   opacity:
                     cookingProgress >= 0.12 && cookingProgress < 0.72 ? 1 : 0,
-
                   transform:
                     cookingProgress >= 0.12 && cookingProgress < 0.72
                       ? "translate(0,0) rotate(0deg)"
@@ -483,7 +474,6 @@ function Home() {
                 style={{
                   opacity:
                     cookingProgress >= 0.18 && cookingProgress < 0.72 ? 1 : 0,
-
                   transform:
                     cookingProgress >= 0.18 && cookingProgress < 0.72
                       ? "translate(0,0) scale(1)"
@@ -498,7 +488,6 @@ function Home() {
                 style={{
                   opacity:
                     cookingProgress >= 0.24 && cookingProgress < 0.72 ? 1 : 0,
-
                   transform:
                     cookingProgress >= 0.24 && cookingProgress < 0.72
                       ? "translate(0,0) scale(1)"
@@ -513,7 +502,6 @@ function Home() {
                 style={{
                   opacity:
                     cookingProgress >= 0.3 && cookingProgress < 0.72 ? 1 : 0,
-
                   transform:
                     cookingProgress >= 0.3 && cookingProgress < 0.72
                       ? "translate(0,0) rotate(0deg)"
@@ -528,7 +516,6 @@ function Home() {
                 style={{
                   opacity:
                     cookingProgress >= 0.3 && cookingProgress < 0.82 ? 1 : 0,
-
                   transform: `translate(-50%,-50%) scale(${
                     cookingProgress >= 0.3 ? 1 : 0.72
                   })`,
@@ -557,7 +544,6 @@ function Home() {
                 style={{
                   opacity:
                     cookingProgress >= 0.4 && cookingProgress < 0.8 ? 1 : 0,
-
                   transform:
                     cookingProgress < 0.4
                       ? "translate(-50%,-220px) rotate(-12deg)"
@@ -589,7 +575,6 @@ function Home() {
                     cookingProgress >= 0.72
                       ? Math.min((cookingProgress - 0.72) / 0.1, 1)
                       : 0,
-
                   transform: `translate(-50%,-50%) scale(${
                     cookingProgress >= 0.72 ? 1 : 0.45
                   })`,
@@ -624,9 +609,7 @@ function Home() {
         </div>
       </section>
 
-      {/* =====================================
-          COLLECTION TABS
-      ===================================== */}
+      {/* COLLECTION TABS */}
 
       <section className="home-collections-section">
         <div
@@ -671,9 +654,7 @@ function Home() {
           </button>
         </div>
 
-        {/* =====================================
-            OUR RECIPES
-        ===================================== */}
+        {/* OUR RECIPES */}
 
         {homeTab === "our" && (
           <section className="recipes-section home-tab-content" role="tabpanel">
@@ -698,8 +679,7 @@ function Home() {
 
             {loading && (
               <div className="recipes-loading">
-                <div className="loading-spinner" />
-                <p>Finding delicious recipes...</p>
+                <Loading />
               </div>
             )}
 
@@ -761,9 +741,7 @@ function Home() {
           </section>
         )}
 
-        {/* =====================================
-            MY RECIPES
-        ===================================== */}
+        {/* MY RECIPES */}
 
         {homeTab === "my" && (
           <section
@@ -802,8 +780,7 @@ function Home() {
               </div>
             ) : communityLoading ? (
               <div className="recipes-loading">
-                <div className="loading-spinner" />
-                <p>Loading your recipes...</p>
+                <Loading />
               </div>
             ) : communityError ? (
               <div className="recipe-error">
@@ -846,11 +823,7 @@ function Home() {
           </section>
         )}
 
-        {/* =====================================
-            USER RECIPES
-            Added user-recipes-tab class for
-            compact card styling only.
-        ===================================== */}
+        {/* USER RECIPES */}
 
         {homeTab === "users" && (
           <section
@@ -892,8 +865,7 @@ function Home() {
               </div>
             ) : communityLoading ? (
               <div className="recipes-loading">
-                <div className="loading-spinner" />
-                <p>Discovering community recipes...</p>
+                <Loading />
               </div>
             ) : communityError ? (
               <div className="recipe-error">
