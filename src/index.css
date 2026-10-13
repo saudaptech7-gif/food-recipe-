@@ -17546,3 +17546,427 @@ ol {
     padding: 9px 13px;
   }
 }
+
+/* ============================================
+   SAVORLY — PREMIUM UI UPGRADE
+   Append to the END of index.css
+============================================ */
+
+:root {
+  --savorly-glow: 0 14px 40px rgba(232, 93, 63, 0.13);
+  --savorly-card-shadow: 0 8px 28px rgba(62, 32, 22, 0.07);
+  --savorly-card-hover: 0 20px 45px rgba(62, 32, 22, 0.14);
+}
+
+/* Smooth page experience */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  color: #fff;
+  background: var(--primary);
+}
+
+/* ============================================
+   PREMIUM HEADER
+============================================ */
+
+.savorly-header {
+  background: rgba(255, 250, 247, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(232, 93, 63, 0.09);
+  box-shadow: 0 4px 24px rgba(62, 32, 22, 0.035);
+}
+
+.savorly-header-inner {
+  transition: min-height 0.25s ease;
+}
+
+.savorly-brand {
+  transition: transform 0.25s ease;
+}
+
+.savorly-brand:hover {
+  transform: translateY(-1px);
+}
+
+.savorly-brand-icon {
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.savorly-brand:hover .savorly-brand-icon {
+  transform: rotate(-10deg) scale(1.08);
+  box-shadow: 0 8px 22px rgba(232, 93, 63, 0.28);
+}
+
+.savorly-nav-link {
+  position: relative;
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+
+.savorly-nav-link:hover {
+  transform: translateY(-1px);
+}
+
+.savorly-nav-link.active {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* Dropdown animation */
+
+.savorly-dropdown {
+  position: relative;
+}
+
+.savorly-dropdown-menu {
+  transform-origin: top center;
+  animation: savorlyDropdownEnter 0.2s ease both;
+  border: 1px solid rgba(238, 226, 220, 0.9);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 50px rgba(62, 32, 22, 0.14);
+  overflow: hidden;
+}
+
+@keyframes savorlyDropdownEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-7px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.savorly-dropdown-item {
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    padding-left 0.2s ease;
+}
+
+.savorly-dropdown-item:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+  padding-left: 20px;
+}
+
+.savorly-profile-trigger,
+.savorly-login-button,
+.savorly-signup-button {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+
+.savorly-profile-trigger:hover,
+.savorly-login-button:hover,
+.savorly-signup-button:hover {
+  transform: translateY(-2px);
+}
+
+.savorly-signup-button:hover {
+  box-shadow: var(--savorly-glow);
+}
+
+/* ============================================
+   HERO — PRESERVE EXISTING LAYOUT
+============================================ */
+
+.hero-section {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-content {
+  animation: savorlyHeroEnter 0.8s ease both;
+}
+
+@keyframes savorlyHeroEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Keep cooking scene and its scroll-driven transforms intact */
+
+.cooking-scene {
+  will-change: transform;
+}
+
+/* ============================================
+   HOME COLLECTIONS
+============================================ */
+
+.home-collections-section {
+  position: relative;
+  width: min(100%, 1440px);
+  margin-inline: auto;
+  padding-inline: clamp(18px, 4vw, 56px);
+  padding-bottom: 64px;
+}
+
+.home-section-intro {
+  max-width: 760px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.home-section-intro h2 {
+  color: var(--dark);
+  font-family: "Playfair Display", serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: -1.2px;
+}
+
+.home-section-intro p {
+  max-width: 600px;
+  margin: 12px auto 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+/* Elegant collection tabs */
+
+.home-collection-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 28px auto 34px;
+}
+
+.home-collection-tabs button {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 12px 23px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.25s ease;
+}
+
+.home-collection-tabs button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.home-collection-tabs button.active,
+.home-collection-tabs button[aria-selected="true"] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(232, 93, 63, 0.22);
+}
+
+/* Section headings */
+
+.home-tab-content .section-heading {
+  margin-bottom: 22px;
+}
+
+.home-tab-content .section-heading h2,
+.home-tab-content .section-heading h3 {
+  color: var(--dark);
+  font-family: "Playfair Display", serif;
+  letter-spacing: -0.5px;
+}
+
+/* ============================================
+   RECIPE CARDS
+============================================ */
+
+.home-tab-content .recipes-grid {
+  gap: clamp(18px, 2.2vw, 30px);
+  margin-top: 24px;
+  align-items: stretch;
+}
+
+.recipes-grid > *,
+.recipe-grid > * {
+  min-width: 0;
+}
+
+.recipe-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(238, 226, 220, 0.8);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--savorly-card-shadow);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.recipe-card:hover {
+  transform: translateY(-7px);
+  border-color: rgba(232, 93, 63, 0.25);
+  box-shadow: var(--savorly-card-hover);
+}
+
+.recipe-card img {
+  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.recipe-card:hover img {
+  transform: scale(1.045);
+}
+
+/* Images should not spill outside rounded cards */
+
+.recipe-card,
+.recipes-grid > * {
+  overflow: hidden;
+}
+
+/* ============================================
+   FILTERS AND SEARCH
+============================================ */
+
+.home-tab-content .filter-bar,
+.home-tab-content .filters-container {
+  margin-bottom: 26px;
+}
+
+.home-tab-content input,
+.home-tab-content select,
+.home-tab-content textarea {
+  border-color: var(--border);
+  border-radius: 12px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.home-tab-content input:focus,
+.home-tab-content select:focus,
+.home-tab-content textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(232, 93, 63, 0.09);
+}
+
+/* ============================================
+   BUTTONS
+============================================ */
+
+.home-tab-content button,
+.hero-content button {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+
+.hero-content button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--savorly-glow);
+}
+
+.home-tab-content button:focus-visible,
+.savorly-header button:focus-visible,
+.savorly-header a:focus-visible {
+  outline: 3px solid rgba(232, 93, 63, 0.45);
+  outline-offset: 3px;
+}
+
+/* ============================================
+   RESPONSIVE FINISHING TOUCHES
+============================================ */
+
+@media (max-width: 768px) {
+  .home-collections-section {
+    padding-inline: 20px;
+    padding-bottom: 42px;
+  }
+
+  .home-section-intro h2 {
+    font-size: clamp(29px, 6vw, 38px);
+    letter-spacing: -0.7px;
+  }
+
+  .home-section-intro p {
+    font-size: 14px;
+  }
+
+  .home-collection-tabs {
+    gap: 8px;
+    margin: 22px auto 28px;
+  }
+
+  .home-collection-tabs button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .home-tab-content .recipes-grid {
+    gap: 18px;
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-collections-section {
+    padding-inline: 15px;
+  }
+
+  .recipe-card {
+    border-radius: 18px;
+  }
+
+  .home-section-intro h2 {
+    font-size: 29px;
+  }
+}
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .savorly-dropdown-menu,
+  .hero-content {
+    animation: none;
+  }
+
+  .recipe-card,
+  .recipe-card img,
+  .savorly-nav-link,
+  .savorly-dropdown-item {
+    transition: none;
+  }
+}
