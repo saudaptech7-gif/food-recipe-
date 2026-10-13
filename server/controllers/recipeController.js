@@ -106,7 +106,6 @@ const isPublished = (recipe) => {
     return value === true || value === 1;
   }
 
-  // Old records without publish information remain visible.
   return true;
 };
 
@@ -231,7 +230,6 @@ const containsRegex = (value) =>
     "i",
   );
 
-// Support older archive records without recipeType.
 const getArchiveQuery = () => ({
   $or: [
     { recipeType: "archive" },
@@ -260,8 +258,6 @@ const getCategoryQuery = (category) => {
   };
 };
 
-// Supports difficulty and legacy difficult fields.
-// Comparison also ignores uppercase and surrounding spaces.
 const getDifficultyQuery = (difficulty) => {
   const normalized = String(difficulty ?? "")
     .trim()
@@ -445,7 +441,6 @@ const buildRecipeQuery = (req) => {
 
 // =====================================
 // GET FILTER OPTIONS
-// GET /api/recipes/filters/options
 // =====================================
 
 const getFilterOptions = async (req, res) => {
@@ -516,17 +511,14 @@ const getFilterOptions = async (req, res) => {
         ...oldMainCategories,
         ...categories,
       ]),
-
       difficulties: uniqueValues([
         ...difficulties,
         ...oldDifficulties,
       ]),
-
       subcategories: uniqueValues([
         ...subcategories,
         ...oldSubcategories,
       ]),
-
       dishTypes: uniqueValues([
         ...dishTypes,
         ...oldDishTypes,
@@ -543,7 +535,6 @@ const getFilterOptions = async (req, res) => {
 
 // =====================================
 // GET RECIPES
-// GET /api/recipes
 // =====================================
 
 const getRecipes = async (req, res) => {
@@ -626,7 +617,6 @@ const getRecipes = async (req, res) => {
 
 // =====================================
 // UPLOAD RECIPE IMAGES
-// POST /api/recipes/upload-images
 // =====================================
 
 const uploadRecipeImages = async (req, res) => {
@@ -686,7 +676,6 @@ const uploadRecipeImages = async (req, res) => {
 
 // =====================================
 // CREATE COMMUNITY RECIPE
-// POST /api/recipes
 // =====================================
 
 const createRecipe = async (req, res) => {
@@ -792,7 +781,6 @@ const createRecipe = async (req, res) => {
 
     const recipe = await Recipe.create(recipeData);
 
-    // Ensure newly created recipes remain drafts.
     await Recipe.collection.updateOne(
       { _id: recipe._id },
       {
@@ -822,7 +810,6 @@ const createRecipe = async (req, res) => {
 
 // =====================================
 // GET SINGLE RECIPE
-// GET /api/recipes/:id
 // =====================================
 
 const getRecipeById = async (req, res) => {
@@ -848,8 +835,7 @@ const getRecipeById = async (req, res) => {
 };
 
 // =====================================
-// RATE COMMUNITY RECIPE
-// POST /api/recipes/:id/rating
+// RATE ARCHIVE + COMMUNITY RECIPES
 // =====================================
 
 const rateRecipe = async (req, res) => {
@@ -889,58 +875,108 @@ const rateRecipe = async (req, res) => {
       });
     }
 
-    if (recipe.recipeType !== "community") {
-      return res.status(403).json({
-        message: "Archive recipes cannot be rated",
-      });
-    }
-
-    if (isOwner(recipe, userId)) {
+    // Recipe owner cannot rate their own community recipe.
+    // Archive recipes are allowed to be rated.
+    if (
+      recipe.recipeType === "community" &&
+      isOwner(recipe, userId)
+    ) {
       return res.status(403).json({
         message: "You cannot rate your own recipe",
       });
     }
 
-    if (!Array.isArray(recipe.ratings)) {
-      recipe.ratings = [];
+    const rawRecipe = await Recipe.collection.findOne({
+      _id: recipe._id,
+    });
+
+    if (!rawRecipe) {
+      return res.status(404).json({
+        message: "Recipe not found",
+      });
     }
 
-    const existingRating = recipe.ratings.find(
-      (item) => idString(item.user) === idString(userId),
+    const ratings = Array.isArray(rawRecipe.ratings)
+      ? rawRecipe.ratings
+      : [];
+
+    const getRatingUserId = (item) =>
+      idString(item?.user ?? item?.userId ?? item?.ratedBy);
+
+    const getRatingValue = (item) =>
+      Number(item?.value ?? item?.rating ?? 0);
+
+    // Remove invalid ratings before recalculating.
+    const updatedRatings = ratings.filter((item) => {
+      const value = getRatingValue(item);
+
+      return (
+        getRatingUserId(item) !== "" &&
+        Number.isInteger(value) &&
+        value >= 1 &&
+        value <= 5
+      );
+    });
+
+    const currentUserId = idString(userId);
+
+    const existingIndex = updatedRatings.findIndex(
+      (item) => getRatingUserId(item) === currentUserId,
     );
 
-    if (existingRating) {
-      existingRating.value = ratingValue;
+    const isUpdating = existingIndex !== -1;
+
+    if (isUpdating) {
+      updatedRatings[existingIndex] = {
+        ...updatedRatings[existingIndex],
+        value: ratingValue,
+      };
     } else {
-      recipe.ratings.push({
-        user: userId,
+      const storedUserId = mongoose.Types.ObjectId.isValid(
+        currentUserId,
+      )
+        ? new mongoose.Types.ObjectId(currentUserId)
+        : currentUserId;
+
+      updatedRatings.push({
+        user: storedUserId,
         value: ratingValue,
       });
     }
 
-    const total = recipe.ratings.reduce(
-      (sum, item) => sum + Number(item.value || 0),
+    const total = updatedRatings.reduce(
+      (sum, item) => sum + getRatingValue(item),
       0,
     );
 
-    const count = recipe.ratings.length;
+    const count = updatedRatings.length;
 
     const average =
       count > 0
         ? Number((total / count).toFixed(1))
         : 0;
 
-    recipe.averageRating = average;
-    recipe.ratingCount = count;
+    const result = await Recipe.collection.updateOne(
+      { _id: recipe._id },
+      {
+        $set: {
+          ratings: updatedRatings,
+          averageRating: average,
+          ratingCount: count,
+          rating: average,
+          voteCount: count,
+        },
+      },
+    );
 
-    // Keep older UI fields synchronized.
-    recipe.rating = average;
-    recipe.voteCount = count;
-
-    await recipe.save();
+    if (!result.matchedCount) {
+      return res.status(404).json({
+        message: "Recipe not found",
+      });
+    }
 
     return res.status(200).json({
-      message: existingRating
+      message: isUpdating
         ? "Rating updated successfully"
         : "Rating submitted successfully",
       averageRating: average,
@@ -960,7 +996,6 @@ const rateRecipe = async (req, res) => {
 
 // =====================================
 // UPDATE OWN COMMUNITY RECIPE
-// PUT /api/recipes/:id
 // =====================================
 
 const updateRecipe = async (req, res) => {
@@ -1024,7 +1059,7 @@ const updateRecipe = async (req, res) => {
 
     const cleanSteps = parseArray(steps, "steps");
 
-    if (cleanIngredients.length === 0 || cleanSteps.length === 0) {
+    if (!cleanIngredients.length || !cleanSteps.length) {
       return res.status(400).json({
         message: "Please add ingredients and cooking steps",
       });
@@ -1038,7 +1073,7 @@ const updateRecipe = async (req, res) => {
       });
     }
 
-    if (!Array.isArray(images) || images.length === 0) {
+    if (!Array.isArray(images) || !images.length) {
       return res.status(400).json({
         message: "At least one recipe image is required",
       });
@@ -1087,7 +1122,6 @@ const updateRecipe = async (req, res) => {
 
 // =====================================
 // PUBLISH / UNPUBLISH OWN RECIPE
-// PATCH /api/recipes/:id/publish
 // =====================================
 
 const togglePublishRecipe = async (req, res) => {
@@ -1164,7 +1198,6 @@ const togglePublishRecipe = async (req, res) => {
 
 // =====================================
 // DELETE OWN COMMUNITY RECIPE
-// DELETE /api/recipes/:id
 // =====================================
 
 const deleteRecipe = async (req, res) => {
@@ -1211,7 +1244,6 @@ const deleteRecipe = async (req, res) => {
 
 // =====================================
 // MY RECIPES
-// GET /api/recipes/my
 // =====================================
 
 const getMyRecipes = async (req, res) => {
@@ -1240,7 +1272,6 @@ const getMyRecipes = async (req, res) => {
 
 // =====================================
 // COMMUNITY RECIPES
-// GET /api/recipes/community
 // =====================================
 
 const getUserRecipes = async (req, res) => {
