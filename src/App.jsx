@@ -11,31 +11,36 @@ import CreateRecipe from "./pages/CreateRecipe";
 import Favorites from "./pages/Favorites";
 import LikedRecipes from "./pages/LikedRecipes";
 
+import { NotificationProvider } from "./context/NotificationContext";
+
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
+    <NotificationProvider>
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/community" element={<Community />} />
-      <Route path="/my-recipes" element={<MyRecipes />} />
-      <Route path="/create-recipe" element={<CreateRecipe />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/my-recipes" element={<MyRecipes />} />
+        <Route path="/create-recipe" element={<CreateRecipe />} />
 
-      {/* Favorites: alag feature */}
-      <Route path="/favorites" element={<Favorites />} />
+        {/* Favorites */}
+        <Route path="/favorites" element={<Favorites />} />
 
-      {/* Liked Recipes: user ki liked community recipes */}
-      <Route path="/liked-recipes" element={<LikedRecipes />} />
+        {/* Liked community recipes */}
+        <Route path="/liked-recipes" element={<LikedRecipes />} />
 
-      <Route path="/recipe/:id" element={<RecipeDetails />} />
-      <Route path="/recipes/:id" element={<RecipeDetails />} />
+        {/* Recipe details */}
+        <Route path="/recipe/:id" element={<RecipeDetails />} />
+        <Route path="/recipes/:id" element={<RecipeDetails />} />
 
-      {/* Unknown routes ke liye */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Unknown routes */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </NotificationProvider>
   );
 }
 
