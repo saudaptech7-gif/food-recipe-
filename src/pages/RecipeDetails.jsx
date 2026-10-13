@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,7 +20,6 @@ import {
   removeFavoriteFromState,
 } from "../redux/favoriteSlice";
 
-import "./RecipeDetails.css";
 
 function RecipeDetails() {
   const { id } = useParams();
