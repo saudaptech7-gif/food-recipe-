@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -11,12 +12,12 @@ import {
   deleteRecipeComment,
 } from "../services/socialApi";
 
-
 function RecipeSocial({ recipe, isLoggedIn = false }) {
   const navigate = useNavigate();
 
   const recipeId = recipe?._id;
   const isCommunityRecipe = recipe?.recipeType === "community";
+  const recipeName = recipe?.name || recipe?.title || "Community Recipe";
 
   const [isOpen, setIsOpen] = useState(false);
   const [social, setSocial] = useState(null);
@@ -26,16 +27,23 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
   const [message, setMessage] = useState("");
   const [retryCount, setRetryCount] = useState(0);
 
-  // Load social data only when the comments panel is opened.
+  // Load comments only when the popup is open.
   useEffect(() => {
-    if (!isCommunityRecipe || !recipeId || !isOpen || !isLoggedIn) {
+    if (!isCommunityRecipe || !recipeId || !isOpen) {
       setLoading(false);
+      return undefined;
+    }
+
+    if (!isLoggedIn) {
+      setSocial(null);
+      setLoading(false);
+      setMessage("");
       return undefined;
     }
 
     let cancelled = false;
 
-    const loadSocial = async () => {
+    async function loadSocial() {
       setLoading(true);
       setMessage("");
       setSocial(null);
@@ -58,7 +66,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
           setLoading(false);
         }
       }
-    };
+    }
 
     loadSocial();
 
@@ -66,6 +74,28 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
       cancelled = true;
     };
   }, [recipeId, isCommunityRecipe, isLoggedIn, isOpen, retryCount]);
+
+  // Lock background scrolling and support Escape to close.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && !working) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, working]);
 
   if (!isCommunityRecipe || !recipeId) {
     return null;
@@ -75,24 +105,31 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
 
   const owner = social?.owner;
 
+  const commentCount =
+    social?.comments?.length ??
+    recipe?.commentsCount ??
+    recipe?.commentCount ??
+    null;
+
+  const closePopup = () => {
+    if (!working) {
+      setIsOpen(false);
+    }
+  };
+
   const loginFirst = () => {
+    setIsOpen(false);
     navigate("/login");
   };
 
-  const handleTogglePanel = () => {
-    setIsOpen((current) => !current);
-  };
-
-  // Like / unlike a recipe.
+  // LIKE / UNLIKE
   const handleLike = async () => {
     if (!isLoggedIn) {
       loginFirst();
       return;
     }
 
-    if (social?.isOwnRecipe || working) {
-      return;
-    }
+    if (!social || social.isOwnRecipe || working) return;
 
     try {
       setWorking(true);
@@ -116,7 +153,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     }
   };
 
-  // Follow / unfollow the recipe owner.
+  // FOLLOW / UNFOLLOW
   const handleFollow = async () => {
     if (!isLoggedIn) {
       loginFirst();
@@ -155,7 +192,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     }
   };
 
-  // Add a comment.
+  // ADD COMMENT
   const handleComment = async (event) => {
     event.preventDefault();
 
@@ -166,9 +203,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
 
     const cleanText = commentText.trim();
 
-    if (!cleanText || working) {
-      return;
-    }
+    if (!cleanText || working) return;
 
     try {
       setWorking(true);
@@ -206,7 +241,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     }
   };
 
-  // Delete a comment.
+  // DELETE COMMENT
   const handleDeleteComment = async (commentId) => {
     if (working) return;
 
@@ -242,324 +277,409 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
   };
 
   return (
-    <section className={`recipe-social-shell ${isOpen ? "is-open" : ""}`}>
-      <button
-        type="button"
-        className="recipe-social-toggle"
-        aria-expanded={isOpen}
-        aria-controls={`recipe-social-content-${recipeId}`}
-        onClick={handleTogglePanel}
-      >
-        <span className="recipe-social-toggle-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" width="23" height="23">
+    <>
+      {/* SMALL COMMENTS ICON — NO EXPANDING PANEL */}
+
+      <div className="savorly-comment-launcher">
+        <button
+          type="button"
+          className="savorly-comment-icon-button"
+          onClick={() => setIsOpen(true)}
+          aria-label={`Open comments for ${recipeName}`}
+          title="View comments"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            aria-hidden="true"
+          >
             <path
-              d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.7-3A7.5 7.5 0 1 1 20 11.5Z"
+              d="M20 11.4a7.4 7.4 0 0 1-7.4 7.4H5l1.7-3A7.4 7.4 0 1 1 20 11.4Z"
               stroke="currentColor"
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
             <path
-              d="M8.5 11.5h7M8.5 14.5h4"
+              d="M8.5 10.5h7M8.5 13.5h4"
               stroke="currentColor"
               strokeWidth="1.8"
               strokeLinecap="round"
             />
           </svg>
-        </span>
 
-        <span className="recipe-social-toggle-copy">
-          <strong>
-            {isOpen ? "Recipe discussion" : "Comments & Discussion"}
-          </strong>
+          <span>Comments</span>
 
-          <small>
-            {isOpen
-              ? "Join the conversation about this recipe"
-              : "Share thoughts, like the recipe and follow the chef"}
-          </small>
-        </span>
+          {commentCount !== null && (
+            <span className="savorly-comment-icon-count">{commentCount}</span>
+          )}
+        </button>
+      </div>
 
-        {social && (
-          <span className="recipe-social-toggle-count">
-            {comments.length} {comments.length === 1 ? "comment" : "comments"}
-          </span>
-        )}
+      {/* CENTERED MODAL POPUP */}
 
-        <span
-          className={`recipe-social-toggle-action ${isOpen ? "is-open" : ""}`}
-        >
-          {isOpen ? "Hide" : "View comments"}
-          <span className="recipe-social-chevron" aria-hidden="true">
-            ↓
-          </span>
-        </span>
-      </button>
-
-      {isOpen && (
-        <div
-          className="recipe-social-panel"
-          id={`recipe-social-content-${recipeId}`}
-        >
-          {!isLoggedIn ? (
-            <div className="recipe-social-login">
-              <span className="recipe-social-section-label">
-                JOIN THE COMMUNITY
-              </span>
-
-              <h3>Good food brings people together.</h3>
-
-              <p>
-                Log in to like recipes, follow chefs and share your thoughts in
-                the comments.
-              </p>
-
-              <button
-                type="button"
-                className="recipe-social-primary"
-                onClick={loginFirst}
-              >
-                Log in to interact
-                <span aria-hidden="true">→</span>
-              </button>
-            </div>
-          ) : loading ? (
-            <div
-              className="recipe-social-loading"
-              role="status"
-              aria-live="polite"
+      {isOpen &&
+        createPortal(
+          <div
+            className="savorly-comments-overlay"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closePopup();
+              }
+            }}
+          >
+            <section
+              className="savorly-comments-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`comments-title-${recipeId}`}
             >
-              <span className="recipe-social-loader" />
-              <p>Preparing the conversation...</p>
-            </div>
-          ) : !social ? (
-            <div className="recipe-social-load-error">
-              <span className="recipe-social-error-icon" aria-hidden="true">
-                !
-              </span>
-
-              <h3>Conversation unavailable</h3>
-
-              <p>{message || "We couldn't load this recipe's interactions."}</p>
-
-              <button
-                type="button"
-                className="recipe-social-primary"
-                onClick={() => {
-                  setMessage("");
-                  setRetryCount((count) => count + 1);
-                }}
-              >
-                Try again
-              </button>
-            </div>
-          ) : (
-            <div className="recipe-social-content">
-              {owner && (
-                <div className="recipe-social-chef">
-                  <button
-                    type="button"
-                    className="recipe-social-chef-name"
-                    onClick={() => navigate(`/chefs/${owner._id}`)}
-                  >
-                    <span className="recipe-social-avatar">
-                      {(owner.chef || owner.name || "C")
-                        .trim()
-                        .charAt(0)
-                        .toUpperCase()}
-                    </span>
-
-                    <span className="recipe-social-chef-copy">
-                      <small>CREATED BY</small>
-                      <strong>
-                        {owner.chef || owner.name || "Savorly Chef"}
-                      </strong>
-
-                      {owner.followersCount != null && (
-                        <span>{owner.followersCount} followers</span>
-                      )}
-                    </span>
-                  </button>
-
-                  {!social.isOwnRecipe && (
-                    <button
-                      type="button"
-                      className={`recipe-social-follow ${
-                        social.isFollowingOwner ? "is-following" : ""
-                      }`}
-                      onClick={handleFollow}
-                      disabled={working}
-                    >
-                      {social.isFollowingOwner
-                        ? "✓ Following"
-                        : "+ Follow chef"}
-                    </button>
-                  )}
-                </div>
-              )}
-
-              <div className="recipe-social-heading">
-                <span className="recipe-social-section-label">
-                  COOK · CONNECT · SHARE
-                </span>
-
-                <h2>Join the conversation</h2>
-
-                <p>
-                  Tried this recipe or have a tip to share? We'd love to hear
-                  from you.
-                </p>
-              </div>
-
-              <div className="recipe-social-actions">
-                <button
-                  type="button"
-                  className={`recipe-social-like ${
-                    social.likedByMe ? "is-liked" : ""
-                  }`}
-                  onClick={handleLike}
-                  disabled={working || social.isOwnRecipe}
-                  title={
-                    social.isOwnRecipe
-                      ? "You cannot like your own recipe"
-                      : "Like this recipe"
-                  }
-                >
-                  <span className="recipe-social-heart" aria-hidden="true">
-                    {social.likedByMe ? "♥" : "♡"}
+              <header className="savorly-comments-header">
+                <div className="savorly-comments-header-copy">
+                  <span className="savorly-comments-eyebrow">
+                    SAVORLY COMMUNITY
                   </span>
 
-                  <span>{social.likedByMe ? "Liked" : "Like recipe"}</span>
+                  <h2 id={`comments-title-${recipeId}`}>
+                    Kitchen conversations
+                  </h2>
 
-                  <strong>{social.likesCount || 0}</strong>
-                </button>
-
-                <span className="recipe-social-comment-count">
-                  <span aria-hidden="true">✳</span>
-                  {comments.length}{" "}
-                  {comments.length === 1 ? "comment" : "comments"}
-                </span>
-              </div>
-
-              <div className="recipe-social-comments">
-                <div className="recipe-social-comments-title">
-                  <h3>Kitchen conversations</h3>
-                  <span>{comments.length}</span>
+                  <p>{recipeName}</p>
                 </div>
 
-                {comments.length === 0 ? (
-                  <div className="recipe-social-empty">
-                    <span aria-hidden="true">💬</span>
-                    <strong>Be the first to share</strong>
-                    <p>
-                      No comments yet. Start a conversation about this recipe.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="recipe-social-comment-list">
-                    {comments.map((comment) => {
-                      const author = comment.user;
-
-                      const authorName =
-                        author?.chef || author?.name || "Savorly User";
-
-                      return (
-                        <article
-                          className="recipe-social-comment"
-                          key={comment._id}
-                        >
-                          <span className="recipe-social-comment-avatar">
-                            {authorName.trim().charAt(0).toUpperCase()}
-                          </span>
-
-                          <div className="recipe-social-comment-body">
-                            <div className="recipe-social-comment-top">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (author?._id) {
-                                    navigate(`/chefs/${author._id}`);
-                                  }
-                                }}
-                              >
-                                {authorName}
-                              </button>
-
-                              <time>
-                                {comment.createdAt
-                                  ? new Date(
-                                      comment.createdAt,
-                                    ).toLocaleDateString(undefined, {
-                                      day: "numeric",
-                                      month: "short",
-                                      year: "numeric",
-                                    })
-                                  : ""}
-                              </time>
-                            </div>
-
-                            <p>{comment.text}</p>
-
-                            {comment.canDelete && (
-                              <button
-                                type="button"
-                                className="recipe-social-delete-comment"
-                                disabled={working}
-                                onClick={() => handleDeleteComment(comment._id)}
-                              >
-                                Delete comment
-                              </button>
-                            )}
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <form
-                  className="recipe-social-comment-form"
-                  onSubmit={handleComment}
+                <button
+                  type="button"
+                  className="savorly-comments-close"
+                  onClick={closePopup}
+                  disabled={working}
+                  aria-label="Close comments"
+                  title="Close"
                 >
-                  <label htmlFor={`comment-${recipeId}`}>
-                    Add to the conversation
-                  </label>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="21"
+                    height="21"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="m6 6 12 12M18 6 6 18"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </header>
 
-                  <textarea
-                    id={`comment-${recipeId}`}
-                    value={commentText}
-                    onChange={(event) => setCommentText(event.target.value)}
-                    maxLength={500}
-                    rows={3}
-                    placeholder="Share a tip, ask a question or tell us how it went..."
-                    disabled={working}
-                  />
+              <div className="savorly-comments-modal-body">
+                {!isLoggedIn ? (
+                  <div className="savorly-comments-login">
+                    <span className="savorly-comments-empty-icon">
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="30"
+                        height="30"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M20 11.4a7.4 7.4 0 0 1-7.4 7.4H5l1.7-3A7.4 7.4 0 1 1 20 11.4Z"
+                          stroke="currentColor"
+                          strokeWidth="1.7"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
 
-                  <div className="recipe-social-comment-footer">
-                    <small>{commentText.length}/500 characters</small>
+                    <h3>Join the conversation</h3>
+
+                    <p>
+                      Log in to view recipe interactions, follow chefs and share
+                      your thoughts.
+                    </p>
 
                     <button
-                      type="submit"
-                      className="recipe-social-primary"
-                      disabled={working || !commentText.trim()}
+                      type="button"
+                      className="savorly-comments-primary"
+                      onClick={loginFirst}
                     >
-                      {working ? "Please wait..." : "Post comment"}
-                      {!working && <span aria-hidden="true">→</span>}
+                      Log in to continue
+                      <span aria-hidden="true">→</span>
                     </button>
                   </div>
-                </form>
-              </div>
-            </div>
-          )}
+                ) : loading ? (
+                  <div
+                    className="savorly-comments-loading"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <span className="savorly-comments-spinner" />
+                    <p>Loading conversations...</p>
+                  </div>
+                ) : !social ? (
+                  <div className="savorly-comments-error">
+                    <span className="savorly-comments-empty-icon">!</span>
 
-          {message && social && (
-            <p className="recipe-social-status" role="status">
-              {message}
-            </p>
-          )}
-        </div>
-      )}
-    </section>
+                    <h3>Couldn't load comments</h3>
+
+                    <p>
+                      {message ||
+                        "The conversation is temporarily unavailable."}
+                    </p>
+
+                    <button
+                      type="button"
+                      className="savorly-comments-primary"
+                      onClick={() => {
+                        setMessage("");
+                        setRetryCount((count) => count + 1);
+                      }}
+                    >
+                      Try again
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* RECIPE CHEF */}
+
+                    {owner && (
+                      <div className="savorly-comments-chef">
+                        <button
+                          type="button"
+                          className="savorly-comments-chef-profile"
+                          onClick={() => {
+                            setIsOpen(false);
+                            navigate(`/chefs/${owner._id}`);
+                          }}
+                        >
+                          <span className="savorly-comments-avatar">
+                            {String(owner.chef || owner.name || "C")
+                              .trim()
+                              .charAt(0)
+                              .toUpperCase()}
+                          </span>
+
+                          <span>
+                            <small>RECIPE BY</small>
+                            <strong>
+                              {owner.chef || owner.name || "Savorly Chef"}
+                            </strong>
+                          </span>
+                        </button>
+
+                        {!social.isOwnRecipe && (
+                          <button
+                            type="button"
+                            className={`savorly-comments-follow ${
+                              social.isFollowingOwner ? "is-following" : ""
+                            }`}
+                            onClick={handleFollow}
+                            disabled={working}
+                          >
+                            {social.isFollowingOwner
+                              ? "✓ Following"
+                              : "+ Follow"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* LIKES SUMMARY */}
+
+                    <div className="savorly-comments-summary">
+                      <div>
+                        <span className="savorly-comments-summary-heart">
+                          ♥
+                        </span>
+
+                        <span>
+                          <strong>{social.likesCount || 0}</strong>
+                          <small>
+                            {(social.likesCount || 0) === 1 ? "Like" : "Likes"}
+                          </small>
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className={`savorly-comments-like ${
+                          social.likedByMe ? "is-liked" : ""
+                        }`}
+                        onClick={handleLike}
+                        disabled={working || social.isOwnRecipe}
+                        title={
+                          social.isOwnRecipe
+                            ? "You cannot like your own recipe"
+                            : "Like this recipe"
+                        }
+                      >
+                        <span aria-hidden="true">
+                          {social.likedByMe ? "♥" : "♡"}
+                        </span>
+
+                        {social.likedByMe ? "Liked" : "Like recipe"}
+                      </button>
+                    </div>
+
+                    {/* COMMENTS LIST */}
+
+                    <div className="savorly-comments-list-section">
+                      <div className="savorly-comments-list-heading">
+                        <div>
+                          <h3>Comments</h3>
+                          <p>Share ideas and learn from other cooks.</p>
+                        </div>
+
+                        <span className="savorly-comments-total">
+                          {comments.length}
+                        </span>
+                      </div>
+
+                      {comments.length === 0 ? (
+                        <div className="savorly-comments-empty">
+                          <span className="savorly-comments-empty-icon">
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="27"
+                              height="27"
+                              fill="none"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M20 11.4a7.4 7.4 0 0 1-7.4 7.4H5l1.7-3A7.4 7.4 0 1 1 20 11.4Z"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </span>
+
+                          <strong>Start the conversation</strong>
+
+                          <p>
+                            No comments yet. Share your first thought about this
+                            recipe.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="savorly-comments-list">
+                          {comments.map((comment) => {
+                            const author = comment.user;
+                            const authorName = String(
+                              author?.chef || author?.name || "Savorly User",
+                            );
+
+                            return (
+                              <article
+                                className="savorly-comment-item"
+                                key={comment._id}
+                              >
+                                <span className="savorly-comments-avatar">
+                                  {authorName.trim().charAt(0).toUpperCase()}
+                                </span>
+
+                                <div className="savorly-comment-content">
+                                  <div className="savorly-comment-meta">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (author?._id) {
+                                          setIsOpen(false);
+                                          navigate(`/chefs/${author._id}`);
+                                        }
+                                      }}
+                                    >
+                                      {authorName}
+                                    </button>
+
+                                    <time>
+                                      {comment.createdAt
+                                        ? new Date(
+                                            comment.createdAt,
+                                          ).toLocaleDateString(undefined, {
+                                            day: "numeric",
+                                            month: "short",
+                                            year: "numeric",
+                                          })
+                                        : ""}
+                                    </time>
+                                  </div>
+
+                                  <p>{comment.text}</p>
+
+                                  {comment.canDelete && (
+                                    <button
+                                      type="button"
+                                      className="savorly-comment-delete"
+                                      disabled={working}
+                                      onClick={() =>
+                                        handleDeleteComment(comment._id)
+                                      }
+                                    >
+                                      Delete comment
+                                    </button>
+                                  )}
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* COMMENT FORM */}
+
+                    <form
+                      className="savorly-comments-form"
+                      onSubmit={handleComment}
+                    >
+                      <label htmlFor={`comment-${recipeId}`}>
+                        Add your thoughts
+                      </label>
+
+                      <textarea
+                        id={`comment-${recipeId}`}
+                        value={commentText}
+                        onChange={(event) => setCommentText(event.target.value)}
+                        maxLength={500}
+                        rows={3}
+                        placeholder="What do you think about this recipe?"
+                        disabled={working}
+                      />
+
+                      <div className="savorly-comments-form-footer">
+                        <small>{commentText.length}/500</small>
+
+                        <button
+                          type="submit"
+                          className="savorly-comments-primary"
+                          disabled={working || !commentText.trim()}
+                        >
+                          {working ? "Posting..." : "Post comment"}
+
+                          {!working && <span aria-hidden="true">↗</span>}
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                )}
+
+                {message && social && !loading && (
+                  <p className="savorly-comments-message" role="status">
+                    {message}
+                  </p>
+                )}
+              </div>
+            </section>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 
