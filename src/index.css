@@ -30168,3 +30168,80 @@ input[type="submit"] {
   animation: none !important;
   transition: none !important;
 }
+
+/* ==========================================
+   RECIPE DETAILS — SIMPLE GREEN CHECKBOX
+   Exact selectors from RecipeDetails.jsx
+========================================== */
+
+/* Hide the custom checkbox icon and orange decoration */
+.recipe-details-page .ingredient-item .ingredient-checkbox,
+.recipe-details-page .ingredient-item .ingredient-checkbox::before,
+.recipe-details-page .ingredient-item .ingredient-checkbox::after {
+  display: none !important;
+  content: none !important;
+  animation: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+/* Show a simple native checkbox */
+.recipe-details-page .ingredient-item input[type="checkbox"] {
+  display: inline-block !important;
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  position: static !important;
+  flex: 0 0 17px !important;
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  min-height: 17px !important;
+  margin: 0 12px 0 0 !important;
+  padding: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  accent-color: #22a447 !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: none !important;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  cursor: pointer !important;
+}
+
+/* Green when checked — no animation */
+.recipe-details-page .ingredient-item input[type="checkbox"]:checked {
+  accent-color: #22a447 !important;
+  animation: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Remove orange dots or circles on the ingredient row */
+.recipe-details-page .ingredient-item::before,
+.recipe-details-page .ingredient-item::after {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* Simple checked ingredient text */
+.recipe-details-page .ingredient-item:has(input[type="checkbox"]:checked) .ingredient-text {
+  color: #7b827c !important;
+  text-decoration: line-through !important;
+  text-decoration-color: #a3aaa4 !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Keep the ingredient row neat */
+.recipe-details-page .ingredient-item {
+  display: flex;
+  align-items: center;
+  gap: 0 !important;
+}
