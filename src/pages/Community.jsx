@@ -10,7 +10,7 @@ import RecipeSocial from "../components/RecipeSocial";
 
 import { getUserRecipes } from "../services/recipeApi";
 import { useNotification } from "../context/NotificationContext";
-
+import { useSelector } from "react-redux";
 // =====================================
 // CONSTANTS
 // =====================================
@@ -104,6 +104,14 @@ function categoryMatches(recipeCategory, selectedCategory) {
 // =====================================
 
 function Community() {
+  const auth = useSelector((state) => state.auth || {});
+
+  const user = auth.user || auth.currentUser || auth.profile || null;
+
+  const isLoggedIn = Boolean(
+    auth.isAuthenticated || auth.isLoggedIn || auth.token || user,
+  );
+
   const navigate = useNavigate();
   const { notify } = useNotification();
 
@@ -557,7 +565,7 @@ function Community() {
                   >
                     <RecipeCard recipe={recipe} />
 
-                    <RecipeSocial recipe={recipe} />
+                    <RecipeSocial recipe={recipe} isLoggedIn={isLoggedIn} />
                   </article>
                 ))}
               </div>
