@@ -29987,3 +29987,80 @@ input[type="submit"] {
   animation: none !important;
   transition: none !important;
 }
+
+/* =========================================
+   1. REMOVE EXTRA SPACE AFTER HERO
+========================================= */
+
+.home-page .hero-scroll-section {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.home-page .hero-section {
+  margin-bottom: 0 !important;
+}
+
+.home-page .home-collections-section {
+  padding-top: 12px !important;
+  margin-top: 0 !important;
+}
+
+.home-page .home-section-intro {
+  margin-top: 0 !important;
+}
+
+/* =========================================
+   2. SIMPLE GREEN INGREDIENT CHECKBOXES
+========================================= */
+
+/* Browser's native checkbox */
+.recipe-ingredients input[type="checkbox"],
+.recipe-details-content input[type="checkbox"],
+.recipe-details-page input[type="checkbox"],
+.ingredient-item input[type="checkbox"],
+.ingredient-row input[type="checkbox"] {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  accent-color: #22a447 !important;
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  margin: 0 10px 0 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 2px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  cursor: pointer;
+}
+
+/* Remove decorative checkbox dots and effects */
+.recipe-ingredients input[type="checkbox"]::before,
+.recipe-ingredients input[type="checkbox"]::after,
+.recipe-details-content input[type="checkbox"]::before,
+.recipe-details-content input[type="checkbox"]::after,
+.ingredient-item input[type="checkbox"]::before,
+.ingredient-item input[type="checkbox"]::after,
+.ingredient-row input[type="checkbox"]::before,
+.ingredient-row input[type="checkbox"]::after {
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* Checked ingredient text */
+.recipe-ingredients input[type="checkbox"]:checked+label,
+.recipe-details-content input[type="checkbox"]:checked+label,
+.ingredient-item input[type="checkbox"]:checked+label,
+.ingredient-row input[type="checkbox"]:checked+label {
+  color: #6b7280 !important;
+  text-decoration: line-through;
+  text-decoration-color: #9ca3af;
+  animation: none !important;
+  transition: none !important;
+}
