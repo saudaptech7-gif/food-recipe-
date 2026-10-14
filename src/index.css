@@ -23810,3 +23810,33 @@ input[type="submit"] {
     font-size: 11px;
   }
 }
+
+/* FORCE SPACE BETWEEN LIKE AND COMMENTS */
+
+.savorly-social-card-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: wrap;
+  column-gap: 18px !important;
+  row-gap: 10px !important;
+  width: 100%;
+}
+
+/* Add guaranteed space before Comments */
+
+.savorly-social-card-actions .savorly-comment-icon-button {
+  margin-left: 18px !important;
+}
+
+/* Mobile spacing */
+
+@media (max-width: 420px) {
+  .savorly-social-card-actions {
+    column-gap: 12px !important;
+  }
+
+  .savorly-social-card-actions .savorly-comment-icon-button {
+    margin-left: 12px !important;
+  }
+}
