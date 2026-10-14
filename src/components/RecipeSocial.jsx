@@ -383,14 +383,13 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
             height="21"
             aria-hidden="true"
             fill={likedByMe ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <path
-              d="M20.8 8.8c0 5.2-8.8 10.1-8.8 10.1S3.2 14 3.2 8.8A4.5 4.5 0 0 1 12 7.2a4.5 4.5 0 0 1 8.8 1.6Z"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M7 10v12" />
+            <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 3a3 3 0 0 1 3 2.88Z" />
           </svg>
 
           <span>{likedByMe ? "Liked" : "Like"}</span>
@@ -455,13 +454,9 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
             >
               <header className="savorly-comments-header">
                 <div className="savorly-comments-header-copy">
-                  <span className="savorly-comments-eyebrow">
-                   
-                  </span>
+                  <span className="savorly-comments-eyebrow"></span>
 
-                  <h2 id={`comments-title-${recipeId}`}>
-                   
-                  </h2>
+                  <h2 id={`comments-title-${recipeId}`}></h2>
 
                   <p>{recipeName}</p>
                 </div>

@@ -23696,3 +23696,117 @@ input[type="submit"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =====================================
+   SAVORLY LIKE BUTTON
+===================================== */
+
+.savorly-social-card-actions .savorly-like-card-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 15px;
+
+  color: #53664f;
+  background: linear-gradient(135deg, #ffffff, #f5f7f0);
+  border: 1px solid #dfe7d8;
+  border-radius: 13px;
+
+  box-shadow: 0 3px 10px rgba(35, 65, 40, 0.04);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+/* Heart icon */
+
+.savorly-social-card-actions .savorly-like-card-button svg {
+  flex-shrink: 0;
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease;
+}
+
+/* Hover effect */
+
+.savorly-social-card-actions .savorly-like-card-button:hover:not(:disabled) {
+  color: #c44752;
+  background: #fff5f3;
+  border-color: #f0c9c8;
+  box-shadow: 0 6px 16px rgba(196, 71, 82, 0.10);
+  transform: translateY(-2px);
+}
+
+.savorly-social-card-actions .savorly-like-card-button:hover:not(:disabled) svg {
+  transform: scale(1.13);
+}
+
+/* Liked state */
+
+.savorly-social-card-actions .savorly-like-card-button.is-liked {
+  color: #c43f4c;
+  background: linear-gradient(135deg, #fff0ee, #ffe7e5);
+  border-color: #f1c6c5;
+  box-shadow: 0 4px 12px rgba(196, 63, 76, 0.08);
+}
+
+.savorly-social-card-actions .savorly-like-card-button.is-liked svg {
+  color: #c43f4c;
+}
+
+/* Like count */
+
+.savorly-social-card-actions .savorly-card-action-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+
+  color: inherit;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(196, 63, 76, 0.10);
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 850;
+}
+
+/* Disabled state */
+
+.savorly-social-card-actions .savorly-like-card-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Keyboard accessibility */
+
+.savorly-social-card-actions .savorly-like-card-button:focus-visible {
+  outline: 3px solid rgba(76, 119, 75, 0.3);
+  outline-offset: 3px;
+}
+
+/* Mobile */
+
+@media (max-width: 420px) {
+  .savorly-social-card-actions .savorly-like-card-button {
+    min-height: 40px;
+    gap: 7px;
+    padding: 8px 11px;
+    border-radius: 11px;
+    font-size: 11px;
+  }
+}
