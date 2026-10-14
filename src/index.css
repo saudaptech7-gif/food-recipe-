@@ -25578,3 +25578,1866 @@ input[type="submit"] {
     min-height: 160px;
   }
 }
+
+/* =========================================================
+   SAVORLY COMMUNITY — FRESH ORANGE THEME
+   Paste this entire block at the END of src/index.css
+   Scoped to Community page + its comments modal
+========================================================= */
+
+.savorly-community-shell {
+  --sav-orange: #e8793e !important;
+  --sav-orange-dark: #c85d28 !important;
+  --sav-orange-deep: #98441f !important;
+  --sav-peach: #fff0e5 !important;
+  --sav-peach-light: #fff8f2 !important;
+  --sav-cream: #fffaf5 !important;
+  --sav-cocoa: #38271f !important;
+  --sav-muted: #85776e !important;
+  --sav-border: #f0dfd1 !important;
+  --sav-white: #ffffff !important;
+
+  min-height: 100vh !important;
+  background: var(--sav-cream) !important;
+  color: var(--sav-cocoa) !important;
+}
+
+.savorly-community-shell *,
+.savorly-community-shell *::before,
+.savorly-community-shell *::after {
+  box-sizing: border-box !important;
+}
+
+.savorly-community-shell .savorly-community-main {
+  width: min(1320px, calc(100% - 64px)) !important;
+  max-width: 1320px !important;
+  margin: 0 auto !important;
+  padding: 34px 0 90px !important;
+  color: var(--sav-cocoa) !important;
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.savorly-community-shell .community-hero {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr) !important;
+  align-items: center !important;
+  gap: 30px !important;
+
+  width: 100% !important;
+  min-height: 475px !important;
+  margin: 0 !important;
+  padding: clamp(32px, 5vw, 64px) !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+
+  color: #ffffff !important;
+  background:
+    radial-gradient(circle at 83% 15%,
+      rgba(255, 190, 132, 0.24),
+      transparent 32%),
+    radial-gradient(circle at 7% 100%,
+      rgba(199, 91, 40, 0.28),
+      transparent 37%),
+    linear-gradient(125deg, #71391f 0%, #a9502a 51%, #df783f 100%) !important;
+
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 30px !important;
+  box-shadow: 0 22px 55px rgba(125, 64, 31, 0.16) !important;
+}
+
+.savorly-community-shell .community-hero-content {
+  position: relative !important;
+  z-index: 2 !important;
+  width: 100% !important;
+  max-width: 650px !important;
+}
+
+.savorly-community-shell .community-eyebrow {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+
+  margin: 0 !important;
+  padding: 10px 14px !important;
+
+  color: #fff0df !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 100px !important;
+
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: 1.6px !important;
+}
+
+.savorly-community-shell .community-eyebrow-dot {
+  display: inline-block !important;
+  flex: 0 0 7px !important;
+  width: 7px !important;
+  height: 7px !important;
+
+  background: #ffd09e !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 12px rgba(255, 208, 158, 0.65) !important;
+}
+
+.savorly-community-shell .community-hero-content h1 {
+  max-width: 650px !important;
+  margin: 25px 0 18px !important;
+
+  color: #fffaf5 !important;
+  font-size: clamp(36px, 4.4vw, 62px) !important;
+  font-weight: 900 !important;
+  letter-spacing: -2.4px !important;
+  line-height: 1.08 !important;
+  text-wrap: balance !important;
+}
+
+.savorly-community-shell .community-hero-content h1 span {
+  display: block !important;
+  margin-top: 5px !important;
+  color: #ffd8b7 !important;
+}
+
+.savorly-community-shell .community-hero-description {
+  max-width: 500px !important;
+  margin: 0 !important;
+
+  color: #f8ded0 !important;
+  font-size: 13px !important;
+  line-height: 1.95 !important;
+}
+
+.savorly-community-shell .community-hero-actions {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+
+  margin-top: 28px !important;
+}
+
+.savorly-community-shell .community-button-primary,
+.savorly-community-shell .community-button-secondary {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 11px !important;
+
+  min-height: 47px !important;
+  margin: 0 !important;
+  padding: 12px 19px !important;
+
+  border-radius: 12px !important;
+  cursor: pointer !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  line-height: 1.4 !important;
+  text-decoration: none !important;
+
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease !important;
+}
+
+.savorly-community-shell .community-button-primary {
+  color: #6e351e !important;
+  background: #fff1df !important;
+  border: 1px solid #fff1df !important;
+  box-shadow: 0 6px 18px rgba(69, 31, 16, 0.12) !important;
+}
+
+.savorly-community-shell .community-button-primary:hover {
+  color: #572713 !important;
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 10px 25px rgba(69, 31, 16, 0.17) !important;
+  transform: translateY(-2px) !important;
+}
+
+.savorly-community-shell .community-button-secondary {
+  color: #fff5ed !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  box-shadow: none !important;
+}
+
+.savorly-community-shell .community-button-secondary:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  transform: translateY(-2px) !important;
+}
+
+.savorly-community-shell .community-button-primary>span,
+.savorly-community-shell .community-button-secondary>span {
+  font-size: 16px !important;
+}
+
+.savorly-community-shell .community-hero-trust {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  margin-top: 26px !important;
+  color: #f7dfce !important;
+}
+
+.savorly-community-shell .community-hero-trust>span {
+  color: #ffd09e !important;
+  font-size: 17px !important;
+}
+
+.savorly-community-shell .community-hero-trust p {
+  margin: 0 !important;
+  color: #f7dfce !important;
+  font-size: 11px !important;
+  line-height: 1.7 !important;
+}
+
+/* =========================================================
+   HERO ART
+========================================================= */
+
+.savorly-community-shell .community-hero-art {
+  position: relative !important;
+  z-index: 1 !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 365px !important;
+}
+
+.savorly-community-shell .community-art-glow {
+  position: absolute !important;
+  top: 8% !important;
+  left: 12% !important;
+
+  width: 76% !important;
+  aspect-ratio: 1 !important;
+
+  background: radial-gradient(circle,
+      rgba(255, 223, 188, 0.25),
+      rgba(255, 223, 188, 0.04) 58%,
+      transparent 73%) !important;
+
+  border-radius: 50% !important;
+}
+
+.savorly-community-shell .community-art-orbit {
+  position: absolute !important;
+  width: 83% !important;
+  aspect-ratio: 1 !important;
+
+  background: transparent !important;
+  border: 1px solid rgba(255, 238, 219, 0.23) !important;
+  border-radius: 50% !important;
+}
+
+.savorly-community-shell .community-art-orbit-one {
+  width: 87% !important;
+  transform: rotate(-22deg) scaleY(0.73) !important;
+}
+
+.savorly-community-shell .community-art-orbit-two {
+  width: 70% !important;
+  border-color: rgba(255, 238, 219, 0.16) !important;
+  transform: rotate(39deg) scaleY(0.75) !important;
+}
+
+.savorly-community-shell .community-art-food {
+  position: relative !important;
+  z-index: 2 !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  width: clamp(175px, 20vw, 255px) !important;
+  aspect-ratio: 1 !important;
+
+  background: linear-gradient(145deg, #ffffff, #fff0dd) !important;
+  border: 9px solid #fffaf4 !important;
+  border-radius: 50% !important;
+
+  box-shadow:
+    0 28px 65px rgba(71, 28, 12, 0.28),
+    inset 0 0 0 1px #f0d9c3 !important;
+
+  animation: savorly-orange-food-float 5s ease-in-out infinite !important;
+}
+
+.savorly-community-shell .community-food-emoji {
+  display: grid !important;
+  place-items: center !important;
+
+  width: 78% !important;
+  height: 78% !important;
+
+  background: radial-gradient(circle at 32% 27%, #fff5e6, #f5dfc4) !important;
+  border: 4px solid #ffffff !important;
+  border-radius: 50% !important;
+
+  font-size: clamp(75px, 8vw, 115px) !important;
+}
+
+.savorly-community-shell .community-art-food-spark {
+  position: absolute !important;
+  z-index: 3 !important;
+  color: #ffe0ac !important;
+  font-size: 30px !important;
+}
+
+.savorly-community-shell .community-art-food-spark.spark-one {
+  top: 1% !important;
+  right: 3% !important;
+}
+
+.savorly-community-shell .community-art-food-spark.spark-two {
+  bottom: 7% !important;
+  left: -6% !important;
+  color: #fff0dc !important;
+  font-size: 25px !important;
+}
+
+.savorly-community-shell .community-art-note {
+  position: absolute !important;
+  z-index: 4 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+
+  max-width: 235px !important;
+  padding: 13px 15px !important;
+
+  color: #513124 !important;
+  background: rgba(255, 253, 248, 0.97) !important;
+  border: 1px solid #f3ddcb !important;
+  border-radius: 15px !important;
+
+  box-shadow: 0 13px 34px rgba(69, 31, 16, 0.17) !important;
+}
+
+.savorly-community-shell .community-art-note-top {
+  top: 8% !important;
+  left: -4% !important;
+}
+
+.savorly-community-shell .community-art-note-bottom {
+  right: -4% !important;
+  bottom: 10% !important;
+}
+
+.savorly-community-shell .community-art-note-icon {
+  display: grid !important;
+  flex: 0 0 39px !important;
+  place-items: center !important;
+
+  width: 39px !important;
+  height: 39px !important;
+
+  color: #c76535 !important;
+  background: #fff0e2 !important;
+  border-radius: 12px !important;
+  font-size: 19px !important;
+}
+
+.savorly-community-shell .community-art-note>div {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.savorly-community-shell .community-art-note strong {
+  color: #593523 !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+}
+
+.savorly-community-shell .community-art-note small {
+  color: #927b6d !important;
+  font-size: 9px !important;
+}
+
+.savorly-community-shell .community-art-caption {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+
+  color: #ffdfc7 !important;
+  text-align: center !important;
+  font-size: 10px !important;
+  letter-spacing: 0.6px !important;
+}
+
+.savorly-community-shell .community-hero-decoration {
+  position: absolute !important;
+  z-index: -1 !important;
+
+  width: 240px !important;
+  height: 240px !important;
+
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+}
+
+.savorly-community-shell .community-hero-decoration.decoration-one {
+  top: -130px !important;
+  right: -45px !important;
+}
+
+.savorly-community-shell .community-hero-decoration.decoration-two {
+  right: 15% !important;
+  bottom: -190px !important;
+  width: 310px !important;
+  height: 310px !important;
+}
+
+@keyframes savorly-orange-food-float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+/* =========================================================
+   BENEFITS
+========================================================= */
+
+.savorly-community-shell .community-benefits {
+  position: relative !important;
+  z-index: 4 !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 16px !important;
+
+  margin: -23px 24px 0 !important;
+}
+
+.savorly-community-shell .community-benefit {
+  display: flex !important;
+  align-items: center !important;
+  gap: 13px !important;
+
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 20px !important;
+
+  background: #ffffff !important;
+  border: 1px solid var(--sav-border) !important;
+  border-radius: 17px !important;
+
+  box-shadow: 0 8px 24px rgba(93, 54, 32, 0.055) !important;
+
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease !important;
+}
+
+.savorly-community-shell .community-benefit:hover {
+  border-color: #edc7a9 !important;
+  box-shadow: 0 13px 30px rgba(123, 69, 37, 0.09) !important;
+  transform: translateY(-3px) !important;
+}
+
+.savorly-community-shell .community-benefit-icon {
+  display: grid !important;
+  flex: 0 0 45px !important;
+  place-items: center !important;
+
+  width: 45px !important;
+  height: 45px !important;
+
+  color: #c76332 !important;
+  background: #fff0e3 !important;
+  border: 1px solid #f8e2cf !important;
+  border-radius: 14px !important;
+}
+
+.savorly-community-shell .community-benefit-icon svg {
+  display: block !important;
+  width: 22px !important;
+  height: 22px !important;
+
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.savorly-community-shell .community-benefit:nth-child(2) .community-benefit-icon {
+  color: #b95a35 !important;
+  background: #fff0e7 !important;
+}
+
+.savorly-community-shell .community-benefit:nth-child(3) .community-benefit-icon {
+  color: #a66b35 !important;
+  background: #fff3df !important;
+}
+
+.savorly-community-shell .community-benefit>div {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.savorly-community-shell .community-benefit h2 {
+  margin: 0 0 5px !important;
+  color: #493126 !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+}
+
+.savorly-community-shell .community-benefit p {
+  margin: 0 !important;
+  color: #8a796d !important;
+  font-size: 10px !important;
+  line-height: 1.7 !important;
+}
+
+.savorly-community-shell .community-benefit-arrow {
+  align-self: flex-start !important;
+  color: #d28b5d !important;
+  font-size: 14px !important;
+}
+
+/* =========================================================
+   DISCOVER SECTION
+========================================================= */
+
+.savorly-community-shell .community-discover {
+  width: 100% !important;
+  min-width: 0 !important;
+  padding-top: 88px !important;
+  scroll-margin-top: 28px !important;
+}
+
+.savorly-community-shell .community-section-heading {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 24px !important;
+
+  margin: 0 0 30px !important;
+}
+
+.savorly-community-shell .community-section-heading-copy {
+  max-width: 760px !important;
+}
+
+.savorly-community-shell .community-section-eyebrow {
+  display: inline-block !important;
+  color: #c96d3a !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.8px !important;
+}
+
+.savorly-community-shell .community-section-heading h2 {
+  margin: 12px 0 !important;
+  color: #492d20 !important;
+  font-size: clamp(30px, 3.5vw, 44px) !important;
+  font-weight: 900 !important;
+  letter-spacing: -1.6px !important;
+  line-height: 1.18 !important;
+}
+
+.savorly-community-shell .community-section-heading h2 span {
+  color: #d97743 !important;
+}
+
+.savorly-community-shell .community-section-heading p {
+  max-width: 620px !important;
+  margin: 0 !important;
+  color: #88786d !important;
+  font-size: 13px !important;
+  line-height: 1.9 !important;
+}
+
+.savorly-community-shell .community-heading-mark {
+  display: grid !important;
+  flex: 0 0 76px !important;
+  place-items: center !important;
+
+  width: 76px !important;
+  height: 76px !important;
+
+  color: #d5713d !important;
+  background: #fff0e4 !important;
+  border: 1px solid #f2d8c4 !important;
+  border-radius: 23px !important;
+
+  transform: rotate(5deg) !important;
+}
+
+.savorly-community-shell .community-heading-mark span {
+  font-size: 36px !important;
+}
+
+/* =========================================================
+   COMMUNITY STATS
+========================================================= */
+
+.savorly-community-shell .community-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin: 0 0 25px !important;
+}
+
+.savorly-community-shell .community-stat {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 20px !important;
+
+  background: #ffffff !important;
+  border: 1px solid var(--sav-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 5px 19px rgba(93, 54, 32, 0.035) !important;
+}
+
+.savorly-community-shell .community-stat-icon {
+  display: grid !important;
+  flex: 0 0 45px !important;
+  place-items: center !important;
+
+  width: 45px !important;
+  height: 45px !important;
+
+  color: #c76332 !important;
+  background: #fff0e3 !important;
+  border-radius: 14px !important;
+  font-size: 20px !important;
+}
+
+.savorly-community-shell .community-stat:nth-child(2) .community-stat-icon {
+  color: #ba693e !important;
+  background: #fff0e6 !important;
+}
+
+.savorly-community-shell .community-stat:nth-child(3) .community-stat-icon {
+  color: #ab773d !important;
+  background: #fff3df !important;
+}
+
+.savorly-community-shell .community-stat>div {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+
+.savorly-community-shell .community-stat strong {
+  color: #4b3022 !important;
+  font-size: 25px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.8px !important;
+}
+
+.savorly-community-shell .community-stat>div>span {
+  color: #8b7b6f !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+}
+
+/* =========================================================
+   SEARCH AND FILTER PANEL
+========================================================= */
+
+.savorly-community-shell .community-filter-panel {
+  width: 100% !important;
+  margin: 0 0 34px !important;
+  padding: 24px !important;
+
+  background: #ffffff !important;
+  border: 1px solid var(--sav-border) !important;
+  border-radius: 21px !important;
+
+  box-shadow: 0 7px 25px rgba(93, 54, 32, 0.04) !important;
+}
+
+.savorly-community-shell .community-filter-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 18px !important;
+  margin: 0 0 20px !important;
+}
+
+.savorly-community-shell .community-filter-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+.savorly-community-shell .community-filter-title-icon {
+  display: grid !important;
+  flex: 0 0 43px !important;
+  place-items: center !important;
+
+  width: 43px !important;
+  height: 43px !important;
+
+  color: #c76332 !important;
+  background: #fff0e3 !important;
+  border: 1px solid #f5dfcd !important;
+  border-radius: 13px !important;
+}
+
+.savorly-community-shell .community-filter-title h3 {
+  margin: 0 0 5px !important;
+  color: #493126 !important;
+  font-size: 14px !important;
+  font-weight: 850 !important;
+}
+
+.savorly-community-shell .community-filter-title p {
+  margin: 0 !important;
+  color: #8c7c70 !important;
+  font-size: 11px !important;
+  line-height: 1.7 !important;
+}
+
+.savorly-community-shell .community-sort {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.savorly-community-shell .community-sort label {
+  color: #76675b !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+
+.savorly-community-shell .community-sort select {
+  min-height: 42px !important;
+  max-width: 100% !important;
+  padding: 0 32px 0 12px !important;
+
+  color: #5b3b2a !important;
+  background-color: #fffaf5 !important;
+  border: 1px solid #eedccc !important;
+  border-radius: 10px !important;
+
+  cursor: pointer !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+.savorly-community-shell .community-search {
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+
+  width: 100% !important;
+  min-height: 53px !important;
+  margin: 0 !important;
+  padding: 0 15px !important;
+
+  background: #fffaf6 !important;
+  border: 1px solid #efdfd1 !important;
+  border-radius: 12px !important;
+
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+.savorly-community-shell .community-search:focus-within {
+  background: #ffffff !important;
+  border-color: #e7a477 !important;
+  box-shadow: 0 0 0 3px rgba(232, 121, 62, 0.11) !important;
+}
+
+.savorly-community-shell .community-search>svg {
+  display: block !important;
+  flex: 0 0 21px !important;
+  width: 21px !important;
+  height: 21px !important;
+
+  fill: none !important;
+  stroke: #bd764e !important;
+  stroke-width: 1.8 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.savorly-community-shell .community-search input {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 49px !important;
+  padding: 0 !important;
+
+  color: #493126 !important;
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+}
+
+.savorly-community-shell .community-search input::placeholder {
+  color: #ad9b8e !important;
+}
+
+.savorly-community-shell .community-search input:focus-visible {
+  outline: 0 !important;
+}
+
+.savorly-community-shell .community-search-clear {
+  display: grid !important;
+  flex: 0 0 29px !important;
+  place-items: center !important;
+
+  width: 29px !important;
+  height: 29px !important;
+  padding: 0 !important;
+
+  color: #a85a31 !important;
+  background: #ffeadb !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+
+  cursor: pointer !important;
+  font-size: 20px !important;
+}
+
+.savorly-community-shell .community-category-heading {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+
+  margin: 22px 0 12px !important;
+}
+
+.savorly-community-shell .community-category-heading>span {
+  color: #a17c65 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px !important;
+}
+
+.savorly-community-shell .community-category-heading button {
+  padding: 0 !important;
+  color: #c66b37 !important;
+  background: transparent !important;
+  border: 0 !important;
+
+  cursor: pointer !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+}
+
+.savorly-community-shell .community-category-heading button:hover {
+  color: #99451f !important;
+  text-decoration: underline !important;
+}
+
+.savorly-community-shell .community-categories {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 9px !important;
+}
+
+.savorly-community-shell .community-category {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+
+  min-height: 39px !important;
+  margin: 0 !important;
+  padding: 9px 13px !important;
+
+  color: #806c5e !important;
+  background: #ffffff !important;
+  border: 1px solid #ecdfd3 !important;
+  border-radius: 10px !important;
+
+  cursor: pointer !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease !important;
+}
+
+.savorly-community-shell .community-category>span {
+  font-size: 13px !important;
+}
+
+.savorly-community-shell .community-category:hover {
+  color: #b9592a !important;
+  background: #fff2e7 !important;
+  border-color: #edc6a7 !important;
+  transform: translateY(-1px) !important;
+}
+
+.savorly-community-shell .community-category.active {
+  color: #ffffff !important;
+  background: #d96e36 !important;
+  border-color: #d96e36 !important;
+  box-shadow: 0 4px 12px rgba(203, 97, 43, 0.18) !important;
+}
+
+/* =========================================================
+   RESULTS HEADING
+========================================================= */
+
+.savorly-community-shell .community-results-heading {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+
+  margin: 0 0 22px !important;
+}
+
+.savorly-community-shell .community-results-eyebrow {
+  display: block !important;
+  margin: 0 0 7px !important;
+  color: #c77547 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.6px !important;
+}
+
+.savorly-community-shell .community-results-heading h3 {
+  margin: 0 !important;
+  color: #493126 !important;
+  font-size: 23px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.7px !important;
+  line-height: 1.3 !important;
+}
+
+.savorly-community-shell .community-results-heading>p {
+  margin: 0 !important;
+  padding: 8px 12px !important;
+
+  color: #9f552c !important;
+  background: #fff0e3 !important;
+  border: 1px solid #f5dfcb !important;
+  border-radius: 9px !important;
+
+  font-size: 10px !important;
+  white-space: nowrap !important;
+}
+
+.savorly-community-shell .community-results-heading>p strong {
+  color: #b95728 !important;
+  font-weight: 900 !important;
+}
+
+/* =========================================================
+   RECIPE GRID AND OUTER CARDS
+========================================================= */
+
+.savorly-community-shell .recipes-grid.community-recipes-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  gap: 24px !important;
+
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.savorly-community-shell .community-recipe-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-self: stretch !important;
+  gap: 0 !important;
+
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 12px !important;
+  overflow: hidden !important;
+
+  background: #ffffff !important;
+  border: 1px solid #efdfd2 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 6px 22px rgba(96, 55, 32, 0.045) !important;
+
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease !important;
+}
+
+.savorly-community-shell .community-recipe-item:hover {
+  border-color: #e9c3a5 !important;
+  box-shadow: 0 14px 34px rgba(108, 58, 29, 0.095) !important;
+  transform: translateY(-3px) !important;
+}
+
+.savorly-community-shell .community-recipe-item>* {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* RecipeCard may use its own root class. Keep its content
+   within the outer Community card without forcing unknown layouts. */
+
+.savorly-community-shell .community-recipe-item .recipe-card {
+  max-width: 100% !important;
+  border-radius: 13px !important;
+}
+
+/* Unified orange like/comments action bar */
+
+.savorly-community-shell .savorly-card-social-group {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+
+  width: fit-content !important;
+  max-width: 100% !important;
+  margin-top: 11px !important;
+  padding: 4px !important;
+
+  background: #fff4eb !important;
+  border: 1px solid #f3decd !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.savorly-community-shell .savorly-card-social-group .savorly-card-social-like,
+.savorly-community-shell .savorly-card-social-group .savorly-card-social-comments {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+
+  min-height: 38px !important;
+  margin: 0 !important;
+  padding: 8px 12px !important;
+
+  color: #9b522d !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+
+  cursor: pointer !important;
+  transform: none !important;
+
+  transition:
+    color 180ms ease,
+    background 180ms ease !important;
+}
+
+.savorly-community-shell .savorly-card-social-group .savorly-card-social-comments {
+  border-left: 1px solid #edcdb7 !important;
+  border-radius: 0 8px 8px 0 !important;
+  padding-left: 13px !important;
+}
+
+.savorly-community-shell .savorly-card-social-group .savorly-card-social-like:hover:not(:disabled),
+.savorly-community-shell .savorly-card-social-group .savorly-card-social-comments:hover {
+  color: #873d1d !important;
+  background: #ffe6d3 !important;
+}
+
+.savorly-community-shell .savorly-card-social-group .savorly-card-social-like.is-liked {
+  color: #c64e36 !important;
+  background: transparent !important;
+}
+
+.savorly-community-shell .savorly-card-social-group .savorly-card-social-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-width: 18px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+
+  color: inherit !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+}
+
+.savorly-community-shell .savorly-card-social-group button svg {
+  display: block !important;
+  flex: 0 0 auto !important;
+}
+
+/* =========================================================
+   LOADING, ERROR AND EMPTY STATES
+========================================================= */
+
+.savorly-community-shell .community-state {
+  display: flex !important;
+  align-items: center !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+
+  min-height: 265px !important;
+  margin: 0 !important;
+  padding: 35px 22px !important;
+  text-align: center !important;
+
+  background: #ffffff !important;
+  border: 1px solid var(--sav-border) !important;
+  border-radius: 20px !important;
+}
+
+.savorly-community-shell .community-state-spinner {
+  display: block !important;
+  width: 36px !important;
+  height: 36px !important;
+
+  border: 3px solid #f7e0cf !important;
+  border-top-color: #df783f !important;
+  border-radius: 50% !important;
+
+  animation: savorly-orange-spinner 750ms linear infinite !important;
+}
+
+@keyframes savorly-orange-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.savorly-community-shell .community-state h3 {
+  margin: 17px 0 7px !important;
+  color: #513326 !important;
+  font-size: 19px !important;
+  font-weight: 900 !important;
+}
+
+.savorly-community-shell .community-state p {
+  max-width: 470px !important;
+  margin: 0 0 20px !important;
+  color: #8b7a6f !important;
+  font-size: 12px !important;
+  line-height: 1.8 !important;
+}
+
+.savorly-community-shell .community-state-icon {
+  display: grid !important;
+  place-items: center !important;
+
+  width: 51px !important;
+  height: 51px !important;
+  margin: 0 !important;
+
+  color: #bf6638 !important;
+  background: #fff0e3 !important;
+  border-radius: 15px !important;
+  font-size: 25px !important;
+  font-weight: 900 !important;
+}
+
+.savorly-community-shell .community-error-state .community-state-icon {
+  color: #b84935 !important;
+  background: #fff0eb !important;
+}
+
+.savorly-community-shell .community-empty-state .community-state-icon {
+  color: #bd7139 !important;
+  background: #fff0de !important;
+}
+
+.savorly-community-shell .community-state .community-button-primary {
+  color: #ffffff !important;
+  background: #d96e36 !important;
+  border-color: #d96e36 !important;
+}
+
+.savorly-community-shell .community-state .community-button-primary:hover {
+  color: #ffffff !important;
+  background: #b95728 !important;
+  border-color: #b95728 !important;
+}
+
+/* =========================================================
+   BOTTOM CTA
+========================================================= */
+
+.savorly-community-shell .community-cta {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 270px !important;
+  align-items: center !important;
+  gap: 25px !important;
+
+  min-height: 300px !important;
+  margin: 86px 0 0 !important;
+  padding: 45px 52px !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+
+  color: #ffffff !important;
+  background:
+    radial-gradient(circle at 85% 20%,
+      rgba(255, 190, 132, 0.19),
+      transparent 32%),
+    linear-gradient(120deg, #71391f, #c86535 70%, #df783f) !important;
+
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 27px !important;
+  box-shadow: 0 18px 40px rgba(125, 64, 31, 0.12) !important;
+}
+
+.savorly-community-shell .community-cta-content {
+  position: relative !important;
+  z-index: 2 !important;
+  max-width: 650px !important;
+}
+
+.savorly-community-shell .community-cta-content .community-section-eyebrow {
+  color: #ffe0c8 !important;
+}
+
+.savorly-community-shell .community-cta-content h2 {
+  margin: 13px 0 !important;
+  color: #fffaf5 !important;
+  font-size: clamp(29px, 3.5vw, 43px) !important;
+  font-weight: 900 !important;
+  letter-spacing: -1.5px !important;
+  line-height: 1.17 !important;
+}
+
+.savorly-community-shell .community-cta-content h2 span {
+  display: block !important;
+  color: #ffd5b1 !important;
+}
+
+.savorly-community-shell .community-cta-content p {
+  max-width: 520px !important;
+  margin: 0 !important;
+  color: #f8dfd0 !important;
+  font-size: 12px !important;
+  line-height: 1.9 !important;
+}
+
+.savorly-community-shell .community-cta-content .community-button-primary {
+  margin-top: 22px !important;
+  color: #6e351e !important;
+  background: #fff1df !important;
+  border-color: #fff1df !important;
+}
+
+.savorly-community-shell .community-cta-content .community-button-primary:hover {
+  color: #572713 !important;
+  background: #ffffff !important;
+}
+
+.savorly-community-shell .community-cta-art {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  min-height: 200px !important;
+}
+
+.savorly-community-shell .community-cta-art-ring {
+  position: absolute !important;
+  width: 185px !important;
+  height: 185px !important;
+  background: transparent !important;
+  border: 1px solid rgba(255, 245, 232, 0.28) !important;
+  border-radius: 50% !important;
+  box-shadow:
+    0 0 0 17px rgba(255, 255, 255, 0.035),
+    0 0 0 34px rgba(255, 255, 255, 0.025) !important;
+}
+
+.savorly-community-shell .community-cta-chef {
+  position: relative !important;
+  z-index: 1 !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  width: 137px !important;
+  height: 137px !important;
+
+  background: #fff4e6 !important;
+  border: 7px solid #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 16px 38px rgba(71, 28, 12, 0.24) !important;
+  font-size: 73px !important;
+}
+
+.savorly-community-shell .community-cta-art-spark {
+  position: absolute !important;
+  top: 6px !important;
+  right: 15px !important;
+  color: #ffe0ac !important;
+  font-size: 30px !important;
+}
+
+.savorly-community-shell .community-cta-decoration {
+  position: absolute !important;
+  z-index: -1 !important;
+  top: -90px !important;
+  right: 24% !important;
+
+  color: rgba(255, 255, 255, 0.06) !important;
+  font-size: 280px !important;
+  pointer-events: none !important;
+}
+
+/* =========================================================
+   COMMUNITY PAGE COMMENTS MODAL
+   The modal uses a portal, so these selectors are global.
+========================================================= */
+
+.savorly-comments-header {
+  background:
+    radial-gradient(circle at 95% 5%,
+      rgba(255, 190, 132, 0.17),
+      transparent 33%),
+    linear-gradient(125deg, #71391f, #c86535) !important;
+}
+
+.savorly-comments-eyebrow {
+  color: #ffe0c8 !important;
+}
+
+.savorly-comments-close {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.savorly-comments-avatar {
+  background: linear-gradient(145deg, #f09a61, #b9552b) !important;
+}
+
+.savorly-comments-follow {
+  color: #ffffff !important;
+  background: #d96e36 !important;
+  border-color: #d96e36 !important;
+}
+
+.savorly-comments-follow:hover:not(:disabled) {
+  background: #b95728 !important;
+}
+
+.savorly-comments-follow.is-following {
+  color: #994b26 !important;
+  background: #fff0e3 !important;
+  border-color: #f1d3bd !important;
+}
+
+.savorly-comments-total {
+  color: #a3532a !important;
+  background: #fff0e3 !important;
+}
+
+.savorly-comments-empty-icon {
+  color: #bf6638 !important;
+  background: #fff0e3 !important;
+}
+
+.savorly-comments-primary {
+  color: #ffffff !important;
+  background: #d96e36 !important;
+  border-color: #d96e36 !important;
+}
+
+.savorly-comments-primary:hover:not(:disabled) {
+  color: #ffffff !important;
+  background: #b95728 !important;
+  border-color: #b95728 !important;
+}
+
+.savorly-comments-spinner {
+  border-color: #f4dfcf !important;
+  border-top-color: #df783f !important;
+}
+
+.savorly-comments-message {
+  color: #90502e !important;
+  background: #fff3e7 !important;
+  border-color: #f3ddc9 !important;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1000px) {
+  .savorly-community-shell .savorly-community-main {
+    width: calc(100% - 42px) !important;
+  }
+
+  .savorly-community-shell .community-hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) !important;
+    gap: 20px !important;
+    padding: 38px !important;
+  }
+
+  .savorly-community-shell .community-hero-content h1 {
+    font-size: clamp(34px, 4.4vw, 48px) !important;
+    letter-spacing: -1.7px !important;
+  }
+
+  .savorly-community-shell .community-hero-art {
+    min-height: 310px !important;
+  }
+
+  .savorly-community-shell .community-art-note {
+    max-width: 195px !important;
+    gap: 8px !important;
+    padding: 10px 11px !important;
+  }
+
+  .savorly-community-shell .community-art-note-top {
+    left: -5% !important;
+  }
+
+  .savorly-community-shell .community-art-note-bottom {
+    right: -5% !important;
+  }
+
+  .savorly-community-shell .community-benefits {
+    gap: 12px !important;
+    margin-right: 12px !important;
+    margin-left: 12px !important;
+  }
+
+  .savorly-community-shell .community-benefit {
+    padding: 15px !important;
+  }
+
+  .savorly-community-shell .recipes-grid.community-recipes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+  }
+
+  .savorly-community-shell .community-cta {
+    grid-template-columns: minmax(0, 1fr) 220px !important;
+    padding: 36px !important;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+  .savorly-community-shell .savorly-community-main {
+    width: calc(100% - 28px) !important;
+    padding: 20px 0 52px !important;
+  }
+
+  .savorly-community-shell .community-hero {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+
+    min-height: auto !important;
+    padding: 27px 21px 23px !important;
+    border-radius: 22px !important;
+  }
+
+  .savorly-community-shell .community-eyebrow {
+    padding: 8px 11px !important;
+    font-size: 9px !important;
+    letter-spacing: 1.25px !important;
+  }
+
+  .savorly-community-shell .community-hero-content h1 {
+    margin: 20px 0 14px !important;
+    font-size: clamp(33px, 8.5vw, 44px) !important;
+    letter-spacing: -1.5px !important;
+    line-height: 1.1 !important;
+  }
+
+  .savorly-community-shell .community-hero-description {
+    font-size: 12px !important;
+    line-height: 1.85 !important;
+  }
+
+  .savorly-community-shell .community-hero-actions {
+    align-items: stretch !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: 22px !important;
+  }
+
+  .savorly-community-shell .community-hero-actions>button {
+    width: 100% !important;
+  }
+
+  .savorly-community-shell .community-hero-trust {
+    margin-top: 18px !important;
+  }
+
+  .savorly-community-shell .community-hero-art {
+    min-height: 260px !important;
+    margin-top: 10px !important;
+  }
+
+  .savorly-community-shell .community-art-food {
+    width: 175px !important;
+    border-width: 7px !important;
+  }
+
+  .savorly-community-shell .community-food-emoji {
+    font-size: 83px !important;
+  }
+
+  .savorly-community-shell .community-art-note {
+    max-width: 175px !important;
+    gap: 8px !important;
+    padding: 9px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .savorly-community-shell .community-art-note-top {
+    top: 5% !important;
+    left: -2% !important;
+  }
+
+  .savorly-community-shell .community-art-note-bottom {
+    right: -2% !important;
+    bottom: 7% !important;
+  }
+
+  .savorly-community-shell .community-art-note-icon {
+    flex-basis: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
+  }
+
+  .savorly-community-shell .community-art-note strong {
+    font-size: 9px !important;
+  }
+
+  .savorly-community-shell .community-art-note small {
+    font-size: 8px !important;
+  }
+
+  .savorly-community-shell .community-art-caption {
+    bottom: -2px !important;
+    font-size: 9px !important;
+  }
+
+  .savorly-community-shell .community-benefits {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    margin: 17px 0 0 !important;
+  }
+
+  .savorly-community-shell .community-benefit {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .savorly-community-shell .community-discover {
+    padding-top: 58px !important;
+  }
+
+  .savorly-community-shell .community-section-heading {
+    align-items: flex-start !important;
+    gap: 12px !important;
+    margin-bottom: 22px !important;
+  }
+
+  .savorly-community-shell .community-section-heading h2 {
+    margin: 10px 0 !important;
+    font-size: 30px !important;
+    letter-spacing: -1px !important;
+  }
+
+  .savorly-community-shell .community-section-heading p {
+    font-size: 12px !important;
+  }
+
+  .savorly-community-shell .community-heading-mark {
+    flex: 0 0 43px !important;
+    width: 43px !important;
+    height: 43px !important;
+    border-radius: 13px !important;
+  }
+
+  .savorly-community-shell .community-heading-mark span {
+    font-size: 24px !important;
+  }
+
+  .savorly-community-shell .community-stats {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 19px !important;
+  }
+
+  .savorly-community-shell .community-stat {
+    gap: 12px !important;
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .savorly-community-shell .community-stat-icon {
+    flex-basis: 39px !important;
+    width: 39px !important;
+    height: 39px !important;
+  }
+
+  .savorly-community-shell .community-stat strong {
+    font-size: 22px !important;
+  }
+
+  .savorly-community-shell .community-filter-panel {
+    margin-bottom: 27px !important;
+    padding: 15px !important;
+    border-radius: 16px !important;
+  }
+
+  .savorly-community-shell .community-filter-top {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 15px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .savorly-community-shell .community-filter-title h3 {
+    font-size: 12px !important;
+  }
+
+  .savorly-community-shell .community-filter-title p {
+    font-size: 10px !important;
+  }
+
+  .savorly-community-shell .community-sort {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .savorly-community-shell .community-sort select {
+    flex: 1 !important;
+    max-width: 190px !important;
+  }
+
+  .savorly-community-shell .community-search {
+    min-height: 47px !important;
+    padding: 0 11px !important;
+  }
+
+  .savorly-community-shell .community-search input {
+    min-height: 45px !important;
+    font-size: 11px !important;
+  }
+
+  .savorly-community-shell .community-category-heading {
+    margin-top: 17px !important;
+  }
+
+  .savorly-community-shell .community-categories {
+    gap: 7px !important;
+  }
+
+  .savorly-community-shell .community-category {
+    min-height: 35px !important;
+    gap: 5px !important;
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+  }
+
+  .savorly-community-shell .community-results-heading {
+    align-items: flex-start !important;
+    gap: 10px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .savorly-community-shell .community-results-heading h3 {
+    font-size: 19px !important;
+  }
+
+  .savorly-community-shell .community-results-heading>p {
+    padding: 7px 9px !important;
+    font-size: 9px !important;
+  }
+
+  .savorly-community-shell .recipes-grid.community-recipes-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 17px !important;
+  }
+
+  .savorly-community-shell .community-recipe-item {
+    padding: 10px !important;
+    border-radius: 16px !important;
+  }
+
+  .savorly-community-shell .savorly-card-social-group {
+    max-width: 100% !important;
+    margin-top: 9px !important;
+  }
+
+  .savorly-community-shell .savorly-card-social-group .savorly-card-social-like,
+  .savorly-community-shell .savorly-card-social-group .savorly-card-social-comments {
+    min-height: 36px !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+  }
+
+  .savorly-community-shell .savorly-card-social-group .savorly-card-social-comments {
+    padding-left: 11px !important;
+  }
+
+  .savorly-community-shell .community-state {
+    min-height: 235px !important;
+    padding: 25px 15px !important;
+    border-radius: 17px !important;
+  }
+
+  .savorly-community-shell .community-state h3 {
+    font-size: 18px !important;
+  }
+
+  .savorly-community-shell .community-state p {
+    font-size: 11px !important;
+  }
+
+  .savorly-community-shell .community-cta {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    min-height: auto !important;
+    margin-top: 57px !important;
+    padding: 29px 22px 20px !important;
+    border-radius: 21px !important;
+  }
+
+  .savorly-community-shell .community-cta-content h2 {
+    font-size: 31px !important;
+    letter-spacing: -1px !important;
+  }
+
+  .savorly-community-shell .community-cta-content p {
+    font-size: 11px !important;
+  }
+
+  .savorly-community-shell .community-cta-art {
+    min-height: 160px !important;
+  }
+
+  .savorly-community-shell .community-cta-art-ring {
+    width: 135px !important;
+    height: 135px !important;
+  }
+
+  .savorly-community-shell .community-cta-chef {
+    width: 103px !important;
+    height: 103px !important;
+    border-width: 5px !important;
+    font-size: 57px !important;
+  }
+
+  .savorly-community-shell .community-cta-decoration {
+    top: auto !important;
+    right: -14% !important;
+    bottom: -60px !important;
+    font-size: 190px !important;
+  }
+}
+
+/* Small phones */
+
+@media (max-width: 380px) {
+  .savorly-community-shell .savorly-community-main {
+    width: calc(100% - 22px) !important;
+  }
+
+  .savorly-community-shell .community-hero {
+    padding: 24px 16px 20px !important;
+  }
+
+  .savorly-community-shell .community-hero-content h1 {
+    font-size: 32px !important;
+  }
+
+  .savorly-community-shell .community-art-note {
+    max-width: 155px !important;
+    padding: 8px !important;
+  }
+
+  .savorly-community-shell .community-art-note small {
+    font-size: 7px !important;
+  }
+
+  .savorly-community-shell .community-results-heading h3 {
+    font-size: 17px !important;
+  }
+
+  .savorly-community-shell .community-filter-panel {
+    padding: 12px !important;
+  }
+}
+
+/* Reduced motion accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .savorly-community-shell .community-art-food {
+    animation: none !important;
+  }
+
+  .savorly-community-shell *,
+  .savorly-community-shell *::before,
+  .savorly-community-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
