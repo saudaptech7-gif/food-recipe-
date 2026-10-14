@@ -718,8 +718,8 @@ function CreateRecipe() {
 
             <p>
               Your recipe will be saved as a private draft. You can publish it
-              later from <strong>My Kitchen</strong>, if publishing is supported
-              by your backend.
+              later from <strong>My Kitchen</strong>.!
+              
             </p>
           </div>
         </form>

@@ -30,7 +30,7 @@ function ChefProfile() {
         if (active) setData(result);
       } catch (err) {
         if (active) {
-          setError(err.message || "Chef profile load nahi ho saka.");
+          setError(err.message || "can't load chef profile.");
         }
       } finally {
         if (active) setLoading(false);
@@ -61,7 +61,7 @@ function ChefProfile() {
         },
       }));
     } catch (err) {
-      setError(err.message || "Follow status update nahi ho saka.");
+      setError(err.message || "can't update follow status.");
     } finally {
       setFollowLoading(false);
     }
