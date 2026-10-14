@@ -1,8 +1,7 @@
-
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -48,11 +47,7 @@ function extractRecipes(response) {
 
   return {
     recipes: possibleLists.find(Array.isArray) || [],
-    meta:
-      payload?.pagination ||
-      payload?.data?.pagination ||
-      payload ||
-      {},
+    meta: payload?.pagination || payload?.data?.pagination || payload || {},
   };
 }
 
@@ -67,9 +62,7 @@ function normalizeRecipeList(response) {
 
 function hasNutritionData(recipe) {
   const nutrition =
-    recipe?.nutrients ??
-    recipe?.nutrition ??
-    recipe?.nutritionalInfo;
+    recipe?.nutrients ?? recipe?.nutrition ?? recipe?.nutritionalInfo;
 
   if (
     nutrition === undefined ||
@@ -109,9 +102,6 @@ function Home() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const cookingSceneRef = useRef(null);
-
-  const [cookingProgress, setCookingProgress] = useState(0);
   const [homeTab, setHomeTab] = useState("our");
 
   const [myRecipes, setMyRecipes] = useState([]);
@@ -149,77 +139,7 @@ function Home() {
 
   const visibleRecipes = recipes.filter(hasNutritionData);
 
-  const isLoggedIn = useSelector(
-    (state) => state.auth.isLoggedIn,
-  );
-
-  // =====================================
-  // OPTIMIZED COOKING SCROLL ANIMATION
-  // =====================================
-
-  useEffect(() => {
-    let animationFrame = null;
-
-    const updateCookingProgress = () => {
-      animationFrame = null;
-
-      const scene = cookingSceneRef.current;
-
-      if (!scene) return;
-
-      const section = scene.closest(".hero-scroll-section");
-
-      if (!section) return;
-
-      const scrollDistance =
-        section.offsetHeight - window.innerHeight;
-
-      if (scrollDistance <= 0) {
-        setCookingProgress(0);
-        return;
-      }
-
-      const rect = section.getBoundingClientRect();
-
-      const progress = Math.min(
-        Math.max(-rect.top / scrollDistance, 0),
-        1,
-      );
-
-      setCookingProgress((previous) => {
-        if (Math.abs(previous - progress) < 0.002) {
-          return previous;
-        }
-
-        return progress;
-      });
-    };
-
-    const handleScroll = () => {
-      if (animationFrame !== null) return;
-
-      animationFrame = window.requestAnimationFrame(
-        updateCookingProgress,
-      );
-    };
-
-    window.addEventListener("scroll", handleScroll, {
-      passive: true,
-    });
-
-    window.addEventListener("resize", handleScroll);
-
-    updateCookingProgress();
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-
-      if (animationFrame !== null) {
-        window.cancelAnimationFrame(animationFrame);
-      }
-    };
-  }, []);
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
 
   // =====================================
   // FETCH ARCHIVE RECIPES
@@ -244,28 +164,18 @@ function Home() {
 
       dispatch(
         setPagination({
-          currentPage:
-            Number(meta.currentPage ?? meta.page) || page,
+          currentPage: Number(meta.currentPage ?? meta.page) || page,
 
-          totalPages:
-            Number(meta.totalPages ?? meta.pages) || 1,
+          totalPages: Number(meta.totalPages ?? meta.pages) || 1,
 
           totalRecipes:
-            Number(meta.totalRecipes ?? meta.total) ||
-            result.recipes.length,
+            Number(meta.totalRecipes ?? meta.total) || result.recipes.length,
         }),
       );
     } catch (fetchError) {
-      console.error(
-        "Failed to fetch archive recipes:",
-        fetchError,
-      );
+      console.error("Failed to fetch archive recipes:", fetchError);
 
-      dispatch(
-        setError(
-          fetchError.message || "Failed to load recipes.",
-        ),
-      );
+      dispatch(setError(fetchError.message || "Failed to load recipes."));
     } finally {
       dispatch(setLoading(false));
     }
@@ -308,14 +218,10 @@ function Home() {
         setUserRecipes(normalizeRecipeList(usersResponse));
       } catch (fetchError) {
         if (!cancelled) {
-          console.error(
-            "Failed to load community recipes:",
-            fetchError,
-          );
+          console.error("Failed to load community recipes:", fetchError);
 
           setCommunityError(
-            fetchError.message ||
-              "Unable to load community recipes.",
+            fetchError.message || "Unable to load community recipes.",
           );
         }
       } finally {
@@ -338,12 +244,10 @@ function Home() {
 
   const scrollToCollections = () => {
     window.setTimeout(() => {
-      document
-        .querySelector(".home-collections-section")
-        ?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
+      document.querySelector(".home-collections-section")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }, 100);
   };
 
@@ -429,25 +333,29 @@ function Home() {
     <div className="home-page">
       <Header onCategoryChange={handleCategoryChange} />
 
-      {/* HERO AND COOKING ANIMATION */}
+      {/* PREMIUM FOOD IMAGE HERO */}
 
       <section className="hero-scroll-section">
         <div className="hero-sticky">
           <section className="hero-section">
+            {/* LEFT SIDE: HERO CONTENT */}
+
             <div className="hero-content">
               <span className="hero-badge">
-                🍳 Discover • Cook • Enjoy
+                <span aria-hidden="true">✦</span>
+                Discover • Cook • Enjoy
               </span>
 
               <h1>
                 Delicious recipes,
                 <br />
-                made for you.
+                made for <span>you.</span>
               </h1>
 
               <p>
-                Explore delicious recipes for baking, healthy meals,
-                quick budgets and everyday inspiration.
+                Explore delicious recipes for baking, healthy meals, quick
+                budgets and everyday inspiration. Find your next favourite dish
+                with Savorly.
               </p>
 
               <button
@@ -457,232 +365,79 @@ function Home() {
               >
                 Explore Recipes <span>→</span>
               </button>
+
+              <div className="hero-trust-row">
+                <span className="hero-trust-icon">♥</span>
+                <span>Made for food lovers, shared with love.</span>
+              </div>
             </div>
 
-            <div
-              className="cooking-scene"
-              ref={cookingSceneRef}
-            >
-              <div
-                className="cook-glow"
-                style={{
-                  opacity: cookingProgress > 0 ? 1 : 0,
-                }}
-              />
+            {/* RIGHT SIDE: FOOD IMAGE AND FLOATING INGREDIENTS */}
 
-              <div
-                className="counter-shadow"
-                style={{
-                  opacity: cookingProgress > 0.05 ? 1 : 0,
-                  transform: `translateX(-50%) scaleX(${
-                    0.7 + cookingProgress * 0.3
-                  })`,
-                }}
-              />
+            <div className="hero-food-visual">
+              <div className="hero-food-glow" />
 
-              <div
-                className="pro-plate"
-                style={{
-                  opacity: Math.min(cookingProgress / 0.12, 1),
-                  transform: `translate(-50%, -50%) scale(${
-                    0.72 +
-                    Math.min(cookingProgress / 0.12, 1) * 0.28
-                  })`,
-                }}
+              <span
+                className="hero-floating-ingredient ingredient-tomato"
+                aria-hidden="true"
               >
-                <div className="plate-rim" />
-                <div className="plate-center" />
+                🍅
+              </span>
+
+              <span
+                className="hero-floating-ingredient ingredient-leaf"
+                aria-hidden="true"
+              >
+                🌿
+              </span>
+
+              <span
+                className="hero-floating-ingredient ingredient-pasta"
+                aria-hidden="true"
+              >
+                🍝
+              </span>
+
+              <span
+                className="hero-floating-ingredient ingredient-herb"
+                aria-hidden="true"
+              >
+                🌱
+              </span>
+
+              <span
+                className="hero-floating-ingredient ingredient-pepper"
+                aria-hidden="true"
+              >
+                🫑
+              </span>
+
+              <div className="hero-food-image-wrap">
+                <img
+                  className="hero-food-image"
+                  src="/images/savorly-hero-food.png"
+                  alt="A delicious 3D cartoon food dish with fresh ingredients"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
               </div>
 
-              <div
-                className="food-item carrot"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.12 &&
-                    cookingProgress < 0.72
-                      ? 1
-                      : 0,
+              <div className="hero-food-caption">
+                <span className="hero-caption-icon">✦</span>
 
-                  transform:
-                    cookingProgress >= 0.12 &&
-                    cookingProgress < 0.72
-                      ? "translate(0,0) rotate(0deg)"
-                      : "translate(-60px,-160px) rotate(-35deg)",
-                }}
-              >
-                <span />
-              </div>
-
-              <div
-                className="food-item tomato"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.18 &&
-                    cookingProgress < 0.72
-                      ? 1
-                      : 0,
-
-                  transform:
-                    cookingProgress >= 0.18 &&
-                    cookingProgress < 0.72
-                      ? "translate(0,0) scale(1)"
-                      : "translate(55px,-165px) scale(.55)",
-                }}
-              >
-                <span />
-              </div>
-
-              <div
-                className="food-item broccoli"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.24 &&
-                    cookingProgress < 0.72
-                      ? 1
-                      : 0,
-
-                  transform:
-                    cookingProgress >= 0.24 &&
-                    cookingProgress < 0.72
-                      ? "translate(0,0) scale(1)"
-                      : "translate(-70px,-145px) scale(.55)",
-                }}
-              >
-                <span />
-              </div>
-
-              <div
-                className="food-item leaf"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.3 &&
-                    cookingProgress < 0.72
-                      ? 1
-                      : 0,
-
-                  transform:
-                    cookingProgress >= 0.3 &&
-                    cookingProgress < 0.72
-                      ? "translate(0,0) rotate(0deg)"
-                      : "translate(70px,-150px) rotate(45deg)",
-                }}
-              >
-                <span />
-              </div>
-
-              <div
-                className="pro-pan"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.3 &&
-                    cookingProgress < 0.82
-                      ? 1
-                      : 0,
-
-                  transform: `translate(-50%,-50%) scale(${
-                    cookingProgress >= 0.3 ? 1 : 0.72
-                  })`,
-                }}
-              >
-                <div className="pan-inside" />
-                <div className="pan-handle" />
-              </div>
-
-              <div
-                className="pan-food-visual"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.34 &&
-                    cookingProgress < 0.78
-                      ? 1
-                      : 0,
-                }}
-              >
-                <span className="food-dot dot-1" />
-                <span className="food-dot dot-2" />
-                <span className="food-dot dot-3" />
-                <span className="food-dot dot-4" />
-                <span className="food-dot dot-5" />
-              </div>
-
-              <div
-                className="pro-lid"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.4 &&
-                    cookingProgress < 0.8
-                      ? 1
-                      : 0,
-
-                  transform:
-                    cookingProgress < 0.4
-                      ? "translate(-50%,-220px) rotate(-12deg)"
-                      : cookingProgress < 0.7
-                        ? "translate(-50%,0) rotate(0deg)"
-                        : "translate(-50%,-220px) rotate(12deg)",
-                }}
-              >
-                <div className="lid-top" />
-                <div className="lid-handle" />
-              </div>
-
-              <div
-                className="heat-lines"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.55 &&
-                    cookingProgress < 0.72
-                      ? 1
-                      : 0,
-                }}
-              >
-                <span />
-                <span />
-                <span />
-              </div>
-
-              <div
-                className="final-food"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.72
-                      ? Math.min(
-                          (cookingProgress - 0.72) / 0.1,
-                          1,
-                        )
-                      : 0,
-
-                  transform: `translate(-50%,-50%) scale(${
-                    cookingProgress >= 0.72 ? 1 : 0.45
-                  })`,
-                }}
-              >
-                <div className="dish-food">
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <i />
-                  <i />
+                <div>
+                  <strong>Made with love</strong>
+                  <span>Fresh ideas, delicious moments</span>
                 </div>
               </div>
 
-              <div
-                className="steam"
-                style={{
-                  opacity:
-                    cookingProgress >= 0.84
-                      ? Math.min(
-                          (cookingProgress - 0.84) / 0.1,
-                          1,
-                        )
-                      : 0,
-                }}
-              >
-                <span />
-                <span />
-                <span />
+              <div className="hero-floating-note">
+                <span>🥗</span>
+                <div>
+                  <strong>Fresh & delicious</strong>
+                  <small>Everyday inspiration</small>
+                </div>
               </div>
             </div>
           </section>
@@ -702,8 +457,8 @@ function Home() {
           </h2>
 
           <p>
-            From everyday meals to special treats, discover delicious
-            ideas for every occasion.
+            From everyday meals to special treats, discover delicious ideas for
+            every occasion.
           </p>
 
           <div className="home-section-divider">
@@ -763,10 +518,7 @@ function Home() {
         {/* OUR RECIPES */}
 
         {homeTab === "our" && (
-          <section
-            className="recipes-section home-tab-content"
-            role="tabpanel"
-          >
+          <section className="recipes-section home-tab-content" role="tabpanel">
             <div className="section-heading">
               <div>
                 <span>HANDPICKED FOR YOU</span>
@@ -774,8 +526,7 @@ function Home() {
               </div>
 
               <p>
-                Delicious ideas, inspiring flavors, and meals
-                worth sharing.
+                Delicious ideas, inspiring flavors, and meals worth sharing.
               </p>
             </div>
 
@@ -807,12 +558,7 @@ function Home() {
                   <div className="recipes-grid">
                     {visibleRecipes.map((recipe, index) => (
                       <RecipeCard
-                        key={
-                          recipe._id ||
-                          recipe.id ||
-                          recipe.url ||
-                          index
-                        }
+                        key={recipe._id || recipe.id || recipe.url || index}
                         recipe={recipe}
                       />
                     ))}
@@ -820,9 +566,7 @@ function Home() {
                 ) : (
                   <div className="empty-recipes">
                     <h3>No recipes found</h3>
-                    <p>
-                      Try changing your search or filters.
-                    </p>
+                    <p>Try changing your search or filters.</p>
                   </div>
                 )}
 
@@ -832,29 +576,23 @@ function Home() {
                       type="button"
                       disabled={pagination.currentPage === 1}
                       onClick={() =>
-                        handlePageChange(
-                          pagination.currentPage - 1,
-                        )
+                        handlePageChange(pagination.currentPage - 1)
                       }
                     >
                       ← Previous
                     </button>
 
                     <span>
-                      Page {pagination.currentPage} of{" "}
-                      {pagination.totalPages}
+                      Page {pagination.currentPage} of {pagination.totalPages}
                     </span>
 
                     <button
                       type="button"
                       disabled={
-                        pagination.currentPage ===
-                        pagination.totalPages
+                        pagination.currentPage === pagination.totalPages
                       }
                       onClick={() =>
-                        handlePageChange(
-                          pagination.currentPage + 1,
-                        )
+                        handlePageChange(pagination.currentPage + 1)
                       }
                     >
                       Next →
@@ -877,9 +615,7 @@ function Home() {
               <div>
                 <span>YOUR CREATIONS</span>
                 <h2>My Recipes</h2>
-                <p>
-                  All the delicious recipes you have created.
-                </p>
+                <p>All the delicious recipes you have created.</p>
               </div>
 
               {isLoggedIn && (
@@ -896,9 +632,7 @@ function Home() {
             {!isLoggedIn ? (
               <div className="empty-recipes home-community-message">
                 <h3>Sign in to see your recipes</h3>
-                <p>
-                  Log in to create and manage your own recipes.
-                </p>
+                <p>Log in to create and manage your own recipes.</p>
 
                 <button
                   type="button"
@@ -931,9 +665,7 @@ function Home() {
                   <button
                     type="button"
                     className="home-view-all-button"
-                    onClick={() =>
-                      navigate("/community?tab=my")
-                    }
+                    onClick={() => navigate("/community?tab=my")}
                   >
                     View All My Recipes →
                   </button>
@@ -942,10 +674,7 @@ function Home() {
             ) : (
               <div className="empty-recipes home-community-message">
                 <h3>Your collection starts here</h3>
-                <p>
-                  Share your favourite dish by creating your first
-                  recipe.
-                </p>
+                <p>Share your favourite dish by creating your first recipe.</p>
 
                 <button
                   type="button"
@@ -970,9 +699,7 @@ function Home() {
               <div>
                 <span>FROM OUR COMMUNITY</span>
                 <h2>User Recipes</h2>
-                <p>
-                  Discover recipes shared by other home chefs.
-                </p>
+                <p>Discover recipes shared by other home chefs.</p>
               </div>
 
               {isLoggedIn && (
@@ -990,8 +717,8 @@ function Home() {
               <div className="empty-recipes home-community-message">
                 <h3>Join the Savorly community</h3>
                 <p>
-                  Log in to explore community recipes and share your
-                  own creations.
+                  Log in to explore community recipes and share your own
+                  creations.
                 </p>
 
                 <button
@@ -1025,9 +752,7 @@ function Home() {
                   <button
                     type="button"
                     className="home-view-all-button"
-                    onClick={() =>
-                      navigate("/community?tab=users")
-                    }
+                    onClick={() => navigate("/community?tab=users")}
                   >
                     View All User Recipes →
                   </button>
@@ -1036,9 +761,7 @@ function Home() {
             ) : (
               <div className="empty-recipes home-community-message">
                 <h3>No community recipes yet</h3>
-                <p>
-                  Be one of the first chefs to share a recipe.
-                </p>
+                <p>Be one of the first chefs to share a recipe.</p>
 
                 <button
                   type="button"

@@ -30168,6 +30168,7 @@ input[type="submit"] {
   animation: none !important;
   transition: none !important;
 }
+
 /* =========================================
    RECIPE INGREDIENT CHECKBOX
    Keep animation, remove hover effects & dots
@@ -30224,11 +30225,629 @@ input[type="submit"] {
 }
 
 /* Green checked state with animated text */
-.recipe-details-page
-  .ingredient-item:has(input[type="checkbox"]:checked)
-  .ingredient-text {
+.recipe-details-page .ingredient-item:has(input[type="checkbox"]:checked) .ingredient-text {
   color: #7b827c !important;
   text-decoration: line-through !important;
   text-decoration-color: #a3aaa4 !important;
   opacity: 0.8;
+}
+
+/* =========================================
+   SAVORLY - INGREDIENT CHECKBOX & FOOD ICON
+========================================= */
+
+.recipe-details-page .ingredient-food-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  margin-right: 12px;
+  border-radius: 10px;
+  background-color: #fff0df;
+  font-size: 22px;
+  line-height: 1;
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Remove old animated checkbox and decorative dots */
+.recipe-details-page .ingredient-checkbox,
+.recipe-details-page .ingredient-checkbox::before,
+.recipe-details-page .ingredient-checkbox::after,
+.recipe-details-page .ingredient-item::before,
+.recipe-details-page .ingredient-item::after {
+  display: none !important;
+  content: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Native green checkbox */
+.recipe-details-page .ingredient-item input[type="checkbox"] {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  display: inline-block !important;
+  position: static !important;
+  flex: 0 0 17px !important;
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  min-height: 17px !important;
+  margin: 0 12px 0 0 !important;
+  padding: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  accent-color: #22a447 !important;
+  cursor: pointer !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: none !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Remove checkbox hover effects */
+.recipe-details-page .ingredient-item input[type="checkbox"]:hover,
+.recipe-details-page .ingredient-item input[type="checkbox"]:focus,
+.recipe-details-page .ingredient-item input[type="checkbox"]:active {
+  accent-color: #22a447 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+/* No decorative hover effect on ingredient rows */
+.recipe-details-page .ingredient-item:hover {
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+/* Checked ingredient text */
+.recipe-details-page .ingredient-item:has(input[type="checkbox"]:checked) .ingredient-text {
+  color: #7b827c !important;
+  text-decoration: line-through !important;
+  text-decoration-color: #a3aaa4 !important;
+}
+
+/* =========================================
+   SAVORLY PREMIUM HOME HERO OVERRIDE
+   Cream + Orange Theme
+========================================= */
+
+.home-page .hero-scroll-section {
+  position: relative !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 35px 0 55px !important;
+  overflow: hidden !important;
+  background: #fffaf3 !important;
+}
+
+.home-page .hero-sticky {
+  position: relative !important;
+  top: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+.home-page .hero-section {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 35px !important;
+  width: min(1180px, calc(100% - 64px)) !important;
+  min-height: 480px !important;
+  margin: 0 auto !important;
+  padding: 30px 0 !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+}
+
+.home-page .hero-content {
+  position: relative !important;
+  z-index: 5 !important;
+  width: 100% !important;
+  max-width: 560px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+.home-page .hero-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 0 22px !important;
+  padding: 10px 16px !important;
+  border: 1px solid #f5dfc9 !important;
+  border-radius: 50px !important;
+  background: #fff0df !important;
+  color: #bd6428 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.7px !important;
+}
+
+.home-page .hero-content h1 {
+  max-width: 620px !important;
+  margin: 0 0 22px !important;
+  color: #38251c !important;
+  font-size: clamp(42px, 5vw, 68px) !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -2.5px !important;
+}
+
+.home-page .hero-content h1 span {
+  color: #e87932 !important;
+}
+
+.home-page .hero-content p {
+  max-width: 470px !important;
+  margin: 0 0 28px !important;
+  color: #79695e !important;
+  font-size: 16px !important;
+  line-height: 1.85 !important;
+}
+
+.home-page .hero-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px !important;
+  min-height: 53px !important;
+  margin: 0 !important;
+  padding: 0 25px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: #e87932 !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 10px 24px rgba(232, 121, 50, 0.22) !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease, transform 0.2s ease !important;
+}
+
+.home-page .hero-button:hover {
+  background: #cf6424 !important;
+  transform: translateY(-2px) !important;
+}
+
+.home-page .hero-button span {
+  font-size: 20px !important;
+}
+
+.home-page .hero-trust-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  margin-top: 24px !important;
+  color: #8b7768 !important;
+  font-size: 12px !important;
+}
+
+.home-page .hero-trust-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 25px !important;
+  height: 25px !important;
+  border-radius: 50% !important;
+  background: #ffead7 !important;
+  color: #e87932 !important;
+  font-size: 13px !important;
+}
+
+/* FOOD IMAGE AREA */
+
+.home-page .hero-food-visual {
+  position: relative !important;
+  isolation: isolate !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 540px !important;
+  min-width: 0 !important;
+  min-height: 450px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.home-page .hero-food-glow {
+  position: absolute !important;
+  z-index: -1 !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 86% !important;
+  aspect-ratio: 1 !important;
+  border-radius: 50% !important;
+  background: radial-gradient(
+    circle,
+    rgba(255, 174, 91, 0.30) 0%,
+    rgba(255, 214, 168, 0.18) 48%,
+    rgba(255, 250, 243, 0) 74%
+  ) !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+}
+
+.home-page .hero-food-image-wrap {
+  position: relative !important;
+  z-index: 2 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: min(100%, 460px) !important;
+  aspect-ratio: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+.home-page .hero-food-image {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: drop-shadow(
+    0 24px 24px rgba(115, 67, 32, 0.15)
+  ) !important;
+  animation: savorlyFoodFloat 5s ease-in-out infinite !important;
+}
+
+/* FLOATING INGREDIENTS */
+
+.home-page .hero-floating-ingredient {
+  position: absolute !important;
+  z-index: 3 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 55px !important;
+  height: 55px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 19px !important;
+  background: rgba(255, 245, 233, 0.96) !important;
+  box-shadow: 0 12px 28px rgba(113, 72, 36, 0.11) !important;
+  font-size: 29px !important;
+  line-height: 1 !important;
+  pointer-events: none !important;
+}
+
+.home-page .ingredient-tomato {
+  top: 12% !important;
+  left: 7% !important;
+  animation: savorlyIngredientFloat 4.5s ease-in-out infinite !important;
+}
+
+.home-page .ingredient-leaf {
+  top: 10% !important;
+  right: 9% !important;
+  animation: savorlyIngredientFloat 5s ease-in-out infinite -1s !important;
+}
+
+.home-page .ingredient-pasta {
+  right: 3% !important;
+  bottom: 25% !important;
+  animation: savorlyIngredientFloat 4.7s ease-in-out infinite -2s !important;
+}
+
+.home-page .ingredient-herb {
+  left: 6% !important;
+  bottom: 19% !important;
+  animation: savorlyIngredientFloat 5.2s ease-in-out infinite -1.5s !important;
+}
+
+.home-page .ingredient-pepper {
+  top: 43% !important;
+  right: 1% !important;
+  animation: savorlyIngredientFloat 4.8s ease-in-out infinite -0.7s !important;
+}
+
+/* FLOATING CAPTION CARDS */
+
+.home-page .hero-food-caption {
+  position: absolute !important;
+  z-index: 4 !important;
+  right: 0 !important;
+  bottom: 5% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+  padding: 13px 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 17px !important;
+  background: rgba(255, 250, 243, 0.97) !important;
+  box-shadow: 0 12px 32px rgba(113, 72, 36, 0.11) !important;
+}
+
+.home-page .hero-caption-icon {
+  display: grid !important;
+  place-items: center !important;
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 12px !important;
+  background: #fff0df !important;
+  color: #e8782d !important;
+  font-size: 22px !important;
+}
+
+.home-page .hero-food-caption div,
+.home-page .hero-floating-note div {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.home-page .hero-food-caption strong,
+.home-page .hero-floating-note strong {
+  color: #432c20 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.home-page .hero-food-caption div span,
+.home-page .hero-floating-note small {
+  color: #8a7668 !important;
+  font-size: 10px !important;
+}
+
+.home-page .hero-floating-note {
+  position: absolute !important;
+  z-index: 4 !important;
+  top: 29% !important;
+  left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 12px 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 15px !important;
+  background: rgba(255, 250, 243, 0.97) !important;
+  box-shadow: 0 12px 30px rgba(113, 72, 36, 0.10) !important;
+}
+
+.home-page .hero-floating-note > span {
+  display: grid !important;
+  place-items: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 11px !important;
+  background: #edf3df !important;
+  font-size: 20px !important;
+}
+
+/* ANIMATIONS */
+
+@keyframes savorlyFoodFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(2deg);
+  }
+}
+
+@keyframes savorlyIngredientFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(7deg);
+  }
+}
+
+/* TABLET */
+
+@media (max-width: 900px) {
+  .home-page .hero-scroll-section {
+    padding: 25px 0 40px !important;
+  }
+
+  .home-page .hero-section {
+    width: calc(100% - 44px) !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 18px !important;
+    min-height: 390px !important;
+  }
+
+  .home-page .hero-content h1 {
+    font-size: clamp(36px, 5vw, 49px) !important;
+    letter-spacing: -1.6px !important;
+  }
+
+  .home-page .hero-content p {
+    font-size: 14px !important;
+    line-height: 1.75 !important;
+  }
+
+  .home-page .hero-food-visual {
+    min-height: 360px !important;
+  }
+
+  .home-page .hero-food-image-wrap {
+    width: min(100%, 360px) !important;
+  }
+
+  .home-page .hero-floating-ingredient {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 15px !important;
+    font-size: 24px !important;
+  }
+
+  .home-page .hero-floating-note {
+    top: 20% !important;
+    left: -2% !important;
+    padding: 9px !important;
+  }
+
+  .home-page .hero-food-caption {
+    right: -2% !important;
+    bottom: 3% !important;
+    padding: 10px !important;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .home-page .hero-scroll-section {
+    padding: 38px 0 28px !important;
+  }
+
+  .home-page .hero-section {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 15px !important;
+    width: calc(100% - 36px) !important;
+    min-height: 0 !important;
+    padding: 8px 0 15px !important;
+  }
+
+  .home-page .hero-content {
+    max-width: 100% !important;
+  }
+
+  .home-page .hero-badge {
+    margin-bottom: 17px !important;
+    padding: 9px 13px !important;
+    font-size: 11px !important;
+  }
+
+  .home-page .hero-content h1 {
+    margin-bottom: 15px !important;
+    font-size: clamp(38px, 10vw, 49px) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -1.8px !important;
+  }
+
+  .home-page .hero-content p {
+    max-width: 100% !important;
+    margin-bottom: 22px !important;
+    font-size: 14px !important;
+    line-height: 1.75 !important;
+  }
+
+  .home-page .hero-button {
+    min-height: 49px !important;
+    padding: 0 20px !important;
+  }
+
+  .home-page .hero-trust-row {
+    margin-top: 17px !important;
+    font-size: 11px !important;
+  }
+
+  .home-page .hero-food-visual {
+    width: 100% !important;
+    max-width: 420px !important;
+    min-height: 310px !important;
+    margin: 0 auto !important;
+  }
+
+  .home-page .hero-food-image-wrap {
+    width: min(100%, 310px) !important;
+  }
+
+  .home-page .hero-floating-ingredient {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+    font-size: 22px !important;
+  }
+
+  .home-page .ingredient-tomato {
+    top: 9% !important;
+    left: 5% !important;
+  }
+
+  .home-page .ingredient-leaf {
+    top: 7% !important;
+    right: 7% !important;
+  }
+
+  .home-page .ingredient-pasta {
+    right: 2% !important;
+    bottom: 22% !important;
+  }
+
+  .home-page .ingredient-herb {
+    left: 3% !important;
+    bottom: 19% !important;
+  }
+
+  .home-page .ingredient-pepper {
+    top: 44% !important;
+    right: 0 !important;
+  }
+
+  .home-page .hero-food-caption {
+    right: 0 !important;
+    bottom: 0 !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+  }
+
+  .home-page .hero-caption-icon {
+    width: 29px !important;
+    height: 29px !important;
+    font-size: 18px !important;
+  }
+
+  .home-page .hero-food-caption strong,
+  .home-page .hero-floating-note strong {
+    font-size: 10px !important;
+  }
+
+  .home-page .hero-food-caption div span,
+  .home-page .hero-floating-note small {
+    font-size: 9px !important;
+  }
+
+  .home-page .hero-floating-note {
+    top: 18% !important;
+    left: 0 !important;
+    gap: 7px !important;
+    padding: 8px !important;
+  }
+
+  .home-page .hero-floating-note > span {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* REDUCED MOTION ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page .hero-food-image,
+  .home-page .hero-floating-ingredient {
+    animation: none !important;
+  }
 }
