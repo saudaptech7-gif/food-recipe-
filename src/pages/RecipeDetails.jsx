@@ -274,7 +274,6 @@ function RecipeDetails() {
   const servings = recipe.servings || recipe.serves || "—";
   const difficulty = recipe.difficulty || recipe.difficult || "—";
 
-
   const authorName = recipe.createdBy?.name || recipe.author || "Savorly";
 
   return (
@@ -357,16 +356,13 @@ function RecipeDetails() {
             <div className="recipe-details-badges">
               <span className="recipe-category-badge">{category}</span>
 
-              <span
-                className={
-                  isCommunityRecipe ? "community-badge  " : "archive-badge "
-                  
-                }
-              
+              <div className="recipe-details-badges">
+                <span className="recipe-source-badge">
+                  {isCommunityRecipe ? "COMMUNITY RECIPE" : "SAVORLY RECIPE"}
+                </span>
 
-              >
-                {isCommunityRecipe ? "Community Recipe" : "Savorly Recipe"}
-              </span>
+                <span className="recipe-category-badge">{category}</span>
+              </div>
             </div>
 
             <h1>{recipe.name || "Untitled Recipe"}</h1>
