@@ -31,29 +31,52 @@ function RecipeDetails() {
 
   const [selectedRating, setSelectedRating] = useState(0);
   const [ratingLoading, setRatingLoading] = useState(false);
+
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const recipeId = recipe?.id || recipe?._id || id;
-  const isCommunityRecipe = recipe?.recipeType === "community";
 
+  // Community recipes ko identify karo.
+  // createdBy check is liye hai taake recipeType missing
+  // hone par bhi user's recipe ka badge nazar aaye.
+  const isCommunityRecipe =
+    recipe?.recipeType === "community" || Boolean(recipe?.createdBy);
+
+  // Check whether the logged-in user owns this recipe.
   const isOwnRecipe = useMemo(() => {
-    if (!currentUser || !recipe?.createdBy) return false;
+    if (!currentUser || !recipe?.createdBy) {
+      return false;
+    }
 
     const currentUserId = currentUser.id || currentUser._id;
 
     const ownerId =
       recipe.createdBy?.id || recipe.createdBy?._id || recipe.createdBy;
 
-    if (!currentUserId || !ownerId) return false;
+    if (!currentUserId || !ownerId) {
+      return false;
+    }
 
     return String(currentUserId) === String(ownerId);
   }, [currentUser, recipe]);
 
-  const isFavorite = favorites?.some(
-    (favoriteId) => String(favoriteId) === String(recipeId),
-  );
+  // Favorite status.
+  const isFavorite = Array.isArray(favorites)
+    ? favorites.some(
+        (favoriteId) =>
+          String(
+            typeof favoriteId === "object"
+              ? favoriteId.id || favoriteId._id
+              : favoriteId,
+          ) === String(recipeId),
+      )
+    : false;
+
+  // =====================================
+  // FETCH RECIPE
+  // =====================================
 
   useEffect(() => {
     let mounted = true;
@@ -75,7 +98,7 @@ function RecipeDetails() {
         setRecipe(recipeData);
 
         setSelectedRating(
-          Number(recipeData?.userRating || recipeData?.myRating || 0),
+          Number(recipeData.userRating || recipeData.myRating || 0),
         );
       } catch (fetchError) {
         console.error("Fetch recipe error:", fetchError);
@@ -84,7 +107,9 @@ function RecipeDetails() {
           setError(fetchError.message || "Failed to load recipe.");
         }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -95,25 +120,34 @@ function RecipeDetails() {
     };
   }, [id]);
 
+  // =====================================
+  // FAVORITES
+  // =====================================
+
   const handleFavorite = async () => {
     if (!isLoggedIn) {
       notify("Please log in to save your favorite recipes.", "warning");
+
       navigate("/login");
       return;
     }
 
-    if (!recipeId || favoriteLoading) return;
+    if (!recipeId || favoriteLoading) {
+      return;
+    }
 
     try {
       setFavoriteLoading(true);
 
       if (isFavorite) {
         await removeFavorite(recipeId);
+
         dispatch(removeFavoriteFromState(String(recipeId)));
 
         notify("Recipe removed from your favorites.", "success");
       } else {
         await addFavorite(recipeId);
+
         dispatch(addFavoriteToState(String(recipeId)));
 
         notify("Recipe saved to your favorites.", "success");
@@ -127,40 +161,52 @@ function RecipeDetails() {
     }
   };
 
+  // =====================================
+  // RECIPE RATING
+  // =====================================
+
   const handleRating = async (value) => {
     if (!isLoggedIn) {
       notify("Please log in to rate this recipe.", "warning");
+
       navigate("/login");
       return;
     }
 
     if (!isCommunityRecipe) {
       notify("Archive recipes cannot be rated.", "warning");
+
       return;
     }
 
-    if (isOwnRecipe || ratingLoading) return;
+    if (isOwnRecipe || ratingLoading) {
+      return;
+    }
 
     try {
       setRatingLoading(true);
 
       const data = await rateRecipe(recipeId, value);
 
-      setSelectedRating(Number(data?.userRating || value));
+      setSelectedRating(Number(data?.userRating ?? value));
 
       setRecipe((previous) => ({
         ...previous,
+
         averageRating:
           data?.averageRating ??
           previous?.averageRating ??
           previous?.rating ??
           0,
+
         ratingCount:
           data?.ratingCount ??
           previous?.ratingCount ??
           previous?.voteCount ??
           0,
+
         rating: data?.averageRating ?? previous?.rating ?? 0,
+
         voteCount: data?.ratingCount ?? previous?.voteCount ?? 0,
       }));
 
@@ -174,8 +220,14 @@ function RecipeDetails() {
     }
   };
 
+  // =====================================
+  // DELETE RECIPE
+  // =====================================
+
   const handleDelete = async () => {
-    if (!isOwnRecipe || deleteLoading) return;
+    if (!isOwnRecipe || deleteLoading) {
+      return;
+    }
 
     try {
       setDeleteLoading(true);
@@ -186,9 +238,9 @@ function RecipeDetails() {
 
       notify("Recipe deleted successfully.", "success");
 
-      setTimeout(() => {
-        navigate("/community");
-      }, 900);
+      navigate("/community", {
+        replace: true,
+      });
     } catch (deleteError) {
       console.error("Delete error:", deleteError);
 
@@ -200,6 +252,10 @@ function RecipeDetails() {
     }
   };
 
+  // =====================================
+  // LOADING
+  // =====================================
+
   if (loading) {
     return (
       <div className="recipe-details-page">
@@ -207,11 +263,16 @@ function RecipeDetails() {
 
         <div className="details-loading">
           <div className="loading-spinner" />
+
           <p>Loading recipe...</p>
         </div>
       </div>
     );
   }
+
+  // =====================================
+  // ERROR
+  // =====================================
 
   if (error || !recipe) {
     return (
@@ -220,7 +281,9 @@ function RecipeDetails() {
 
         <div className="details-error">
           <span>🍽️</span>
+
           <h2>Recipe Not Found</h2>
+
           <p>{error || "This recipe could not be found."}</p>
 
           <button type="button" onClick={() => navigate("/")}>
@@ -230,6 +293,10 @@ function RecipeDetails() {
       </div>
     );
   }
+
+  // =====================================
+  // RECIPE DATA
+  // =====================================
 
   const images =
     Array.isArray(recipe.images) && recipe.images.length > 0
@@ -272,13 +339,27 @@ function RecipeDetails() {
     recipe.times?.cooking || recipe.times?.Cooking || recipe.cookTime || "—";
 
   const servings = recipe.servings || recipe.serves || "—";
+
   const difficulty = recipe.difficulty || recipe.difficult || "—";
 
   const authorName = recipe.createdBy?.name || recipe.author || "Savorly";
 
+  const displayedRating = Math.min(
+    Math.max(Math.round(averageRatingNumber), 0),
+    5,
+  );
+
+  // =====================================
+  // RENDER
+  // =====================================
+
   return (
     <div className="recipe-details-page">
       <Header />
+
+      {/* =====================================
+          DELETE CONFIRMATION
+      ===================================== */}
 
       {showDeleteConfirm && (
         <div
@@ -329,6 +410,8 @@ function RecipeDetails() {
       )}
 
       <main className="recipe-details-container">
+        {/* BACK BUTTON */}
+
         <button
           type="button"
           className="details-back-button"
@@ -337,32 +420,41 @@ function RecipeDetails() {
           ← Back
         </button>
 
+        {/* =====================================
+            RECIPE HERO
+        ===================================== */}
+
         <section className="recipe-hero-details">
-          <div className="recipe-image-gallery">
+          {/* IMAGE + SOURCE BADGE */}
+
+          <div className="recipe-image-gallery recipe-detail-cover">
             <img
               src={images[0]}
               alt={recipe.name || "Recipe"}
               onError={(event) => {
+                event.currentTarget.onerror = null;
                 event.currentTarget.src = "/fallback.jpg";
               }}
             />
+
+            {/* This badge stays ON the image. */}
+
+            <span className="details-image-badge">
+              {isCommunityRecipe ? "COMMUNITY RECIPE" : "SAVORLY RECIPE"}
+            </span>
 
             {images.length > 1 && (
               <div className="recipe-image-count">+{images.length - 1}</div>
             )}
           </div>
 
+          {/* RECIPE INFORMATION */}
+
           <div className="recipe-details-content">
+            {/* Only one category badge here. */}
+
             <div className="recipe-details-badges">
               <span className="recipe-category-badge">{category}</span>
-
-              <div className="recipe-details-badges">
-                <span className="recipe-source-badge">
-                  {isCommunityRecipe ? "COMMUNITY RECIPE" : "SAVORLY RECIPE"}
-                </span>
-
-                <span className="recipe-category-badge">{category}</span>
-              </div>
             </div>
 
             <h1>{recipe.name || "Untitled Recipe"}</h1>
@@ -371,18 +463,13 @@ function RecipeDetails() {
               {recipe.description || "No description available."}
             </p>
 
+            {/* RATING SUMMARY */}
+
             <div className="recipe-rating-summary">
               <div className="rating-stars-display">
-                {"★".repeat(
-                  Math.min(Math.max(Math.round(averageRatingNumber), 0), 5),
-                )}
+                {"★".repeat(displayedRating)}
 
-                <span>
-                  {"★".repeat(
-                    5 -
-                      Math.min(Math.max(Math.round(averageRatingNumber), 0), 5),
-                  )}
-                </span>
+                <span>{"★".repeat(5 - displayedRating)}</span>
               </div>
 
               <strong>{averageRating}</strong>
@@ -391,6 +478,8 @@ function RecipeDetails() {
                 ({ratingCount} {ratingCount === 1 ? "rating" : "ratings"})
               </small>
             </div>
+
+            {/* RECIPE DETAILS */}
 
             <div className="recipe-meta-row">
               <div>
@@ -413,6 +502,8 @@ function RecipeDetails() {
                 <strong>{difficulty}</strong>
               </div>
             </div>
+
+            {/* ACTION BUTTONS */}
 
             <div className="recipe-action-row">
               <button
@@ -453,6 +544,10 @@ function RecipeDetails() {
             </div>
           </div>
         </section>
+
+        {/* =====================================
+            RATE RECIPE
+        ===================================== */}
 
         <section className="recipe-rating-section">
           <div>
@@ -495,67 +590,82 @@ function RecipeDetails() {
           )}
         </section>
 
+        {/* =====================================
+            INGREDIENTS + METHOD
+        ===================================== */}
+
         <section className="recipe-main-grid">
+          {/* INGREDIENTS */}
+
           <div className="recipe-section">
             <span className="section-eyebrow">WHAT YOU NEED</span>
+
             <h2>Ingredients</h2>
 
             {ingredients.length > 0 ? (
               <div className="ingredients-list">
-                {ingredients.map((ingredient, index) => (
-                  <label
-                    className="ingredient-item"
-                    key={`${String(
-                      typeof ingredient === "object"
-                        ? ingredient.name || ingredient.ingredient || index
-                        : ingredient,
-                    )}-${index}`}
-                  >
-                    <input type="checkbox" />
+                {ingredients.map((ingredient, index) => {
+                  const ingredientName =
+                    ingredient && typeof ingredient === "object"
+                      ? ingredient.name ||
+                        ingredient.ingredient ||
+                        JSON.stringify(ingredient)
+                      : ingredient;
 
-                    <span className="ingredient-checkbox">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="m5 12 4 4L19 6" />
-                      </svg>
-                    </span>
+                  return (
+                    <label
+                      className="ingredient-item"
+                      key={`${String(ingredientName ?? index)}-${index}`}
+                    >
+                      <input type="checkbox" />
 
-                    <span className="ingredient-text">
-                      {typeof ingredient === "object"
-                        ? ingredient.name ||
-                          ingredient.ingredient ||
-                          JSON.stringify(ingredient)
-                        : ingredient}
-                    </span>
-                  </label>
-                ))}
+                      <span className="ingredient-checkbox">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="m5 12 4 4L19 6" />
+                        </svg>
+                      </span>
+
+                      <span className="ingredient-text">{ingredientName}</span>
+                    </label>
+                  );
+                })}
               </div>
             ) : (
               <p>No ingredients available.</p>
             )}
           </div>
 
+          {/* METHOD */}
+
           <div className="recipe-section">
             <span className="section-eyebrow">LET'S COOK</span>
+
             <h2>Method</h2>
 
             {steps.length > 0 ? (
               <div className="steps-list">
-                {steps.map((step, index) => (
-                  <div className="step-item" key={`${String(step)}-${index}`}>
-                    <span className="step-number">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
+                {steps.map((step, index) => {
+                  const stepText =
+                    step && typeof step === "object"
+                      ? step.step ||
+                        step.description ||
+                        step.text ||
+                        JSON.stringify(step)
+                      : step;
 
-                    <p>
-                      {typeof step === "object"
-                        ? step.step ||
-                          step.description ||
-                          step.text ||
-                          JSON.stringify(step)
-                        : step}
-                    </p>
-                  </div>
-                ))}
+                  return (
+                    <div
+                      className="step-item"
+                      key={`${String(stepText ?? index)}-${index}`}
+                    >
+                      <span className="step-number">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      <p>{stepText}</p>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p>No cooking steps available.</p>
@@ -563,9 +673,14 @@ function RecipeDetails() {
           </div>
         </section>
 
+        {/* =====================================
+            NUTRITION
+        ===================================== */}
+
         <section className="nutrition-section">
           <div>
             <span className="section-eyebrow">PER SERVING</span>
+
             <h2>Nutrition</h2>
           </div>
 
@@ -585,13 +700,17 @@ function RecipeDetails() {
 
                 <strong>
                   {value !== undefined && value !== null && value !== ""
-                    ? `${value} ${unit}`
+                    ? `${value} ${unit}`.trim()
                     : "—"}
                 </strong>
               </div>
             ))}
           </div>
         </section>
+
+        {/* =====================================
+            AUTHOR
+        ===================================== */}
 
         <footer className="recipe-author-footer">
           <div className="author-avatar">
