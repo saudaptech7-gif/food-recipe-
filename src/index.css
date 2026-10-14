@@ -23976,3 +23976,130 @@ input[type="submit"] {
     padding-left: 12px !important;
   }
 }
+
+/* =========================================
+   SAVORLY — ONE CONNECTED SOCIAL ACTION BAR
+========================================= */
+
+.savorly-card-social-group {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+
+  width: fit-content !important;
+  max-width: 100% !important;
+  padding: 4px !important;
+  margin-top: 10px;
+
+  background: #f0f4e9 !important;
+  border: 1px solid #dce5d3 !important;
+  border-radius: 13px !important;
+  box-shadow: 0 3px 12px rgba(35, 65, 40, 0.05) !important;
+}
+
+.savorly-card-social-group .savorly-card-social-like,
+.savorly-card-social-group .savorly-card-social-comments {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 9px 13px !important;
+
+  color: #486048 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+
+  cursor: pointer !important;
+  transform: none !important;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease !important;
+}
+
+/* Single divider between actions */
+
+.savorly-card-social-group .savorly-card-social-comments {
+  border-left: 1px solid #d4dfca !important;
+  border-radius: 0 8px 8px 0 !important;
+  padding-left: 15px !important;
+}
+
+/* Shared background: don't create separate button cards */
+
+.savorly-card-social-group .savorly-card-social-like:hover:not(:disabled),
+.savorly-card-social-group .savorly-card-social-comments:hover {
+  color: #2e5639 !important;
+  background: #e3ebd9 !important;
+}
+
+.savorly-card-social-group
+  .savorly-card-social-like.is-liked {
+  color: #c43f4c !important;
+  background: transparent !important;
+}
+
+.savorly-card-social-group button svg {
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: 21px !important;
+  height: 21px !important;
+}
+
+.savorly-card-social-group .savorly-card-social-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-width: 18px !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  color: inherit !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  font-size: 11px !important;
+  font-weight: 850 !important;
+}
+
+.savorly-card-social-group button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.55 !important;
+}
+
+.savorly-card-social-group button:focus-visible {
+  outline: 2px solid #658b5c !important;
+  outline-offset: -2px !important;
+}
+
+@media (max-width: 420px) {
+  .savorly-card-social-group .savorly-card-social-like,
+  .savorly-card-social-group .savorly-card-social-comments {
+    gap: 6px !important;
+    min-height: 38px !important;
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .savorly-card-social-group .savorly-card-social-comments {
+    padding-left: 12px !important;
+  }
+}

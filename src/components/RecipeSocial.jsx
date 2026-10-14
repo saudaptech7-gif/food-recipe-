@@ -55,10 +55,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     recipe?.commentCount ??
     (Array.isArray(recipe?.comments) ? recipe.comments.length : null);
 
-  // =====================================
-  // LOAD SOCIAL DATA WHEN POPUP OPENS
-  // =====================================
-
+  // Load comments only when the popup is open.
   useEffect(() => {
     if (!isCommunityRecipe || !recipeId || !isOpen) {
       setLoading(false);
@@ -81,7 +78,6 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
 
       try {
         const result = await getRecipeSocial(recipeId);
-
         if (cancelled) return;
 
         const data = normalizeSocialData(result);
@@ -109,10 +105,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     };
   }, [recipeId, isCommunityRecipe, isLoggedIn, isOpen, retryCount]);
 
-  // =====================================
-  // MODAL SCROLL LOCK AND ESCAPE
-  // =====================================
-
+  // Lock page scrolling while the popup is open.
   useEffect(() => {
     if (!isOpen) return undefined;
 
@@ -138,25 +131,16 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     return null;
   }
 
-  // =====================================
-  // GENERAL ACTIONS
-  // =====================================
-
   const loginFirst = () => {
     setIsOpen(false);
     navigate("/login");
   };
 
   const closePopup = () => {
-    if (!working) {
-      setIsOpen(false);
-    }
+    if (!working) setIsOpen(false);
   };
 
-  // =====================================
-  // LIKE / UNLIKE FROM THE RECIPE CARD
-  // =====================================
-
+  // Like / unlike directly from the recipe card.
   const handleLike = async () => {
     if (!isLoggedIn) {
       loginFirst();
@@ -169,13 +153,11 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
       setWorking(true);
       setMessage("");
 
-      // If the popup has never been opened, load the current
-      // social data before checking ownership and updating likes.
+      // Fetch current status if social data hasn't loaded yet.
       let currentSocial = social;
 
       if (!currentSocial) {
         const response = await getRecipeSocial(recipeId);
-
         currentSocial = normalizeSocialData(response);
 
         if (!currentSocial || typeof currentSocial !== "object") {
@@ -185,7 +167,6 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
         setSocial(currentSocial);
       }
 
-      // A user cannot like their own community recipe.
       if (currentSocial.isOwnRecipe) {
         const warning = "You cannot like your own recipe.";
 
@@ -200,15 +181,15 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
 
       const result = await toggleRecipeLike(recipeId);
 
-      setSocial((current) => {
-        const base = current || currentSocial;
-
-        return {
-          ...base,
-          likedByMe: result.liked,
-          likesCount: result.likesCount ?? base.likesCount ?? 0,
-        };
-      });
+      setSocial((current) => ({
+        ...(current || currentSocial),
+        likedByMe: result.liked,
+        likesCount:
+          result.likesCount ??
+          current?.likesCount ??
+          currentSocial.likesCount ??
+          0,
+      }));
     } catch (error) {
       const errorMessage = error?.message || "Could not update recipe like.";
 
@@ -222,19 +203,14 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     }
   };
 
-  // =====================================
-  // FOLLOW / UNFOLLOW CHEF
-  // =====================================
-
+  // Follow / unfollow the recipe owner.
   const handleFollow = async () => {
     if (!isLoggedIn) {
       loginFirst();
       return;
     }
 
-    if (!owner?._id || social?.isOwnRecipe || working) {
-      return;
-    }
+    if (!owner?._id || social?.isOwnRecipe || working) return;
 
     try {
       setWorking(true);
@@ -264,10 +240,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     }
   };
 
-  // =====================================
-  // ADD COMMENT
-  // =====================================
-
+  // Add comment.
   const handleComment = async (event) => {
     event.preventDefault();
 
@@ -316,10 +289,7 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     }
   };
 
-  // =====================================
-  // DELETE COMMENT
-  // =====================================
-
+  // Delete comment.
   const handleDeleteComment = async (commentId) => {
     if (working) return;
 
@@ -354,39 +324,29 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
     }
   };
 
-  // =====================================
-  // RENDER
-  // =====================================
-
   return (
     <>
-      {/* LIKE AND COMMENTS BUTTONS BESIDE EACH OTHER */}
+      {/* ONE CONNECTED LIKE + COMMENTS BAR */}
 
-      <div className="savorly-social-card-actions">
+      <div className="savorly-card-social-group">
         <button
           type="button"
-          className={`savorly-like-card-button ${likedByMe ? "is-liked" : ""}`}
+          className={`savorly-card-social-like ${likedByMe ? "is-liked" : ""}`}
           onClick={handleLike}
           disabled={working || loading}
           aria-pressed={likedByMe}
-          title={
-            social?.isOwnRecipe
-              ? "You cannot like your own recipe"
-              : likedByMe
-                ? "Unlike this recipe"
-                : "Like this recipe"
-          }
+          title={likedByMe ? "Unlike this recipe" : "Like this recipe"}
         >
           <svg
             viewBox="0 0 24 24"
             width="21"
             height="21"
-            aria-hidden="true"
             fill={likedByMe ? "currentColor" : "none"}
             stroke="currentColor"
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M7 10v12" />
             <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 3a3 3 0 0 1 3 2.88Z" />
@@ -394,12 +354,12 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
 
           <span>{likedByMe ? "Liked" : "Like"}</span>
 
-          <span className="savorly-card-action-count">{likesCount}</span>
+          <span className="savorly-card-social-count">{likesCount}</span>
         </button>
 
         <button
           type="button"
-          className="savorly-comment-icon-button"
+          className="savorly-card-social-comments"
           onClick={() => setIsOpen(true)}
           aria-label={`Open comments for ${recipeName}`}
           title="View comments"
@@ -409,27 +369,20 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
             width="21"
             height="21"
             fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             aria-hidden="true"
           >
-            <path
-              d="M20 11.4a7.4 7.4 0 0 1-7.4 7.4H5l1.7-3A7.4 7.4 0 1 1 20 11.4Z"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M8.5 10.5h7M8.5 13.5h4"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
+            <path d="M20 11.4a7.4 7.4 0 0 1-7.4 7.4H5l1.7-3A7.4 7.4 0 1 1 20 11.4Z" />
+            <path d="M8.5 10.5h7M8.5 13.5h4" />
           </svg>
 
           <span>Comments</span>
 
           {commentCount !== null && (
-            <span className="savorly-comment-icon-count">{commentCount}</span>
+            <span className="savorly-card-social-count">{commentCount}</span>
           )}
         </button>
       </div>
@@ -454,9 +407,13 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
             >
               <header className="savorly-comments-header">
                 <div className="savorly-comments-header-copy">
-                  <span className="savorly-comments-eyebrow"></span>
+                  <span className="savorly-comments-eyebrow">
+                    SAVORLY COMMUNITY
+                  </span>
 
-                  <h2 id={`comments-title-${recipeId}`}></h2>
+                  <h2 id={`comments-title-${recipeId}`}>
+                    Kitchen conversations
+                  </h2>
 
                   <p>{recipeName}</p>
                 </div>
@@ -556,8 +513,6 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
                   </div>
                 ) : (
                   <>
-                    {/* RECIPE OWNER */}
-
                     {owner && (
                       <div className="savorly-comments-chef">
                         <button
@@ -600,8 +555,6 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
                       </div>
                     )}
 
-                    {/* COMMENTS HEADING */}
-
                     <div className="savorly-comments-list-section">
                       <div className="savorly-comments-list-heading">
                         <div>
@@ -613,8 +566,6 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
                           {comments.length}
                         </span>
                       </div>
-
-                      {/* COMMENT LIST */}
 
                       {comments.length === 0 ? (
                         <div className="savorly-comments-empty">
@@ -647,7 +598,6 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
                         <div className="savorly-comments-list">
                           {comments.map((comment) => {
                             const author = comment.user;
-
                             const authorName = String(
                               author?.chef || author?.name || "Savorly User",
                             );
@@ -710,8 +660,6 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
                       )}
                     </div>
 
-                    {/* ADD COMMENT */}
-
                     <form
                       className="savorly-comments-form"
                       onSubmit={handleComment}
@@ -739,7 +687,6 @@ function RecipeSocial({ recipe, isLoggedIn = false }) {
                           disabled={working || !commentText.trim()}
                         >
                           {working ? "Posting..." : "Post comment"}
-
                           {!working && <span aria-hidden="true">↗</span>}
                         </button>
                       </div>
