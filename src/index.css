@@ -23840,3 +23840,139 @@ input[type="submit"] {
     margin-left: 12px !important;
   }
 }
+
+/* =====================================
+   SAVORLY — UNIFIED SOCIAL ACTION BAR
+===================================== */
+
+.savorly-social-card-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+
+  width: fit-content !important;
+  max-width: 100%;
+  padding: 4px !important;
+
+  background: #f2f5ed !important;
+  border: 1px solid #dfe7d7 !important;
+  border-radius: 14px !important;
+
+  box-shadow: 0 3px 12px rgba(35, 65, 40, 0.04);
+}
+
+/* Both buttons share the same container */
+
+.savorly-social-card-actions .savorly-like-card-button,
+.savorly-social-card-actions .savorly-comment-icon-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 9px 13px !important;
+
+  color: #53664f !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+
+  transform: none !important;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+/* Thumbs-up icon */
+
+.savorly-social-card-actions .savorly-like-card-button svg {
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+/* Liked state — no separate card background */
+
+.savorly-social-card-actions .savorly-like-card-button.is-liked {
+  color: #c43f4c !important;
+  background: transparent !important;
+}
+
+/* Hover */
+
+.savorly-social-card-actions .savorly-like-card-button:hover:not(:disabled),
+.savorly-social-card-actions .savorly-comment-icon-button:hover {
+  color: #315740 !important;
+  background: #e5ecdd !important;
+}
+
+/* Thin divider between Like and Comments */
+
+.savorly-social-card-actions .savorly-comment-icon-button {
+  margin-left: 0 !important;
+  border-left: 1px solid #d6e0ce !important;
+  border-radius: 0 9px 9px 0 !important;
+  padding-left: 15px !important;
+}
+
+/* Counts */
+
+.savorly-social-card-actions .savorly-card-action-count,
+.savorly-social-card-actions .savorly-comment-icon-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: auto;
+  height: auto;
+  padding: 0 0 0 2px;
+
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+
+  font-size: 11px;
+  font-weight: 850;
+}
+
+/* Disabled */
+
+.savorly-social-card-actions .savorly-like-card-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Keyboard accessibility */
+
+.savorly-social-card-actions .savorly-like-card-button:focus-visible,
+.savorly-social-card-actions .savorly-comment-icon-button:focus-visible {
+  outline: 2px solid #70936b;
+  outline-offset: -2px;
+}
+
+/* Mobile */
+
+@media (max-width: 420px) {
+
+  .savorly-social-card-actions .savorly-like-card-button,
+  .savorly-social-card-actions .savorly-comment-icon-button {
+    min-height: 38px !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+    font-size: 11px;
+  }
+
+  .savorly-social-card-actions .savorly-comment-icon-button {
+    padding-left: 12px !important;
+  }
+}
