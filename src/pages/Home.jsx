@@ -415,7 +415,7 @@ function Home() {
               <div className="hero-food-image-wrap">
                 <img
                   className="hero-food-image"
-                  src="/images/savorly-hero-food.png"
+                  src="./public/images/savorly-hero-food.jpg"
                   alt="A delicious 3D cartoon food dish with fresh ingredients"
                   onError={(event) => {
                     event.currentTarget.style.display = "none";
