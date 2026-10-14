@@ -30346,3 +30346,29 @@ input[type="submit"] {
   flex: 0 0 auto;
   cursor: pointer;
 }
+
+/* Stop checkbox and its parent from shifting on hover */
+.home-page input[type="checkbox"],
+.home-page input[type="checkbox"]:hover,
+.home-page input[type="checkbox"]:focus,
+.home-page input[type="checkbox"]:active {
+  transform: none !important;
+  translate: 0 0 !important;
+  position: static !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.home-page label:has(input[type="checkbox"]),
+.home-page label:has(input[type="checkbox"]):hover {
+  transform: none !important;
+  translate: 0 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Disable movement transitions on checkbox filters */
+.home-page input[type="checkbox"],
+.home-page label:has(input[type="checkbox"]) {
+  transition-property: color, background-color, border-color !important;
+}
