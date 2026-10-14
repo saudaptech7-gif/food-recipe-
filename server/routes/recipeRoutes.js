@@ -1,6 +1,5 @@
-
 /* eslint-disable no-undef */
-
+const optionalAuthMiddleware = require("../middleware/optionalAuthMiddleware");
 const express = require("express");
 
 const upload = require("../middleware/uploadMiddleware");
@@ -32,6 +31,8 @@ router.get("/my", authMiddleware, getMyRecipes);
 // COMMUNITY RECIPES
 router.get("/community", authMiddleware, getUserRecipes);
 
+// SINGLE RECIPE DETAILS
+router.get("/:id", optionalAuthMiddleware, getRecipeById);
 // CLOUDINARY IMAGE UPLOAD
 router.post(
   "/upload-images",

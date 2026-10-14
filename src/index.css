@@ -28964,3 +28964,16 @@ input[type="submit"] {
     font-size: 9px !important;
   }
 }
+
+.recipe-details-page .rating-star-button.active,
+.recipe-details-page .rating-star-button.active:disabled {
+  color: #f5a623 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #f5a623 !important;
+  cursor: not-allowed;
+}
+
+.recipe-details-page .rating-star-button:disabled:not(.active) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
