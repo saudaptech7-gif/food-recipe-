@@ -30316,3 +30316,33 @@ input[type="submit"] {
   text-decoration: line-through !important;
   text-decoration-color: #a3aaa4 !important;
 }
+
+/* Fix: checkbox hover par apni position change na kare */
+.home-page input[type="checkbox"],
+.home-page input[type="checkbox"]:hover,
+.home-page input[type="checkbox"]:focus,
+.home-page input[type="checkbox"]:active {
+  transform: none !important;
+  translate: none !important;
+  margin-left: 0 !important;
+  position: relative;
+  left: 0 !important;
+}
+
+/* Checkbox aur label ki alignment stable rakho */
+.home-page label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: none !important;
+  transition: color 0.2s ease !important;
+}
+
+.home-page label:has(input[type="checkbox"]):hover {
+  transform: none !important;
+}
+
+.home-page input[type="checkbox"] {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
