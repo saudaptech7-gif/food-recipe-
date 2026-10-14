@@ -359,10 +359,11 @@ function RecipeDetails() {
 
               <span
                 className={
-                  isCommunityRecipe ? "community-badge" : "archive-badge"
+                  isCommunityRecipe ? "community-badge  " : "archive-badge "
+                  
                 }
               
-                
+
               >
                 {isCommunityRecipe ? "Community Recipe" : "Savorly Recipe"}
               </span>
