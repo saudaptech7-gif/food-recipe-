@@ -24048,8 +24048,7 @@ input[type="submit"] {
   background: #e3ebd9 !important;
 }
 
-.savorly-card-social-group
-  .savorly-card-social-like.is-liked {
+.savorly-card-social-group .savorly-card-social-like.is-liked {
   color: #c43f4c !important;
   background: transparent !important;
 }
@@ -24091,6 +24090,7 @@ input[type="submit"] {
 }
 
 @media (max-width: 420px) {
+
   .savorly-card-social-group .savorly-card-social-like,
   .savorly-card-social-group .savorly-card-social-comments {
     gap: 6px !important;
@@ -24101,5 +24101,1480 @@ input[type="submit"] {
 
   .savorly-card-social-group .savorly-card-social-comments {
     padding-left: 12px !important;
+  }
+}
+
+/* ==========================================
+   SAVORLY — UNIFIED THEME
+   Home + Community
+========================================== */
+
+.home-page,
+.savorly-community-shell {
+  --savorly-green: #2b593d;
+  --savorly-green-dark: #1c402c;
+  --savorly-green-soft: #eaf1e4;
+  --savorly-sage: #78916b;
+  --savorly-cream: #fbfaf6;
+  --savorly-card: #ffffff;
+  --savorly-border: #e4e8de;
+  --savorly-text: #293b2e;
+  --savorly-muted: #7d8579;
+
+  color: var(--savorly-text);
+  background: var(--savorly-cream);
+}
+
+/* ==========================================
+   HOME — PAGE SPACING
+========================================== */
+
+.home-page {
+  min-height: 100vh;
+}
+
+.home-page .home-collections-section {
+  width: min(1280px, calc(100% - 64px));
+  margin: 0 auto;
+  padding: 85px 0 100px;
+  scroll-margin-top: 30px;
+}
+
+.home-page .home-section-intro {
+  max-width: 700px;
+  margin: 0 auto 35px;
+  text-align: center;
+}
+
+.home-page .home-section-eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--savorly-sage);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.home-page .home-section-intro h2 {
+  margin: 0;
+  color: var(--savorly-green-dark);
+  font-size: clamp(30px, 4vw, 45px);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  line-height: 1.15;
+}
+
+.home-page .home-section-intro h2 span {
+  color: var(--savorly-sage);
+}
+
+.home-page .home-section-intro>p {
+  max-width: 570px;
+  margin: 15px auto 0;
+  color: var(--savorly-muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.home-page .home-section-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 22px;
+}
+
+.home-page .home-section-divider span {
+  width: 6px;
+  height: 6px;
+  background: #a6ba98;
+  border-radius: 50%;
+}
+
+.home-page .home-section-divider span:nth-child(2) {
+  width: 25px;
+  background: var(--savorly-green);
+  border-radius: 10px;
+}
+
+/* ==========================================
+   HOME — HERO
+   Keep existing cooking animation functional.
+========================================== */
+
+.home-page .hero-sticky {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 32px;
+}
+
+.home-page .hero-section {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: 35px;
+
+  width: min(1320px, 100%);
+  min-height: 510px;
+  margin: 0 auto;
+  padding: 48px clamp(30px, 5vw, 70px);
+
+  background:
+    radial-gradient(circle at 83% 20%,
+      rgba(155, 181, 128, 0.16),
+      transparent 33%),
+    linear-gradient(125deg, #f7f8f0, #eef3e7);
+
+  border: 1px solid #e3e9da;
+  border-radius: 28px;
+  box-shadow: 0 18px 48px rgba(37, 67, 43, 0.07);
+}
+
+.home-page .hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 590px;
+}
+
+.home-page .hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 20px;
+  padding: 10px 14px;
+
+  color: var(--savorly-green);
+  background: #ffffff;
+  border: 1px solid #e3e9da;
+  border-radius: 50px;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.home-page .hero-content h1 {
+  margin: 0;
+  color: var(--savorly-green-dark);
+  font-size: clamp(38px, 4.3vw, 59px);
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1.12;
+}
+
+.home-page .hero-content>p {
+  max-width: 490px;
+  margin: 20px 0 0;
+  color: #727e70;
+  font-size: 14px;
+  line-height: 1.95;
+}
+
+.home-page .hero-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+
+  min-height: 49px;
+  margin-top: 26px;
+  padding: 13px 21px;
+
+  color: #ffffff;
+  background: var(--savorly-green);
+  border: 1px solid var(--savorly-green);
+  border-radius: 12px;
+
+  box-shadow: 0 7px 18px rgba(43, 89, 61, 0.15);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 850;
+
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.home-page .hero-button:hover {
+  background: var(--savorly-green-dark);
+  box-shadow: 0 11px 24px rgba(43, 89, 61, 0.2);
+  transform: translateY(-2px);
+}
+
+.home-page .hero-button span {
+  font-size: 17px;
+}
+
+.home-page .cooking-scene {
+  width: 100%;
+  max-width: 530px;
+  min-width: 0;
+  justify-self: center;
+}
+
+/* ==========================================
+   HOME — COLLECTION TABS
+========================================== */
+
+.home-page .home-collection-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 42px;
+  padding: 6px;
+
+  background: #eff2e9;
+  border: 1px solid #e1e7d9;
+  border-radius: 16px;
+}
+
+.home-page .home-collection-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 45px;
+  padding: 11px 20px;
+
+  color: #6c7968;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 11px;
+
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.home-page .home-collection-tab:hover {
+  color: var(--savorly-green);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.home-page .home-collection-tab.active {
+  color: #ffffff;
+  background: var(--savorly-green);
+  border-color: var(--savorly-green);
+  box-shadow: 0 4px 12px rgba(43, 89, 61, 0.13);
+}
+
+.home-page .home-tab-icon {
+  font-size: 15px;
+}
+
+/* ==========================================
+   HOME — RECIPE SECTIONS
+========================================== */
+
+.home-page .home-tab-content {
+  min-width: 0;
+  animation: savorly-home-tab-in 0.25s ease both;
+}
+
+@keyframes savorly-home-tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-page .section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 25px;
+}
+
+.home-page .section-heading>div>span,
+.home-page .community-subsection-heading>div>span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--savorly-sage);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.7px;
+}
+
+.home-page .section-heading h2,
+.home-page .community-subsection-heading h2 {
+  margin: 0;
+  color: var(--savorly-green-dark);
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 900;
+  letter-spacing: -0.9px;
+}
+
+.home-page .section-heading>p {
+  max-width: 350px;
+  margin: 0;
+  color: var(--savorly-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* Recipe grid spacing */
+
+.home-page .recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 25px;
+  width: 100%;
+  margin-top: 25px;
+}
+
+.home-page .recipes-grid>* {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Search and filter spacing */
+
+.home-page .recipes-section> :is(.search-bar,
+  .filter-bar,
+  .search-container,
+  .filters-container) {
+  margin-bottom: 18px;
+}
+
+.home-page .recipes-section>.recipes-grid {
+  margin-top: 25px;
+}
+
+/* ==========================================
+   HOME — COMMUNITY TAB HEADINGS
+========================================== */
+
+.home-page .community-subsection-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 22px;
+
+  margin-bottom: 27px;
+  padding: 25px;
+
+  background: linear-gradient(120deg, #f0f4e8, #f8f8f2);
+  border: 1px solid #e3e9dc;
+  border-radius: 20px;
+}
+
+.home-page .community-subsection-heading h2 {
+  margin-bottom: 8px;
+}
+
+.home-page .community-subsection-heading>div>p {
+  margin: 0;
+  color: var(--savorly-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.home-page .create-recipe-button,
+.home-page .home-view-all-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 43px;
+  padding: 11px 16px;
+
+  color: #ffffff;
+  background: var(--savorly-green);
+  border: 1px solid var(--savorly-green);
+  border-radius: 11px;
+
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 850;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.home-page .create-recipe-button:hover,
+.home-page .home-view-all-button:hover {
+  color: #ffffff;
+  background: var(--savorly-green-dark);
+  transform: translateY(-1px);
+}
+
+.home-page .home-view-all {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.home-page .home-view-all-button {
+  color: var(--savorly-green);
+  background: #edf3e6;
+  border-color: #dfe8d7;
+}
+
+.home-page .home-view-all-button:hover {
+  color: #ffffff;
+}
+
+/* Empty states and errors */
+
+.home-page .home-community-message,
+.home-page .empty-recipes {
+  box-sizing: border-box;
+  max-width: 100%;
+  margin-top: 20px;
+  padding: 45px 24px;
+
+  text-align: center;
+  background: #ffffff;
+  border: 1px dashed #dce5d5;
+  border-radius: 20px;
+}
+
+.home-page .home-community-message h3,
+.home-page .empty-recipes h3 {
+  margin: 0 0 10px;
+  color: var(--savorly-green-dark);
+  font-size: 19px;
+  font-weight: 850;
+}
+
+.home-page .home-community-message p,
+.home-page .empty-recipes p {
+  max-width: 490px;
+  margin: 0 auto 20px;
+  color: var(--savorly-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.home-page .recipe-error {
+  padding: 20px;
+  color: #9d4842;
+  background: #fff1ee;
+  border: 1px solid #f0d6d0;
+  border-radius: 14px;
+}
+
+.home-page .pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 17px;
+  margin-top: 35px;
+}
+
+.home-page .pagination button {
+  min-height: 40px;
+  padding: 10px 14px;
+  color: var(--savorly-green);
+  background: #ffffff;
+  border: 1px solid #dfe7d8;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.home-page .pagination button:hover:not(:disabled) {
+  color: #ffffff;
+  background: var(--savorly-green);
+}
+
+.home-page .pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.home-page .pagination>span {
+  color: var(--savorly-muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+/* ==========================================
+   COMMUNITY — MATCH SAVORLY HOME THEME
+========================================== */
+
+.savorly-community-shell {
+  background: var(--savorly-cream);
+}
+
+.savorly-community-shell .community-hero {
+  background:
+    radial-gradient(circle at 85% 20%,
+      rgba(151, 179, 119, 0.2),
+      transparent 34%),
+    linear-gradient(120deg, #1d432e, #315d40) !important;
+
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.savorly-community-shell .community-hero-content h1 {
+  color: #fffdf7;
+}
+
+.savorly-community-shell .community-hero-content h1 span {
+  color: #d4e1c4;
+}
+
+.savorly-community-shell .community-hero-description {
+  color: #d6e0d1;
+}
+
+.savorly-community-shell .community-eyebrow {
+  color: #e7efdd;
+}
+
+.savorly-community-shell .community-section-heading h2,
+.savorly-community-shell .community-results-heading h3 {
+  color: var(--savorly-green-dark);
+}
+
+.savorly-community-shell .community-section-heading h2 span {
+  color: var(--savorly-sage);
+}
+
+/* Community category filters */
+
+.savorly-community-shell .community-category {
+  color: #64745e;
+  background: #ffffff;
+  border-color: #e0e7d9;
+}
+
+.savorly-community-shell .community-category:hover {
+  color: var(--savorly-green);
+  background: #f0f4e9;
+  border-color: #cbdcc1;
+}
+
+.savorly-community-shell .community-category.active {
+  color: #ffffff;
+  background: var(--savorly-green);
+  border-color: var(--savorly-green);
+}
+
+/* Community filter panels and stats */
+
+.savorly-community-shell .community-stat,
+.savorly-community-shell .community-filter-panel,
+.savorly-community-shell .community-benefit,
+.savorly-community-shell .community-recipe-item {
+  background-color: #ffffff;
+  border-color: var(--savorly-border);
+}
+
+.savorly-community-shell .community-stat-icon,
+.savorly-community-shell .community-benefit-icon,
+.savorly-community-shell .community-heading-mark {
+  color: var(--savorly-green);
+  background-color: var(--savorly-green-soft);
+  border-color: #dce6d3;
+}
+
+.savorly-community-shell .community-search {
+  background: #f8f9f5;
+  border-color: #e1e8da;
+}
+
+.savorly-community-shell .community-search:focus-within {
+  background: #ffffff;
+  border-color: #8ca982;
+}
+
+/* Community CTA uses the same hero palette */
+
+.savorly-community-shell .community-cta {
+  background:
+    radial-gradient(circle at 85% 25%,
+      rgba(151, 179, 119, 0.2),
+      transparent 34%),
+    linear-gradient(120deg, #1d432e, #315d40) !important;
+}
+
+.savorly-community-shell .community-cta-content .community-section-eyebrow {
+  color: #d4e1c4;
+}
+
+.savorly-community-shell .community-cta-content h2 span {
+  color: #d4e1c4;
+}
+
+/* Community action buttons */
+
+.savorly-community-shell .community-button-primary {
+  color: #ffffff;
+  background: var(--savorly-green);
+  border-color: var(--savorly-green);
+}
+
+.savorly-community-shell .community-button-primary:hover {
+  background: var(--savorly-green-dark);
+  border-color: var(--savorly-green-dark);
+}
+
+.savorly-community-shell .community-button-secondary {
+  color: var(--savorly-green);
+  background: #ffffff;
+  border-color: #dce5d4;
+}
+
+/* ==========================================
+   SHARED RECIPE / COMMENTS COLORS
+========================================== */
+
+.savorly-card-social-group {
+  background: #f0f4e9 !important;
+  border-color: #dce5d3 !important;
+}
+
+.savorly-card-social-group .savorly-card-social-like,
+.savorly-card-social-group .savorly-card-social-comments {
+  color: var(--savorly-green);
+}
+
+.savorly-comments-header {
+  background:
+    radial-gradient(circle at 95% 5%,
+      rgba(151, 179, 119, 0.2),
+      transparent 33%),
+    linear-gradient(125deg, #1d432e, #315d40);
+}
+
+.savorly-comments-primary {
+  background: var(--savorly-green);
+  border-color: var(--savorly-green);
+}
+
+.savorly-comments-primary:hover:not(:disabled) {
+  background: var(--savorly-green-dark);
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (max-width: 1000px) {
+  .home-page .home-collections-section {
+    width: calc(100% - 42px);
+    padding: 68px 0 80px;
+  }
+
+  .home-page .hero-section {
+    gap: 22px;
+    padding: 35px;
+  }
+
+  .home-page .hero-content h1 {
+    font-size: clamp(35px, 4.7vw, 48px);
+  }
+
+  .home-page .recipes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .home-page .home-collection-tabs {
+    margin-bottom: 34px;
+  }
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 650px) {
+  .home-page .hero-sticky {
+    padding: 14px;
+  }
+
+  .home-page .hero-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    min-height: auto;
+    padding: 28px 22px;
+    border-radius: 22px;
+  }
+
+  .home-page .hero-content h1 {
+    font-size: clamp(34px, 8.5vw, 44px);
+    letter-spacing: -1.5px;
+  }
+
+  .home-page .hero-content>p {
+    margin-top: 15px;
+    font-size: 12px;
+  }
+
+  .home-page .hero-button {
+    min-height: 44px;
+    margin-top: 20px;
+  }
+
+  .home-page .cooking-scene {
+    max-width: 430px;
+  }
+
+  .home-page .home-collections-section {
+    width: calc(100% - 28px);
+    padding: 52px 0 60px;
+  }
+
+  .home-page .home-section-intro {
+    margin-bottom: 27px;
+  }
+
+  .home-page .home-section-intro h2 {
+    font-size: 31px;
+    letter-spacing: -1px;
+  }
+
+  .home-page .home-section-intro>p {
+    font-size: 12px;
+  }
+
+  .home-page .home-collection-tabs {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 3px;
+    margin-bottom: 31px;
+    padding: 4px;
+    border-radius: 13px;
+  }
+
+  .home-page .home-collection-tab {
+    flex: 1;
+    min-width: 0;
+    min-height: 43px;
+    gap: 5px;
+    padding: 9px 5px;
+    font-size: 10px;
+  }
+
+  .home-page .home-tab-icon {
+    font-size: 13px;
+  }
+
+  .home-page .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .home-page .section-heading h2,
+  .home-page .community-subsection-heading h2 {
+    font-size: 26px;
+  }
+
+  .home-page .section-heading>p {
+    font-size: 11px;
+  }
+
+  .home-page .recipes-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 17px;
+  }
+
+  .home-page .community-subsection-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .home-page .community-subsection-heading .create-recipe-button {
+    width: 100%;
+  }
+
+  .home-page .home-community-message {
+    padding: 34px 17px;
+  }
+
+  .home-page .pagination {
+    gap: 9px;
+  }
+
+  .home-page .pagination button {
+    padding: 9px 11px;
+    font-size: 10px;
+  }
+
+  .home-page .pagination>span {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page .home-tab-content {
+    animation: none;
+  }
+}
+
+/* ==========================================
+   SAVORLY COMMUNITY — FINAL UI POLISH
+========================================== */
+
+.savorly-community-shell {
+  --community-primary: #2b593d;
+  --community-primary-dark: #1c402c;
+  --community-sage: #78916b;
+  --community-cream: #fbfaf6;
+  --community-soft: #edf3e6;
+  --community-border: #e2e8da;
+  --community-text: #293b2e;
+  --community-muted: #7d8579;
+
+  color: var(--community-text) !important;
+  background: var(--community-cream) !important;
+}
+
+.savorly-community-main {
+  width: min(1280px, calc(100% - 64px)) !important;
+  margin: 0 auto !important;
+  padding: 34px 0 85px !important;
+}
+
+/* HERO */
+
+.savorly-community-main .community-hero {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: 28px;
+  min-height: 460px;
+  padding: clamp(32px, 5vw, 62px);
+  border: 1px solid #315c40;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 82% 18%,
+      rgba(151, 179, 119, 0.19),
+      transparent 32%),
+    linear-gradient(125deg, #1c402c, #315d40) !important;
+  box-shadow: 0 18px 45px rgba(29, 67, 46, 0.10);
+}
+
+.savorly-community-main .community-eyebrow {
+  color: #e5eedc;
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.savorly-community-main .community-hero-content h1 {
+  max-width: 650px;
+  margin: 25px 0 18px;
+  color: #fffdf7;
+  font-size: clamp(36px, 4.2vw, 57px);
+  letter-spacing: -2px;
+  line-height: 1.1;
+}
+
+.savorly-community-main .community-hero-content h1 span {
+  display: block;
+  margin-top: 5px;
+  color: #d3e1c3;
+}
+
+.savorly-community-main .community-hero-description {
+  max-width: 500px;
+  color: #d5e0d0;
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.savorly-community-main .community-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.savorly-community-main .community-button-primary {
+  min-height: 46px;
+  padding: 12px 18px;
+  color: #ffffff;
+  background: var(--community-primary);
+  border: 1px solid var(--community-primary);
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 800;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.savorly-community-main .community-button-primary:hover {
+  color: #ffffff;
+  background: var(--community-primary-dark);
+  transform: translateY(-2px);
+}
+
+.savorly-community-main .community-hero .community-button-primary {
+  color: #263e2b;
+  background: #e7eddb;
+  border-color: #e7eddb;
+}
+
+.savorly-community-main .community-hero .community-button-primary:hover {
+  color: #263e2b;
+  background: #f4f6e9;
+}
+
+.savorly-community-main .community-button-secondary {
+  min-height: 46px;
+  padding: 12px 18px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.savorly-community-main .community-button-secondary:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.savorly-community-main .community-hero-trust {
+  gap: 9px;
+  margin-top: 25px;
+}
+
+/* HERO ART */
+
+.savorly-community-main .community-hero-art {
+  min-height: 345px;
+}
+
+.savorly-community-main .community-art-food {
+  border-color: #ffffff;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.20);
+}
+
+.savorly-community-main .community-art-note {
+  border: 1px solid #e4e9dc;
+  box-shadow: 0 10px 27px rgba(0, 0, 0, 0.12);
+}
+
+.savorly-community-main .community-art-note-icon {
+  color: var(--community-primary);
+  background: var(--community-soft);
+}
+
+/* BENEFIT CARDS */
+
+.savorly-community-main .community-benefits {
+  gap: 16px;
+  margin: -22px 24px 0;
+}
+
+.savorly-community-main .community-benefit {
+  gap: 13px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid var(--community-border);
+  border-radius: 16px;
+  box-shadow: 0 7px 20px rgba(35, 65, 40, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.savorly-community-main .community-benefit:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(35, 65, 40, 0.08);
+}
+
+.savorly-community-main .community-benefit-icon {
+  color: var(--community-primary);
+  background: var(--community-soft);
+}
+
+.savorly-community-main .community-benefit h2 {
+  color: var(--community-text);
+  font-size: 13px;
+}
+
+.savorly-community-main .community-benefit p {
+  color: var(--community-muted);
+  line-height: 1.7;
+}
+
+/* DISCOVER SECTION */
+
+.savorly-community-main .community-discover {
+  padding-top: 86px;
+  scroll-margin-top: 28px;
+}
+
+.savorly-community-main .community-section-heading {
+  margin-bottom: 30px;
+}
+
+.savorly-community-main .community-section-heading h2 {
+  margin: 12px 0;
+  color: var(--community-primary-dark);
+  font-size: clamp(29px, 3.5vw, 43px);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  line-height: 1.2;
+}
+
+.savorly-community-main .community-section-heading h2 span {
+  color: var(--community-sage);
+}
+
+.savorly-community-main .community-section-heading p {
+  color: var(--community-muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.savorly-community-main .community-section-eyebrow {
+  color: var(--community-sage);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.savorly-community-main .community-heading-mark {
+  color: var(--community-primary);
+  background: var(--community-soft);
+  border-color: var(--community-border);
+}
+
+/* STATS */
+
+.savorly-community-main .community-stats {
+  gap: 16px;
+  margin-bottom: 25px;
+}
+
+.savorly-community-main .community-stat {
+  gap: 14px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid var(--community-border);
+  border-radius: 16px;
+  box-shadow: 0 5px 18px rgba(35, 65, 40, 0.03);
+}
+
+.savorly-community-main .community-stat-icon {
+  color: var(--community-primary);
+  background: var(--community-soft);
+}
+
+.savorly-community-main .community-stat strong {
+  color: var(--community-primary-dark);
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.savorly-community-main .community-stat>div>span {
+  color: var(--community-muted);
+  font-size: 11px;
+}
+
+/* SEARCH, SORT AND CATEGORIES */
+
+.savorly-community-main .community-filter-panel {
+  margin-bottom: 34px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid var(--community-border);
+  border-radius: 20px;
+  box-shadow: 0 6px 23px rgba(35, 65, 40, 0.035);
+}
+
+.savorly-community-main .community-filter-top {
+  margin-bottom: 20px;
+}
+
+.savorly-community-main .community-filter-title-icon {
+  color: var(--community-primary);
+  background: var(--community-soft);
+}
+
+.savorly-community-main .community-filter-title h3 {
+  color: var(--community-text);
+  font-size: 14px;
+}
+
+.savorly-community-main .community-filter-title p {
+  color: var(--community-muted);
+  line-height: 1.7;
+}
+
+.savorly-community-main .community-search {
+  min-height: 52px;
+  background: #f8f9f5;
+  border: 1px solid #e1e8da;
+  border-radius: 12px;
+}
+
+.savorly-community-main .community-search:focus-within {
+  background: #ffffff;
+  border-color: #8ca982;
+  box-shadow: 0 0 0 3px rgba(112, 148, 99, 0.11);
+}
+
+.savorly-community-main .community-search input {
+  color: var(--community-text);
+  font-size: 12px;
+}
+
+.savorly-community-main .community-category-heading>span {
+  color: var(--community-muted);
+  letter-spacing: 1.4px;
+}
+
+.savorly-community-main .community-category {
+  min-height: 39px;
+  padding: 9px 13px;
+  color: #64745e;
+  background: #ffffff;
+  border: 1px solid var(--community-border);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 750;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
+.savorly-community-main .community-category:hover {
+  color: var(--community-primary);
+  background: #f1f5eb;
+  border-color: #cad9c0;
+}
+
+.savorly-community-main .community-category.active {
+  color: #ffffff;
+  background: var(--community-primary);
+  border-color: var(--community-primary);
+  box-shadow: 0 4px 12px rgba(43, 89, 61, 0.12);
+}
+
+/* RESULTS HEADING */
+
+.savorly-community-main .community-results-heading {
+  margin-bottom: 22px;
+}
+
+.savorly-community-main .community-results-eyebrow {
+  color: var(--community-sage);
+}
+
+.savorly-community-main .community-results-heading h3 {
+  color: var(--community-primary-dark);
+  font-size: 23px;
+  letter-spacing: -0.7px;
+}
+
+.savorly-community-main .community-results-heading>p {
+  color: #52684d;
+  background: var(--community-soft);
+  border-radius: 9px;
+}
+
+/* RECIPE GRID */
+
+.savorly-community-main .recipes-grid.community-recipes-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 24px;
+}
+
+.savorly-community-main .community-recipe-item {
+  min-width: 0;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid var(--community-border);
+  border-radius: 19px;
+  box-shadow: 0 6px 20px rgba(35, 65, 40, 0.035);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.savorly-community-main .community-recipe-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 13px 30px rgba(35, 65, 40, 0.08);
+}
+
+/* EMPTY, LOADING AND ERROR STATES */
+
+.savorly-community-main .community-state {
+  min-height: 260px;
+  padding: 36px 22px;
+  background: #ffffff;
+  border: 1px solid var(--community-border);
+  border-radius: 20px;
+}
+
+.savorly-community-main .community-state h3 {
+  color: var(--community-primary-dark);
+  font-size: 19px;
+}
+
+.savorly-community-main .community-state p {
+  color: var(--community-muted);
+  line-height: 1.8;
+}
+
+.savorly-community-main .community-state-icon {
+  color: var(--community-primary);
+  background: var(--community-soft);
+}
+
+/* BOTTOM CTA */
+
+.savorly-community-main .community-cta {
+  gap: 28px;
+  min-height: 300px;
+  margin-top: 85px;
+  padding: 45px 52px;
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 84% 22%,
+      rgba(151, 179, 119, 0.18),
+      transparent 33%),
+    linear-gradient(120deg, #1c402c, #315d40) !important;
+}
+
+.savorly-community-main .community-cta-content h2 {
+  color: #fffdf7;
+  font-size: clamp(29px, 3.5vw, 42px);
+  line-height: 1.18;
+}
+
+.savorly-community-main .community-cta-content h2 span {
+  color: #d3e1c3;
+}
+
+.savorly-community-main .community-cta-content p {
+  color: #d5e0d0;
+  line-height: 1.9;
+}
+
+.savorly-community-main .community-cta-content .community-section-eyebrow {
+  color: #d3e1c3;
+}
+
+.savorly-community-main .community-cta-content .community-button-primary {
+  color: #263e2b;
+  background: #e7eddb;
+  border-color: #e7eddb;
+}
+
+.savorly-community-main .community-cta-content .community-button-primary:hover {
+  background: #f4f6e9;
+}
+
+.savorly-community-main .community-cta-chef {
+  border-color: #ffffff;
+}
+
+/* TABLET */
+
+@media (max-width: 1000px) {
+  .savorly-community-main {
+    width: calc(100% - 42px) !important;
+  }
+
+  .savorly-community-main .community-hero {
+    padding: 38px;
+  }
+
+  .savorly-community-main .community-benefits {
+    margin-right: 12px;
+    margin-left: 12px;
+  }
+
+  .savorly-community-main .recipes-grid.community-recipes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .savorly-community-main .community-cta {
+    padding: 36px;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+  .savorly-community-main {
+    width: calc(100% - 28px) !important;
+    padding: 20px 0 50px !important;
+  }
+
+  .savorly-community-main .community-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    min-height: auto;
+    padding: 27px 21px 22px;
+    border-radius: 22px;
+  }
+
+  .savorly-community-main .community-hero-content h1 {
+    margin-top: 20px;
+    font-size: clamp(33px, 8.4vw, 43px);
+    letter-spacing: -1.5px;
+  }
+
+  .savorly-community-main .community-hero-description {
+    font-size: 12px;
+  }
+
+  .savorly-community-main .community-hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .savorly-community-main .community-hero-actions button {
+    width: 100%;
+  }
+
+  .savorly-community-main .community-hero-art {
+    min-height: 255px;
+    margin-top: 10px;
+  }
+
+  .savorly-community-main .community-art-food {
+    width: 175px;
+  }
+
+  .savorly-community-main .community-benefits {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin: 17px 0 0;
+  }
+
+  .savorly-community-main .community-benefit {
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .savorly-community-main .community-discover {
+    padding-top: 56px;
+  }
+
+  .savorly-community-main .community-section-heading {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .savorly-community-main .community-section-heading h2 {
+    font-size: 30px;
+    letter-spacing: -1px;
+  }
+
+  .savorly-community-main .community-section-heading p {
+    font-size: 12px;
+  }
+
+  .savorly-community-main .community-heading-mark {
+    flex: 0 0 43px;
+    width: 43px;
+    height: 43px;
+    border-radius: 13px;
+  }
+
+  .savorly-community-main .community-stats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 19px;
+  }
+
+  .savorly-community-main .community-stat {
+    padding: 14px;
+  }
+
+  .savorly-community-main .community-filter-panel {
+    padding: 15px;
+    margin-bottom: 26px;
+    border-radius: 16px;
+  }
+
+  .savorly-community-main .community-filter-top {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .savorly-community-main .community-sort {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .savorly-community-main .community-sort select {
+    flex: 1;
+    max-width: 190px;
+  }
+
+  .savorly-community-main .community-category {
+    min-height: 35px;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .savorly-community-main .community-results-heading {
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .savorly-community-main .community-results-heading h3 {
+    font-size: 19px;
+  }
+
+  .savorly-community-main .recipes-grid.community-recipes-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 17px;
+  }
+
+  .savorly-community-main .community-recipe-item {
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .savorly-community-main .community-cta {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    min-height: auto;
+    margin-top: 56px;
+    padding: 28px 22px 20px;
+    border-radius: 21px;
+  }
+
+  .savorly-community-main .community-cta-content h2 {
+    font-size: 31px;
+  }
+
+  .savorly-community-main .community-cta-art {
+    min-height: 160px;
   }
 }
