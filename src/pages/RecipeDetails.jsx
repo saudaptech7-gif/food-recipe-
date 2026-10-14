@@ -437,9 +437,7 @@ function RecipeDetails() {
               }}
             />
 
-            {/* This badge stays ON the image. */}
-
-            <span className="details-image-badge">
+            <span className="recipe-cover-badge">
               {isCommunityRecipe ? "COMMUNITY RECIPE" : "SAVORLY RECIPE"}
             </span>
 
