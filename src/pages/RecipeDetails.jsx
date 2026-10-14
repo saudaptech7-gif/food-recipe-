@@ -38,13 +38,8 @@ function RecipeDetails() {
 
   const recipeId = recipe?.id || recipe?._id || id;
 
-  // Community recipes ko identify karo.
-  // createdBy check is liye hai taake recipeType missing
-  // hone par bhi user's recipe ka badge nazar aaye.
-  const isCommunityRecipe =
-    recipe?.recipeType === "community" || Boolean(recipe?.createdBy);
+  const isCommunityRecipe = recipe?.recipeType === "community";
 
-  // Check whether the logged-in user owns this recipe.
   const isOwnRecipe = useMemo(() => {
     if (!currentUser || !recipe?.createdBy) {
       return false;
@@ -53,31 +48,25 @@ function RecipeDetails() {
     const currentUserId = currentUser.id || currentUser._id;
 
     const ownerId =
-      recipe.createdBy?.id || recipe.createdBy?._id || recipe.createdBy;
+      typeof recipe.createdBy === "object"
+        ? recipe.createdBy._id || recipe.createdBy.id
+        : recipe.createdBy;
 
-    if (!currentUserId || !ownerId) {
-      return false;
-    }
-
-    return String(currentUserId) === String(ownerId);
+    return Boolean(
+      currentUserId && ownerId && String(currentUserId) === String(ownerId),
+    );
   }, [currentUser, recipe]);
 
-  // Favorite status.
   const isFavorite = Array.isArray(favorites)
-    ? favorites.some(
-        (favoriteId) =>
-          String(
-            typeof favoriteId === "object"
-              ? favoriteId.id || favoriteId._id
-              : favoriteId,
-          ) === String(recipeId),
-      )
+    ? favorites.some((favorite) => {
+        const favoriteId =
+          typeof favorite === "object" ? favorite.id || favorite._id : favorite;
+
+        return String(favoriteId) === String(recipeId);
+      })
     : false;
 
-  // =====================================
-  // FETCH RECIPE
-  // =====================================
-
+  // Fetch recipe and the current user's saved rating.
   useEffect(() => {
     let mounted = true;
 
@@ -120,34 +109,26 @@ function RecipeDetails() {
     };
   }, [id]);
 
-  // =====================================
-  // FAVORITES
-  // =====================================
-
+  // Add or remove a favorite.
   const handleFavorite = async () => {
     if (!isLoggedIn) {
       notify("Please log in to save your favorite recipes.", "warning");
-
       navigate("/login");
       return;
     }
 
-    if (!recipeId || favoriteLoading) {
-      return;
-    }
+    if (!recipeId || favoriteLoading) return;
 
     try {
       setFavoriteLoading(true);
 
       if (isFavorite) {
         await removeFavorite(recipeId);
-
         dispatch(removeFavoriteFromState(String(recipeId)));
 
         notify("Recipe removed from your favorites.", "success");
       } else {
         await addFavorite(recipeId);
-
         dispatch(addFavoriteToState(String(recipeId)));
 
         notify("Recipe saved to your favorites.", "success");
@@ -161,34 +142,38 @@ function RecipeDetails() {
     }
   };
 
-  // =====================================
-  // RECIPE RATING
-  // =====================================
-
+  // A user may submit only one rating per recipe.
+  // Archive and community recipes can both be rated.
   const handleRating = async (value) => {
     if (!isLoggedIn) {
       notify("Please log in to rate this recipe.", "warning");
-
       navigate("/login");
       return;
     }
 
-    if (!isCommunityRecipe) {
-      notify("Archive recipes cannot be rated.", "warning");
-
+    if (isCommunityRecipe && isOwnRecipe) {
+      notify("You cannot rate your own recipe.", "warning");
       return;
     }
 
-    if (isOwnRecipe || ratingLoading) {
+    if (selectedRating > 0) {
+      notify(
+        "You have already rated this recipe. Ratings cannot be changed.",
+        "warning",
+      );
       return;
     }
+
+    if (ratingLoading) return;
 
     try {
       setRatingLoading(true);
 
       const data = await rateRecipe(recipeId, value);
 
-      setSelectedRating(Number(data?.userRating ?? value));
+      const savedRating = Number(data?.userRating ?? value);
+
+      setSelectedRating(savedRating);
 
       setRecipe((previous) => ({
         ...previous,
@@ -208,24 +193,26 @@ function RecipeDetails() {
         rating: data?.averageRating ?? previous?.rating ?? 0,
 
         voteCount: data?.ratingCount ?? previous?.voteCount ?? 0,
+
+        userRating: savedRating,
       }));
 
-      notify(data?.message || "Your rating has been saved.", "success");
+      notify(
+        data?.message || "Your rating has been submitted successfully.",
+        "success",
+      );
     } catch (ratingError) {
       console.error("Rating error:", ratingError);
 
-      notify(ratingError.message || "Failed to save rating.", "error");
+      notify(ratingError.message || "Failed to submit rating.", "error");
     } finally {
       setRatingLoading(false);
     }
   };
 
-  // =====================================
-  // DELETE RECIPE
-  // =====================================
-
+  // Delete the current user's own community recipe.
   const handleDelete = async () => {
-    if (!isOwnRecipe || deleteLoading) {
+    if (!isOwnRecipe || !isCommunityRecipe || deleteLoading) {
       return;
     }
 
@@ -238,9 +225,7 @@ function RecipeDetails() {
 
       notify("Recipe deleted successfully.", "success");
 
-      navigate("/community", {
-        replace: true,
-      });
+      navigate("/community", { replace: true });
     } catch (deleteError) {
       console.error("Delete error:", deleteError);
 
@@ -252,10 +237,7 @@ function RecipeDetails() {
     }
   };
 
-  // =====================================
-  // LOADING
-  // =====================================
-
+  // Loading state.
   if (loading) {
     return (
       <div className="recipe-details-page">
@@ -263,17 +245,13 @@ function RecipeDetails() {
 
         <div className="details-loading">
           <div className="loading-spinner" />
-
           <p>Loading recipe...</p>
         </div>
       </div>
     );
   }
 
-  // =====================================
-  // ERROR
-  // =====================================
-
+  // Error state.
   if (error || !recipe) {
     return (
       <div className="recipe-details-page">
@@ -281,9 +259,7 @@ function RecipeDetails() {
 
         <div className="details-error">
           <span>🍽️</span>
-
           <h2>Recipe Not Found</h2>
-
           <p>{error || "This recipe could not be found."}</p>
 
           <button type="button" onClick={() => navigate("/")}>
@@ -293,10 +269,6 @@ function RecipeDetails() {
       </div>
     );
   }
-
-  // =====================================
-  // RECIPE DATA
-  // =====================================
 
   const images =
     Array.isArray(recipe.images) && recipe.images.length > 0
@@ -339,7 +311,6 @@ function RecipeDetails() {
     recipe.times?.cooking || recipe.times?.Cooking || recipe.cookTime || "—";
 
   const servings = recipe.servings || recipe.serves || "—";
-
   const difficulty = recipe.difficulty || recipe.difficult || "—";
 
   const authorName = recipe.createdBy?.name || recipe.author || "Savorly";
@@ -349,18 +320,11 @@ function RecipeDetails() {
     5,
   );
 
-  // =====================================
-  // RENDER
-  // =====================================
-
   return (
     <div className="recipe-details-page">
       <Header />
 
-      {/* =====================================
-          DELETE CONFIRMATION
-      ===================================== */}
-
+      {/* Delete confirmation popup */}
       {showDeleteConfirm && (
         <div
           className="confirm-overlay"
@@ -410,8 +374,6 @@ function RecipeDetails() {
       )}
 
       <main className="recipe-details-container">
-        {/* BACK BUTTON */}
-
         <button
           type="button"
           className="details-back-button"
@@ -420,13 +382,8 @@ function RecipeDetails() {
           ← Back
         </button>
 
-        {/* =====================================
-            RECIPE HERO
-        ===================================== */}
-
+        {/* Recipe image and summary */}
         <section className="recipe-hero-details">
-          {/* IMAGE + SOURCE BADGE */}
-
           <div className="recipe-image-gallery recipe-detail-cover">
             <img
               src={images[0]}
@@ -446,11 +403,8 @@ function RecipeDetails() {
             )}
           </div>
 
-          {/* RECIPE INFORMATION */}
-
           <div className="recipe-details-content">
-            {/* Only one category badge here. */}
-
+            {/* Category appears only once, separately from image badge. */}
             <div className="recipe-details-badges">
               <span className="recipe-category-badge">{category}</span>
             </div>
@@ -461,12 +415,13 @@ function RecipeDetails() {
               {recipe.description || "No description available."}
             </p>
 
-            {/* RATING SUMMARY */}
-
+            {/* Shared rating summary */}
             <div className="recipe-rating-summary">
-              <div className="rating-stars-display">
+              <div
+                className="rating-stars-display"
+                aria-label={`${averageRating} out of 5 stars`}
+              >
                 {"★".repeat(displayedRating)}
-
                 <span>{"★".repeat(5 - displayedRating)}</span>
               </div>
 
@@ -476,8 +431,6 @@ function RecipeDetails() {
                 ({ratingCount} {ratingCount === 1 ? "rating" : "ratings"})
               </small>
             </div>
-
-            {/* RECIPE DETAILS */}
 
             <div className="recipe-meta-row">
               <div>
@@ -501,8 +454,6 @@ function RecipeDetails() {
               </div>
             </div>
 
-            {/* ACTION BUTTONS */}
-
             <div className="recipe-action-row">
               <button
                 type="button"
@@ -519,7 +470,7 @@ function RecipeDetails() {
                     : "♡ Save Recipe"}
               </button>
 
-              {isOwnRecipe && (
+              {isOwnRecipe && isCommunityRecipe && (
                 <>
                   <button
                     type="button"
@@ -543,30 +494,29 @@ function RecipeDetails() {
           </div>
         </section>
 
-        {/* =====================================
-            RATE RECIPE
-        ===================================== */}
-
+        {/* Rating: available on Our Recipes and Community Recipes */}
         <section className="recipe-rating-section">
           <div>
             <span className="section-eyebrow">YOUR EXPERIENCE</span>
 
-            <h2>{isOwnRecipe ? "Your Recipe" : "Rate this recipe"}</h2>
+            <h2>
+              {isCommunityRecipe && isOwnRecipe
+                ? "Your Recipe"
+                : "Rate this recipe"}
+            </h2>
 
             <p>
-              {isOwnRecipe
+              {isCommunityRecipe && isOwnRecipe
                 ? "You cannot rate your own recipe."
-                : !isCommunityRecipe
-                  ? "Archive recipes cannot be rated."
+                : selectedRating > 0
+                  ? "You have already rated this recipe. Each user can rate only once."
                   : isLoggedIn
-                    ? selectedRating
-                      ? "You can change your rating anytime."
-                      : "How would you rate this recipe?"
-                    : "Login to leave your rating."}
+                    ? "Choose a star to submit your rating. You cannot change it afterwards."
+                    : "Log in to leave your rating."}
             </p>
           </div>
 
-          {!isOwnRecipe && isCommunityRecipe && (
+          {!(isCommunityRecipe && isOwnRecipe) && (
             <div className="rating-input">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -578,8 +528,9 @@ function RecipeDetails() {
                       : "rating-star-button"
                   }
                   onClick={() => handleRating(star)}
-                  disabled={ratingLoading}
+                  disabled={ratingLoading || selectedRating > 0}
                   aria-label={`Rate ${star} out of 5`}
+                  aria-pressed={star === selectedRating}
                 >
                   ★
                 </button>
@@ -588,16 +539,10 @@ function RecipeDetails() {
           )}
         </section>
 
-        {/* =====================================
-            INGREDIENTS + METHOD
-        ===================================== */}
-
+        {/* Ingredients and method */}
         <section className="recipe-main-grid">
-          {/* INGREDIENTS */}
-
           <div className="recipe-section">
             <span className="section-eyebrow">WHAT YOU NEED</span>
-
             <h2>Ingredients</h2>
 
             {ingredients.length > 0 ? (
@@ -633,11 +578,8 @@ function RecipeDetails() {
             )}
           </div>
 
-          {/* METHOD */}
-
           <div className="recipe-section">
             <span className="section-eyebrow">LET'S COOK</span>
-
             <h2>Method</h2>
 
             {steps.length > 0 ? (
@@ -671,14 +613,10 @@ function RecipeDetails() {
           </div>
         </section>
 
-        {/* =====================================
-            NUTRITION
-        ===================================== */}
-
+        {/* Nutrition */}
         <section className="nutrition-section">
           <div>
             <span className="section-eyebrow">PER SERVING</span>
-
             <h2>Nutrition</h2>
           </div>
 
@@ -706,10 +644,7 @@ function RecipeDetails() {
           </div>
         </section>
 
-        {/* =====================================
-            AUTHOR
-        ===================================== */}
-
+        {/* Recipe author */}
         <footer className="recipe-author-footer">
           <div className="author-avatar">
             {authorName?.charAt(0)?.toUpperCase() || "S"}

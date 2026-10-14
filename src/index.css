@@ -28702,3 +28702,265 @@ input[type="submit"] {
     padding: 7px 11px !important;
   }
 }
+
+/* =========================================
+   SAVORLY RECIPE DETAILS BADGE FIX
+========================================= */
+
+/* Recipe image wrapper */
+.recipe-details-page .recipe-image-gallery.recipe-detail-cover {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  box-sizing: border-box !important;
+}
+
+/* Main recipe image */
+.recipe-details-page .recipe-image-gallery.recipe-detail-cover>img {
+  display: block !important;
+  width: 100% !important;
+  height: clamp(320px, 42vw, 540px) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Community Recipe / Savorly Recipe badge ON image */
+.recipe-details-page .recipe-detail-cover>.details-image-badge {
+  position: absolute !important;
+  top: 18px !important;
+  left: 18px !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 5 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: fit-content !important;
+  max-width: calc(100% - 36px) !important;
+  min-width: 0 !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+
+  margin: 0 !important;
+  padding: 10px 15px !important;
+
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  border-radius: 30px !important;
+
+  background: #fff8ef !important;
+  color: #a95720 !important;
+  box-shadow: 0 5px 18px rgba(60, 35, 15, 0.12);
+
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.6px !important;
+  text-align: center !important;
+
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  transform: none !important;
+}
+
+/* Extra image count stays in its own corner */
+.recipe-details-page .recipe-detail-cover>.recipe-image-count {
+  position: absolute !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  z-index: 4 !important;
+}
+
+/* Category badge container */
+.recipe-details-page .recipe-details-content>.recipe-details-badges {
+  position: relative !important;
+
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+
+  gap: 10px !important;
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+/* Category badge — for example, HEALTH */
+.recipe-details-page .recipe-details-content .recipe-details-badges .recipe-category-badge {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  float: none !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex: 0 1 auto !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  min-height: 34px !important;
+  height: auto !important;
+
+  margin: 0 !important;
+  padding: 8px 14px !important;
+  box-sizing: border-box !important;
+
+  border: 1px solid #f0d9c2 !important;
+  border-radius: 30px !important;
+
+  background: #fff3e7 !important;
+  color: #99501f !important;
+
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1.5 !important;
+  letter-spacing: 0.7px !important;
+  text-transform: uppercase !important;
+  text-align: center !important;
+
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Recipe title always starts below its category badge */
+.recipe-details-page .recipe-details-content>h1 {
+  position: relative !important;
+  display: block !important;
+  clear: both !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+
+  margin-top: 0 !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Prevent long descriptions from stretching the layout */
+.recipe-details-page .recipe-details-description {
+  overflow-wrap: anywhere;
+}
+
+/* Tablet and mobile */
+@media (max-width: 768px) {
+  .recipe-details-page .recipe-image-gallery.recipe-detail-cover>img {
+    height: clamp(280px, 65vw, 420px) !important;
+  }
+
+  .recipe-details-page .recipe-detail-cover>.details-image-badge {
+    top: 12px !important;
+    left: 12px !important;
+    max-width: calc(100% - 24px) !important;
+    padding: 8px 12px !important;
+    font-size: 10px !important;
+  }
+
+  .recipe-details-page .recipe-details-content>.recipe-details-badges {
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .recipe-details-page .recipe-image-gallery.recipe-detail-cover>img {
+    height: 290px !important;
+  }
+
+  .recipe-details-page .recipe-detail-cover>.details-image-badge {
+    font-size: 9px !important;
+    letter-spacing: 0.4px !important;
+  }
+
+  .recipe-details-page .recipe-details-content .recipe-category-badge {
+    font-size: 10px !important;
+    padding: 7px 11px !important;
+  }
+}
+
+/* FIX: BADGE OVER THE RECIPE IMAGE */
+
+.recipe-details-page .recipe-image-gallery.recipe-detail-cover {
+  position: relative !important;
+  display: block !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.recipe-details-page .recipe-image-gallery.recipe-detail-cover>img {
+  display: block !important;
+  width: 100% !important;
+  height: clamp(300px, 42vw, 520px) !important;
+  object-fit: cover !important;
+  position: relative !important;
+  z-index: 0 !important;
+}
+
+.recipe-details-page .recipe-detail-cover .recipe-cover-badge {
+  position: absolute !important;
+  top: 16px !important;
+  left: 16px !important;
+  right: auto !important;
+  bottom: auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: fit-content !important;
+  max-width: calc(100% - 32px) !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+
+  margin: 0 !important;
+  padding: 10px 15px !important;
+
+  background: #fff8ef !important;
+  color: #a95720 !important;
+  border: 1px solid #f3d9c1 !important;
+  border-radius: 30px !important;
+  box-shadow: 0 4px 18px rgba(45, 25, 10, 0.2) !important;
+
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.5px !important;
+  text-align: center !important;
+
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  z-index: 20 !important;
+}
+
+@media (max-width: 480px) {
+  .recipe-details-page .recipe-image-gallery.recipe-detail-cover>img {
+    height: 290px !important;
+  }
+
+  .recipe-details-page .recipe-detail-cover .recipe-cover-badge {
+    top: 10px !important;
+    left: 10px !important;
+    max-width: calc(100% - 20px) !important;
+    padding: 8px 11px !important;
+    font-size: 9px !important;
+  }
+}

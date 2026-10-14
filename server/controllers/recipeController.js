@@ -1,4 +1,3 @@
-
 /* eslint-disable no-undef */
 
 const mongoose = require("mongoose");
@@ -10,11 +9,7 @@ const Recipe = require("../models/Recipe");
 // =====================================
 
 const getAuthenticatedUserId = (req) => {
-  const user =
-    req.userId ||
-    req.user?._id ||
-    req.user?.id ||
-    req.user?.userId;
+  const user = req.userId || req.user?._id || req.user?.id || req.user?.userId;
 
   if (!user) return null;
 
@@ -48,8 +43,8 @@ const idString = (value) => {
 const isOwner = (recipe, userId) =>
   Boolean(
     recipe?.createdBy &&
-      userId &&
-      idString(recipe.createdBy) === idString(userId),
+    userId &&
+    idString(recipe.createdBy) === idString(userId),
   );
 
 // =====================================
@@ -95,12 +90,9 @@ const isPublished = (recipe) => {
     }
 
     if (typeof value === "string") {
-      return [
-        "published",
-        "public",
-        "true",
-        "1",
-      ].includes(value.trim().toLowerCase());
+      return ["published", "public", "true", "1"].includes(
+        value.trim().toLowerCase(),
+      );
     }
 
     return value === true || value === 1;
@@ -142,9 +134,7 @@ const parseArray = (value, fieldName) => {
     throw new Error(`${fieldName} must be an array`);
   }
 
-  return result
-    .map((item) => String(item ?? "").trim())
-    .filter(Boolean);
+  return result.map((item) => String(item ?? "").trim()).filter(Boolean);
 };
 
 const parseNutrients = (value) => {
@@ -162,10 +152,7 @@ const parseNutrients = (value) => {
     }
   }
 
-  if (
-    typeof nutrients !== "object" ||
-    Array.isArray(nutrients)
-  ) {
+  if (typeof nutrients !== "object" || Array.isArray(nutrients)) {
     throw new Error("Nutrients must be an object");
   }
 
@@ -219,16 +206,10 @@ const escapeRegex = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const exactRegex = (value) =>
-  new RegExp(
-    `^\\s*${escapeRegex(String(value ?? "").trim())}\\s*$`,
-    "i",
-  );
+  new RegExp(`^\\s*${escapeRegex(String(value ?? "").trim())}\\s*$`, "i");
 
 const containsRegex = (value) =>
-  new RegExp(
-    escapeRegex(String(value ?? "").trim()),
-    "i",
-  );
+  new RegExp(escapeRegex(String(value ?? "").trim()), "i");
 
 const getArchiveQuery = () => ({
   $or: [
@@ -303,10 +284,7 @@ const getSubcategoryQuery = (subcategory) => {
   const pattern = exactRegex(subcategory);
 
   return {
-    $or: [
-      { subcategory: pattern },
-      { subCategory: pattern },
-    ],
+    $or: [{ subcategory: pattern }, { subCategory: pattern }],
   };
 };
 
@@ -314,10 +292,7 @@ const getDishTypeQuery = (dishType) => {
   const pattern = exactRegex(dishType);
 
   return {
-    $or: [
-      { dishType: pattern },
-      { dish_type: pattern },
-    ],
+    $or: [{ dishType: pattern }, { dish_type: pattern }],
   };
 };
 
@@ -345,11 +320,7 @@ const getSearchQuery = (search) => {
 // =====================================
 
 const getNutritionQuery = () => {
-  const roots = [
-    "nutrients",
-    "nutrition",
-    "nutritionalInfo",
-  ];
+  const roots = ["nutrients", "nutrition", "nutritionalInfo"];
 
   const nutrientKeys = [
     "kcal",
@@ -385,9 +356,7 @@ const getNutritionQuery = () => {
 // =====================================
 
 const buildRecipeQuery = (req) => {
-  const recipeType = String(
-    req.query.recipeType || req.query.type || "archive",
-  )
+  const recipeType = String(req.query.recipeType || req.query.type || "archive")
     .trim()
     .toLowerCase();
 
@@ -433,9 +402,7 @@ const buildRecipeQuery = (req) => {
 
   return {
     recipeType,
-    query: conditions.length
-      ? { $and: conditions }
-      : {},
+    query: conditions.length ? { $and: conditions } : {},
   };
 };
 
@@ -446,17 +413,11 @@ const buildRecipeQuery = (req) => {
 const getFilterOptions = async (req, res) => {
   try {
     const eligibleArchiveQuery = {
-      $and: [
-        getArchiveQuery(),
-        getNutritionQuery(),
-      ],
+      $and: [getArchiveQuery(), getNutritionQuery()],
     };
 
     const distinct = (field) =>
-      Recipe.collection.distinct(
-        field,
-        eligibleArchiveQuery,
-      );
+      Recipe.collection.distinct(field, eligibleArchiveQuery);
 
     const [
       mainCategories,
@@ -500,9 +461,7 @@ const getFilterOptions = async (req, res) => {
         }
       }
 
-      return [...normalizedValues.values()].sort(
-        (a, b) => a.localeCompare(b),
-      );
+      return [...normalizedValues.values()].sort((a, b) => a.localeCompare(b));
     };
 
     return res.status(200).json({
@@ -511,18 +470,9 @@ const getFilterOptions = async (req, res) => {
         ...oldMainCategories,
         ...categories,
       ]),
-      difficulties: uniqueValues([
-        ...difficulties,
-        ...oldDifficulties,
-      ]),
-      subcategories: uniqueValues([
-        ...subcategories,
-        ...oldSubcategories,
-      ]),
-      dishTypes: uniqueValues([
-        ...dishTypes,
-        ...oldDishTypes,
-      ]),
+      difficulties: uniqueValues([...difficulties, ...oldDifficulties]),
+      subcategories: uniqueValues([...subcategories, ...oldSubcategories]),
+      dishTypes: uniqueValues([...dishTypes, ...oldDishTypes]),
     });
   } catch (error) {
     console.error("Get filter options error:", error);
@@ -541,17 +491,11 @@ const getRecipes = async (req, res) => {
   try {
     const { recipeType, query } = buildRecipeQuery(req);
 
-    const page = Math.max(
-      1,
-      Number.parseInt(req.query.page, 10) || 1,
-    );
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
 
     const limit = Math.min(
       100,
-      Math.max(
-        1,
-        Number.parseInt(req.query.limit, 10) || 9,
-      ),
+      Math.max(1, Number.parseInt(req.query.limit, 10) || 9),
     );
 
     const skip = (page - 1) * limit;
@@ -563,14 +507,10 @@ const getRecipes = async (req, res) => {
         .sort({ createdAt: -1, _id: -1 })
         .lean();
 
-      const publishedRecipes =
-        allMatchingRecipes.filter(isPublished);
+      const publishedRecipes = allMatchingRecipes.filter(isPublished);
 
       const totalRecipes = publishedRecipes.length;
-      const totalPages = Math.max(
-        1,
-        Math.ceil(totalRecipes / limit),
-      );
+      const totalPages = Math.max(1, Math.ceil(totalRecipes / limit));
 
       return res.status(200).json({
         recipes: publishedRecipes.slice(skip, skip + limit),
@@ -581,9 +521,7 @@ const getRecipes = async (req, res) => {
     }
 
     const [totalRecipes, recipes] = await Promise.all([
-      Recipe.countDocuments(query)
-        .setOptions({ strictQuery: false })
-        .exec(),
+      Recipe.countDocuments(query).setOptions({ strictQuery: false }).exec(),
 
       Recipe.find(query)
         .setOptions({ strictQuery: false })
@@ -595,10 +533,7 @@ const getRecipes = async (req, res) => {
         .exec(),
     ]);
 
-    const totalPages = Math.max(
-      1,
-      Math.ceil(totalRecipes / limit),
-    );
+    const totalPages = Math.max(1, Math.ceil(totalRecipes / limit));
 
     return res.status(200).json({
       recipes,
@@ -724,10 +659,7 @@ const createRecipe = async (req, res) => {
       });
     }
 
-    const cleanIngredients = parseArray(
-      ingredients,
-      "ingredients",
-    );
+    const cleanIngredients = parseArray(ingredients, "ingredients");
 
     const cleanSteps = parseArray(steps, "steps");
 
@@ -818,18 +750,32 @@ const getRecipeById = async (req, res) => {
 
     if (!recipe) {
       return res.status(404).json({
-        message: "Recipe not found",
+        message: "Recipe not found.",
       });
     }
 
     await recipe.populate("createdBy", "name chef");
 
-    return res.status(200).json(recipe);
+    const userId = getAuthenticatedUserId(req);
+
+    const existingRating =
+      userId && Array.isArray(recipe.ratings)
+        ? recipe.ratings.find(
+            (item) => idString(item.user) === idString(userId),
+          )
+        : null;
+
+    const recipeData = recipe.toObject();
+
+    return res.status(200).json({
+      ...recipeData,
+      userRating: Number(existingRating?.value || 0),
+    });
   } catch (error) {
     console.error("Get recipe error:", error);
 
     return res.status(500).json({
-      message: "Failed to fetch recipe",
+      message: "Failed to fetch recipe.",
     });
   }
 };
@@ -847,10 +793,10 @@ const rateRecipe = async (req, res) => {
     const rawValue =
       typeof req.body === "number"
         ? req.body
-        : req.body?.value ??
+        : (req.body?.value ??
           req.body?.rating ??
           req.body?.stars ??
-          req.body?.ratingValue;
+          req.body?.ratingValue);
 
     const ratingValue = Number(rawValue);
 
@@ -863,7 +809,7 @@ const rateRecipe = async (req, res) => {
       ratingValue > 5
     ) {
       return res.status(400).json({
-        message: "Rating must be between 1 and 5 stars",
+        message: "Rating must be between 1 and 5 stars.",
       });
     }
 
@@ -871,114 +817,62 @@ const rateRecipe = async (req, res) => {
 
     if (!recipe) {
       return res.status(404).json({
-        message: "Recipe not found",
+        message: "Recipe not found.",
       });
     }
 
-    // Recipe owner cannot rate their own community recipe.
-    // Archive recipes are allowed to be rated.
-    if (
-      recipe.recipeType === "community" &&
-      isOwner(recipe, userId)
-    ) {
+    // Community recipe ka owner apni recipe rate nahi kar sakta.
+    if (recipe.recipeType === "community" && isOwner(recipe, userId)) {
       return res.status(403).json({
-        message: "You cannot rate your own recipe",
+        message: "You cannot rate your own recipe.",
       });
     }
 
-    const rawRecipe = await Recipe.collection.findOne({
-      _id: recipe._id,
-    });
-
-    if (!rawRecipe) {
-      return res.status(404).json({
-        message: "Recipe not found",
-      });
+    // Archive aur community dono recipes rating support karti hain.
+    if (!Array.isArray(recipe.ratings)) {
+      recipe.ratings = [];
     }
 
-    const ratings = Array.isArray(rawRecipe.ratings)
-      ? rawRecipe.ratings
-      : [];
-
-    const getRatingUserId = (item) =>
-      idString(item?.user ?? item?.userId ?? item?.ratedBy);
-
-    const getRatingValue = (item) =>
-      Number(item?.value ?? item?.rating ?? 0);
-
-    // Remove invalid ratings before recalculating.
-    const updatedRatings = ratings.filter((item) => {
-      const value = getRatingValue(item);
-
-      return (
-        getRatingUserId(item) !== "" &&
-        Number.isInteger(value) &&
-        value >= 1 &&
-        value <= 5
-      );
-    });
-
-    const currentUserId = idString(userId);
-
-    const existingIndex = updatedRatings.findIndex(
-      (item) => getRatingUserId(item) === currentUserId,
+    const existingRating = recipe.ratings.find(
+      (item) => idString(item.user) === idString(userId),
     );
 
-    const isUpdating = existingIndex !== -1;
-
-    if (isUpdating) {
-      updatedRatings[existingIndex] = {
-        ...updatedRatings[existingIndex],
-        value: ratingValue,
-      };
-    } else {
-      const storedUserId = mongoose.Types.ObjectId.isValid(
-        currentUserId,
-      )
-        ? new mongoose.Types.ObjectId(currentUserId)
-        : currentUserId;
-
-      updatedRatings.push({
-        user: storedUserId,
-        value: ratingValue,
+    // Duplicate rating reject karo; existing rating ko overwrite na karo.
+    if (existingRating) {
+      return res.status(409).json({
+        message:
+          "You have already rated this recipe. Ratings cannot be changed.",
+        userRating: Number(existingRating.value),
+        averageRating: Number(recipe.averageRating ?? recipe.rating ?? 0),
+        ratingCount: Number(recipe.ratingCount ?? recipe.voteCount ?? 0),
       });
     }
 
-    const total = updatedRatings.reduce(
-      (sum, item) => sum + getRatingValue(item),
+    recipe.ratings.push({
+      user: userId,
+      value: ratingValue,
+    });
+
+    const total = recipe.ratings.reduce(
+      (sum, item) => sum + Number(item.value || 0),
       0,
     );
 
-    const count = updatedRatings.length;
+    const count = recipe.ratings.length;
 
-    const average =
-      count > 0
-        ? Number((total / count).toFixed(1))
-        : 0;
+    const average = count > 0 ? Number((total / count).toFixed(1)) : 0;
 
-    const result = await Recipe.collection.updateOne(
-      { _id: recipe._id },
-      {
-        $set: {
-          ratings: updatedRatings,
-          averageRating: average,
-          ratingCount: count,
-          rating: average,
-          voteCount: count,
-        },
-      },
-    );
+    recipe.averageRating = average;
+    recipe.ratingCount = count;
 
-    if (!result.matchedCount) {
-      return res.status(404).json({
-        message: "Recipe not found",
-      });
-    }
+    // Older UI fields ke saath compatibility.
+    recipe.rating = average;
+    recipe.voteCount = count;
 
-    return res.status(200).json({
-      message: isUpdating
-        ? "Rating updated successfully"
-        : "Rating submitted successfully",
+    await recipe.save();
+
+    return res.status(201).json({
+      message: "Rating submitted successfully.",
       averageRating: average,
       ratingCount: count,
       rating: average,
@@ -989,7 +883,7 @@ const rateRecipe = async (req, res) => {
     console.error("Rate recipe error:", error);
 
     return res.status(500).json({
-      message: "Failed to rate recipe",
+      message: "Failed to submit rating.",
     });
   }
 };
@@ -1052,10 +946,7 @@ const updateRecipe = async (req, res) => {
       });
     }
 
-    const cleanIngredients = parseArray(
-      ingredients,
-      "ingredients",
-    );
+    const cleanIngredients = parseArray(ingredients, "ingredients");
 
     const cleanSteps = parseArray(steps, "steps");
 
@@ -1283,9 +1174,7 @@ const getUserRecipes = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    return res.status(200).json(
-      recipes.filter(isPublished),
-    );
+    return res.status(200).json(recipes.filter(isPublished));
   } catch (error) {
     console.error("Get community recipes error:", error);
 
