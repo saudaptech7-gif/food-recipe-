@@ -1,10 +1,25 @@
 import { apiFetch } from "./apiFetch";
 
-const API_BASE = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000"
-).replace(/\/+$/, "");
+const DEFAULT_API_URL = "http://localhost:5000";
 
-const API_URL = `${API_BASE}/api/social`;
+function getApiOrigin() {
+  const configuredUrl = (
+    import.meta.env.VITE_API_URL || DEFAULT_API_URL
+  ).replace(/\/+$/, "");
+
+  const suffixes = ["/api/recipes", "/api/social", "/api"];
+
+  const suffix = suffixes.find((item) => configuredUrl.endsWith(item));
+
+  if (suffix) {
+    return configuredUrl.slice(0, -suffix.length);
+  }
+
+  return configuredUrl;
+}
+
+const API_URL = `${getApiOrigin()}/api/social`;
+
 const PROFILE_CACHE_DURATION = 15000;
 
 let myProfileCache = null;
@@ -193,7 +208,9 @@ export function addRecipeComment(recipeId, text) {
 
 export function deleteRecipeComment(recipeId, commentId) {
   return requestJSON(
-    `/recipes/${encodeURIComponent(recipeId)}/comments/${encodeURIComponent(commentId)}`,
+    `/recipes/${encodeURIComponent(recipeId)}/comments/${encodeURIComponent(
+      commentId,
+    )}`,
     {
       method: "DELETE",
     },
