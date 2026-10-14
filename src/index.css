@@ -30064,3 +30064,107 @@ input[type="submit"] {
   animation: none !important;
   transition: none !important;
 }
+
+/* ==========================================
+   SAVORLY — FORCE HOME HERO GAP FIX
+========================================== */
+
+.home-page .hero-scroll-section,
+.home-page .hero-sticky {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+.home-page .hero-section {
+  margin-bottom: 0 !important;
+}
+
+.home-page .home-collections-section {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.home-page .home-section-intro {
+  margin-top: 0 !important;
+  padding-top: 12px !important;
+}
+
+/* ==========================================
+   RECIPE DETAILS — REMOVE CHECKBOX ANIMATION
+========================================== */
+
+.recipe-details-page *,
+.recipe-details-content *,
+.recipe-ingredients *,
+.recipe-ingredients-section *,
+.ingredients-list *,
+.ingredients-section * {
+  scroll-behavior: auto !important;
+}
+
+/* Native ingredient checkboxes */
+.recipe-details-page input[type="checkbox"],
+.recipe-details-content input[type="checkbox"],
+.recipe-ingredients input[type="checkbox"],
+.recipe-ingredients-section input[type="checkbox"],
+.ingredients-list input[type="checkbox"],
+.ingredients-section input[type="checkbox"],
+[class*="ingredient"] input[type="checkbox"] {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  accent-color: #22a447 !important;
+  width: 17px !important;
+  height: 17px !important;
+  min-width: 17px !important;
+  min-height: 17px !important;
+  margin: 0 10px 0 0 !important;
+  padding: 0 !important;
+  border: initial !important;
+  border-radius: 2px !important;
+  background: initial !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: none !important;
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+/* Remove custom orange dots, circles and pseudo-elements */
+.recipe-details-page [class*="ingredient"]::before,
+.recipe-details-page [class*="ingredient"]::after,
+.recipe-details-content [class*="ingredient"]::before,
+.recipe-details-content [class*="ingredient"]::after,
+[class*="ingredient-checkbox"]::before,
+[class*="ingredient-checkbox"]::after,
+[class*="checkmark"]::before,
+[class*="checkmark"]::after {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove orange checked effects */
+.recipe-details-page input[type="checkbox"]:checked,
+.recipe-details-content input[type="checkbox"]:checked,
+[class*="ingredient"] input[type="checkbox"]:checked {
+  accent-color: #22a447 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+
+/* Simple checked text */
+.recipe-details-page input[type="checkbox"]:checked+label,
+.recipe-details-content input[type="checkbox"]:checked+label,
+[class*="ingredient"] input[type="checkbox"]:checked+label {
+  color: #6b7280 !important;
+  text-decoration: line-through !important;
+  text-decoration-color: #9ca3af !important;
+  animation: none !important;
+  transition: none !important;
+}
