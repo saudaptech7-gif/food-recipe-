@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useRef, useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -10,88 +11,31 @@ import {
   deleteRecipeComment,
 } from "../services/socialApi";
 
-function RecipeSocial({ recipe, isLoggedIn }) {
+
+function RecipeSocial({ recipe, isLoggedIn = false }) {
   const navigate = useNavigate();
 
   const recipeId = recipe?._id;
   const isCommunityRecipe = recipe?.recipeType === "community";
 
-  const panelRef = useRef(null);
-
-  const [shouldLoadSocial, setShouldLoadSocial] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [social, setSocial] = useState(null);
-
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(false);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState("");
   const [retryCount, setRetryCount] = useState(0);
 
-  // =====================================
-  // LOAD INTERACTIONS NEAR THE VIEWPORT
-  // =====================================
-
+  // Load social data only when the comments panel is opened.
   useEffect(() => {
-    if (!isCommunityRecipe || !recipeId) {
-      return undefined;
-    }
-
-    if (!isLoggedIn) {
-      setShouldLoadSocial(false);
-      setSocial(null);
+    if (!isCommunityRecipe || !recipeId || !isOpen || !isLoggedIn) {
       setLoading(false);
-      setMessage("");
-
       return undefined;
     }
 
-    // Already triggered for this mounted recipe component.
-    if (shouldLoadSocial) {
-      return undefined;
-    }
-
-    const panel = panelRef.current;
-
-    if (!panel || !("IntersectionObserver" in window)) {
-      setShouldLoadSocial(true);
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.some((entry) => entry.isIntersecting);
-
-        if (visible) {
-          setShouldLoadSocial(true);
-          observer.disconnect();
-        }
-      },
-      {
-        rootMargin: "300px 0px",
-        threshold: 0.01,
-      },
-    );
-
-    observer.observe(panel);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [recipeId, isCommunityRecipe, isLoggedIn, shouldLoadSocial]);
-
-  // =====================================
-  // FETCH SOCIAL DATA ONCE WHEN NEEDED
-  // =====================================
-
-  useEffect(() => {
     let cancelled = false;
 
     const loadSocial = async () => {
-      if (!isCommunityRecipe || !recipeId || !isLoggedIn || !shouldLoadSocial) {
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       setMessage("");
       setSocial(null);
@@ -99,15 +43,15 @@ function RecipeSocial({ recipe, isLoggedIn }) {
       try {
         const result = await getRecipeSocial(recipeId);
 
-        if (!cancelled) {
-          const data =
-            result?.social || result?.data?.social || result?.data || result;
+        if (cancelled) return;
 
-          setSocial(data);
-        }
-      } catch (err) {
+        const data =
+          result?.social || result?.data?.social || result?.data || result;
+
+        setSocial(data);
+      } catch (error) {
         if (!cancelled) {
-          setMessage(err?.message || "Could not load recipe interactions.");
+          setMessage(error?.message || "Could not load recipe interactions.");
         }
       } finally {
         if (!cancelled) {
@@ -121,24 +65,25 @@ function RecipeSocial({ recipe, isLoggedIn }) {
     return () => {
       cancelled = true;
     };
-  }, [recipeId, isCommunityRecipe, isLoggedIn, shouldLoadSocial, retryCount]);
+  }, [recipeId, isCommunityRecipe, isLoggedIn, isOpen, retryCount]);
 
-  // Not a community recipe? No social panel or social API calls.
   if (!isCommunityRecipe || !recipeId) {
     return null;
   }
 
-  const comments = social?.comments || [];
+  const comments = Array.isArray(social?.comments) ? social.comments : [];
+
   const owner = social?.owner;
 
   const loginFirst = () => {
     navigate("/login");
   };
 
-  // =====================================
-  // LIKE / UNLIKE
-  // =====================================
+  const handleTogglePanel = () => {
+    setIsOpen((current) => !current);
+  };
 
+  // Like / unlike a recipe.
   const handleLike = async () => {
     if (!isLoggedIn) {
       loginFirst();
@@ -164,17 +109,14 @@ function RecipeSocial({ recipe, isLoggedIn }) {
           likesCount: result.likesCount,
         };
       });
-    } catch (err) {
-      setMessage(err?.message || "Could not update like.");
+    } catch (error) {
+      setMessage(error?.message || "Could not update like.");
     } finally {
       setWorking(false);
     }
   };
 
-  // =====================================
-  // FOLLOW / UNFOLLOW
-  // =====================================
-
+  // Follow / unfollow the recipe owner.
   const handleFollow = async () => {
     if (!isLoggedIn) {
       loginFirst();
@@ -206,18 +148,14 @@ function RecipeSocial({ recipe, isLoggedIn }) {
             : current.owner,
         };
       });
-    } catch (err) {
-      setMessage(err?.message || "Could not update follow status.");
+    } catch (error) {
+      setMessage(error?.message || "Could not update follow status.");
     } finally {
       setWorking(false);
     }
   };
 
-  // =====================================
-  // ADD COMMENT
-  // No additional GET request required.
-  // =====================================
-
+  // Add a comment.
   const handleComment = async (event) => {
     event.preventDefault();
 
@@ -241,9 +179,7 @@ function RecipeSocial({ recipe, isLoggedIn }) {
       const payload = result?.data?.comment || result?.comment || null;
 
       if (!payload?._id) {
-        // The backend should return the new comment.
-        // Don't perform another GET just to refresh it.
-        throw new Error("Comment response did not include the saved comment.");
+        throw new Error("The server did not return the saved comment.");
       }
 
       setSocial((current) => {
@@ -251,7 +187,6 @@ function RecipeSocial({ recipe, isLoggedIn }) {
 
         const existingComments = current.comments || [];
 
-        // Avoid adding the same comment twice.
         if (existingComments.some((comment) => comment._id === payload._id)) {
           return current;
         }
@@ -263,27 +198,23 @@ function RecipeSocial({ recipe, isLoggedIn }) {
       });
 
       setCommentText("");
-      setMessage("Comment added.");
-    } catch (err) {
-      setMessage(err?.message || "Could not add comment.");
+      setMessage("Comment added successfully.");
+    } catch (error) {
+      setMessage(error?.message || "Could not add comment.");
     } finally {
       setWorking(false);
     }
   };
 
-  // =====================================
-  // DELETE COMMENT
-  // Update local state after successful deletion.
-  // =====================================
-
+  // Delete a comment.
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm("Delete this comment?")) {
-      return;
-    }
+    if (working) return;
 
-    if (working) {
-      return;
-    }
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this comment?",
+    );
+
+    if (!confirmed) return;
 
     try {
       setWorking(true);
@@ -302,240 +233,331 @@ function RecipeSocial({ recipe, isLoggedIn }) {
         };
       });
 
-      setMessage("Comment deleted.");
-    } catch (err) {
-      setMessage(err?.message || "Could not delete comment.");
+      setMessage("Comment deleted successfully.");
+    } catch (error) {
+      setMessage(error?.message || "Could not delete comment.");
     } finally {
       setWorking(false);
     }
   };
 
-  // =====================================
-  // RENDER
-  // =====================================
-
   return (
-    <section className="recipe-social-panel" ref={panelRef}>
-      {!isLoggedIn ? (
-        <div className="recipe-social-login">
-          <p>Log in to like recipes, follow chefs and leave comments.</p>
+    <section className={`recipe-social-shell ${isOpen ? "is-open" : ""}`}>
+      <button
+        type="button"
+        className="recipe-social-toggle"
+        aria-expanded={isOpen}
+        aria-controls={`recipe-social-content-${recipeId}`}
+        onClick={handleTogglePanel}
+      >
+        <span className="recipe-social-toggle-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" width="23" height="23">
+            <path
+              d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.7-3A7.5 7.5 0 1 1 20 11.5Z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M8.5 11.5h7M8.5 14.5h4"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
+        </span>
 
-          <button
-            type="button"
-            className="recipe-social-primary"
-            onClick={loginFirst}
-          >
-            Log in to interact
-          </button>
-        </div>
-      ) : loading ? (
-        <p className="recipe-social-status" aria-live="polite">
-          Loading recipe interactions...
-        </p>
-      ) : !social ? (
-        <div className="recipe-social-load-error">
-          <p className="recipe-social-status" role="status">
-            {message || "Recipe interactions are unavailable."}
-          </p>
+        <span className="recipe-social-toggle-copy">
+          <strong>
+            {isOpen ? "Recipe discussion" : "Comments & Discussion"}
+          </strong>
 
-          <button
-            type="button"
-            className="recipe-social-primary"
-            onClick={() => {
-              setMessage("");
-              setRetryCount((count) => count + 1);
-            }}
-          >
-            Try Again
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Recipe owner */}
+          <small>
+            {isOpen
+              ? "Join the conversation about this recipe"
+              : "Share thoughts, like the recipe and follow the chef"}
+          </small>
+        </span>
 
-          {owner && (
-            <div className="recipe-social-chef">
+        {social && (
+          <span className="recipe-social-toggle-count">
+            {comments.length} {comments.length === 1 ? "comment" : "comments"}
+          </span>
+        )}
+
+        <span
+          className={`recipe-social-toggle-action ${isOpen ? "is-open" : ""}`}
+        >
+          {isOpen ? "Hide" : "View comments"}
+          <span className="recipe-social-chevron" aria-hidden="true">
+            ↓
+          </span>
+        </span>
+      </button>
+
+      {isOpen && (
+        <div
+          className="recipe-social-panel"
+          id={`recipe-social-content-${recipeId}`}
+        >
+          {!isLoggedIn ? (
+            <div className="recipe-social-login">
+              <span className="recipe-social-section-label">
+                JOIN THE COMMUNITY
+              </span>
+
+              <h3>Good food brings people together.</h3>
+
+              <p>
+                Log in to like recipes, follow chefs and share your thoughts in
+                the comments.
+              </p>
+
               <button
                 type="button"
-                className="recipe-social-chef-name"
+                className="recipe-social-primary"
+                onClick={loginFirst}
+              >
+                Log in to interact
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          ) : loading ? (
+            <div
+              className="recipe-social-loading"
+              role="status"
+              aria-live="polite"
+            >
+              <span className="recipe-social-loader" />
+              <p>Preparing the conversation...</p>
+            </div>
+          ) : !social ? (
+            <div className="recipe-social-load-error">
+              <span className="recipe-social-error-icon" aria-hidden="true">
+                !
+              </span>
+
+              <h3>Conversation unavailable</h3>
+
+              <p>{message || "We couldn't load this recipe's interactions."}</p>
+
+              <button
+                type="button"
+                className="recipe-social-primary"
                 onClick={() => {
-                  navigate(`/chefs/${owner._id}`);
+                  setMessage("");
+                  setRetryCount((count) => count + 1);
                 }}
               >
-                <span className="recipe-social-avatar">
-                  {(owner.chef || owner.name || "C")
-                    .trim()
-                    .charAt(0)
-                    .toUpperCase()}
-                </span>
-
-                <span className="recipe-social-chef-copy">
-                  <small>RECIPE BY</small>
-
-                  <strong>{owner.chef || owner.name || "Savorly Chef"}</strong>
-                </span>
+                Try again
               </button>
+            </div>
+          ) : (
+            <div className="recipe-social-content">
+              {owner && (
+                <div className="recipe-social-chef">
+                  <button
+                    type="button"
+                    className="recipe-social-chef-name"
+                    onClick={() => navigate(`/chefs/${owner._id}`)}
+                  >
+                    <span className="recipe-social-avatar">
+                      {(owner.chef || owner.name || "C")
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase()}
+                    </span>
 
-              {!social.isOwnRecipe && (
+                    <span className="recipe-social-chef-copy">
+                      <small>CREATED BY</small>
+                      <strong>
+                        {owner.chef || owner.name || "Savorly Chef"}
+                      </strong>
+
+                      {owner.followersCount != null && (
+                        <span>{owner.followersCount} followers</span>
+                      )}
+                    </span>
+                  </button>
+
+                  {!social.isOwnRecipe && (
+                    <button
+                      type="button"
+                      className={`recipe-social-follow ${
+                        social.isFollowingOwner ? "is-following" : ""
+                      }`}
+                      onClick={handleFollow}
+                      disabled={working}
+                    >
+                      {social.isFollowingOwner
+                        ? "✓ Following"
+                        : "+ Follow chef"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="recipe-social-heading">
+                <span className="recipe-social-section-label">
+                  COOK · CONNECT · SHARE
+                </span>
+
+                <h2>Join the conversation</h2>
+
+                <p>
+                  Tried this recipe or have a tip to share? We'd love to hear
+                  from you.
+                </p>
+              </div>
+
+              <div className="recipe-social-actions">
                 <button
                   type="button"
-                  className={`recipe-social-follow ${
-                    social.isFollowingOwner ? "is-following" : ""
+                  className={`recipe-social-like ${
+                    social.likedByMe ? "is-liked" : ""
                   }`}
-                  onClick={handleFollow}
-                  disabled={working}
+                  onClick={handleLike}
+                  disabled={working || social.isOwnRecipe}
+                  title={
+                    social.isOwnRecipe
+                      ? "You cannot like your own recipe"
+                      : "Like this recipe"
+                  }
                 >
-                  {social.isFollowingOwner ? "✓ Following" : "+ Follow"}
+                  <span className="recipe-social-heart" aria-hidden="true">
+                    {social.likedByMe ? "♥" : "♡"}
+                  </span>
+
+                  <span>{social.likedByMe ? "Liked" : "Like recipe"}</span>
+
+                  <strong>{social.likesCount || 0}</strong>
                 </button>
-              )}
+
+                <span className="recipe-social-comment-count">
+                  <span aria-hidden="true">✳</span>
+                  {comments.length}{" "}
+                  {comments.length === 1 ? "comment" : "comments"}
+                </span>
+              </div>
+
+              <div className="recipe-social-comments">
+                <div className="recipe-social-comments-title">
+                  <h3>Kitchen conversations</h3>
+                  <span>{comments.length}</span>
+                </div>
+
+                {comments.length === 0 ? (
+                  <div className="recipe-social-empty">
+                    <span aria-hidden="true">💬</span>
+                    <strong>Be the first to share</strong>
+                    <p>
+                      No comments yet. Start a conversation about this recipe.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="recipe-social-comment-list">
+                    {comments.map((comment) => {
+                      const author = comment.user;
+
+                      const authorName =
+                        author?.chef || author?.name || "Savorly User";
+
+                      return (
+                        <article
+                          className="recipe-social-comment"
+                          key={comment._id}
+                        >
+                          <span className="recipe-social-comment-avatar">
+                            {authorName.trim().charAt(0).toUpperCase()}
+                          </span>
+
+                          <div className="recipe-social-comment-body">
+                            <div className="recipe-social-comment-top">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (author?._id) {
+                                    navigate(`/chefs/${author._id}`);
+                                  }
+                                }}
+                              >
+                                {authorName}
+                              </button>
+
+                              <time>
+                                {comment.createdAt
+                                  ? new Date(
+                                      comment.createdAt,
+                                    ).toLocaleDateString(undefined, {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
+                                  : ""}
+                              </time>
+                            </div>
+
+                            <p>{comment.text}</p>
+
+                            {comment.canDelete && (
+                              <button
+                                type="button"
+                                className="recipe-social-delete-comment"
+                                disabled={working}
+                                onClick={() => handleDeleteComment(comment._id)}
+                              >
+                                Delete comment
+                              </button>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <form
+                  className="recipe-social-comment-form"
+                  onSubmit={handleComment}
+                >
+                  <label htmlFor={`comment-${recipeId}`}>
+                    Add to the conversation
+                  </label>
+
+                  <textarea
+                    id={`comment-${recipeId}`}
+                    value={commentText}
+                    onChange={(event) => setCommentText(event.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    placeholder="Share a tip, ask a question or tell us how it went..."
+                    disabled={working}
+                  />
+
+                  <div className="recipe-social-comment-footer">
+                    <small>{commentText.length}/500 characters</small>
+
+                    <button
+                      type="submit"
+                      className="recipe-social-primary"
+                      disabled={working || !commentText.trim()}
+                    >
+                      {working ? "Please wait..." : "Post comment"}
+                      {!working && <span aria-hidden="true">→</span>}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 
-          {/* Conversation heading */}
-
-          <div className="recipe-social-heading">
-            <div>
-              <span className="recipe-social-eyebrow">
-                COOK • CONNECT • SHARE
-              </span>
-
-              <h2>Join the conversation</h2>
-
-              <p>Share your thoughts about this recipe.</p>
-            </div>
-          </div>
-
-          {/* Likes */}
-
-          <div className="recipe-social-actions">
-            <button
-              type="button"
-              className={`recipe-social-like ${
-                social.likedByMe ? "is-liked" : ""
-              }`}
-              onClick={handleLike}
-              disabled={working || social.isOwnRecipe}
-              title={
-                social.isOwnRecipe
-                  ? "You cannot like your own recipe"
-                  : "Like this recipe"
-              }
-            >
-              <span>{social.likedByMe ? "♥" : "♡"}</span>
-
-              {social.likedByMe ? "Liked" : "Like"}
-
-              <strong>{social.likesCount || 0}</strong>
-            </button>
-
-            <span className="recipe-social-comment-count">
-              ▤ {comments.length} comments
-            </span>
-          </div>
-
-          {/* Comments */}
-
-          <div className="recipe-social-comments">
-            <h3>Comments</h3>
-
-            {comments.length === 0 ? (
-              <p className="recipe-social-empty">
-                No comments yet. Start the conversation!
-              </p>
-            ) : (
-              <div className="recipe-social-comment-list">
-                {comments.map((comment) => {
-                  const author = comment.user;
-
-                  const authorName =
-                    author?.chef || author?.name || "Savorly User";
-
-                  return (
-                    <article
-                      className="recipe-social-comment"
-                      key={comment._id}
-                    >
-                      <span className="recipe-social-comment-avatar">
-                        {authorName.trim().charAt(0).toUpperCase()}
-                      </span>
-
-                      <div className="recipe-social-comment-body">
-                        <div className="recipe-social-comment-top">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (author?._id) {
-                                navigate(`/chefs/${author._id}`);
-                              }
-                            }}
-                          >
-                            {authorName}
-                          </button>
-
-                          <time>
-                            {comment.createdAt
-                              ? new Date(comment.createdAt).toLocaleDateString()
-                              : ""}
-                          </time>
-                        </div>
-
-                        <p>{comment.text}</p>
-
-                        {comment.canDelete && (
-                          <button
-                            type="button"
-                            className="recipe-social-delete-comment"
-                            disabled={working}
-                            onClick={() => handleDeleteComment(comment._id)}
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Add comment */}
-
-            <form
-              className="recipe-social-comment-form"
-              onSubmit={handleComment}
-            >
-              <label htmlFor={`comment-${recipeId}`}>Add a comment</label>
-
-              <textarea
-                id={`comment-${recipeId}`}
-                value={commentText}
-                onChange={(event) => setCommentText(event.target.value)}
-                maxLength={500}
-                rows={3}
-                placeholder="Share your thoughts..."
-                disabled={working}
-              />
-
-              <div className="recipe-social-comment-footer">
-                <small>{commentText.length}/500</small>
-
-                <button
-                  type="submit"
-                  className="recipe-social-primary"
-                  disabled={working || !commentText.trim()}
-                >
-                  {working ? "Please wait..." : "Post Comment"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
-      )}
-
-      {message && social && (
-        <p className="recipe-social-status" role="status">
-          {message}
-        </p>
+          {message && social && (
+            <p className="recipe-social-status" role="status">
+              {message}
+            </p>
+          )}
+        </div>
       )}
     </section>
   );
