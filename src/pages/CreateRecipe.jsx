@@ -5,12 +5,9 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import Header from "../components/Header";
+import { useNotification } from "../context/NotificationContext";
 
 import { createRecipe, uploadRecipeImages } from "../services/recipeApi";
-
-// =====================================
-// INITIAL NUTRITION VALUES
-// =====================================
 
 const initialNutrients = {
   kcal: "",
@@ -23,13 +20,10 @@ const initialNutrients = {
   salt: "",
 };
 
-// =====================================
-// CREATE RECIPE
-// =====================================
-
 function CreateRecipe() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { notify } = useNotification();
 
   const isLoggedIn = useSelector((state) =>
     Boolean(
@@ -41,12 +35,7 @@ function CreateRecipe() {
     ),
   );
 
-  // Only the My Kitchen button should open this form.
   const fromMyKitchen = location.state?.fromMyKitchen === true;
-
-  // =====================================
-  // FORM STATE
-  // =====================================
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -69,11 +58,6 @@ function CreateRecipe() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // =====================================
-  // AUTH CHECK
-  // =====================================
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -81,8 +65,6 @@ function CreateRecipe() {
     }
   }, [isLoggedIn, navigate]);
 
-  // Release temporary image previews when they are
-  // replaced or the component unmounts.
   useEffect(() => {
     return () => {
       previews.forEach((preview) => {
@@ -91,46 +73,39 @@ function CreateRecipe() {
     };
   }, [previews]);
 
-  // =====================================
-  // IMAGE SELECTION
-  // =====================================
-
   const handleImages = (event) => {
     const selected = Array.from(event.target.files || []);
 
-    if (selected.length === 0) {
-      return;
-    }
+    if (selected.length === 0) return;
 
     if (selected.length > 6) {
-      setError("You can select a maximum of 6 images.");
+      notify("You can select a maximum of 6 images.", "warning");
       event.target.value = "";
       return;
     }
 
     for (const image of selected) {
       if (!image.type.startsWith("image/")) {
-        setError("Only image files are allowed.");
+        notify("Only image files are allowed.", "warning");
         event.target.value = "";
         return;
       }
 
       if (image.size > 5 * 1024 * 1024) {
-        setError("Each image must be smaller than 5 MB.");
+        notify("Each image must be smaller than 5 MB.", "warning");
         event.target.value = "";
         return;
       }
     }
 
-    setError("");
     setImages(selected);
-
     setPreviews(selected.map((image) => URL.createObjectURL(image)));
-  };
 
-  // =====================================
-  // INGREDIENTS
-  // =====================================
+    notify(
+      `${selected.length} image${selected.length === 1 ? "" : "s"} selected successfully.`,
+      "success",
+    );
+  };
 
   const updateIngredient = (index, value) => {
     setIngredients((previous) =>
@@ -148,10 +123,6 @@ function CreateRecipe() {
     );
   };
 
-  // =====================================
-  // COOKING STEPS
-  // =====================================
-
   const updateStep = (index, value) => {
     setSteps((previous) =>
       previous.map((item, itemIndex) => (itemIndex === index ? value : item)),
@@ -168,20 +139,12 @@ function CreateRecipe() {
     );
   };
 
-  // =====================================
-  // NUTRITION
-  // =====================================
-
   const updateNutrient = (field, value) => {
     setNutrients((previous) => ({
       ...previous,
       [field]: value,
     }));
   };
-
-  // =====================================
-  // VALIDATION
-  // =====================================
 
   const validate = () => {
     if (!name.trim()) {
@@ -233,29 +196,22 @@ function CreateRecipe() {
     return "";
   };
 
-  // =====================================
-  // SUBMIT RECIPE
-  // =====================================
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (loading) {
-      return;
-    }
+    if (loading) return;
 
     const validationError = validate();
 
     if (validationError) {
-      setError(validationError);
+      notify(validationError, "warning");
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
 
-      // STEP 1: Upload images to Cloudinary.
+      // Step 1: Upload images to Cloudinary.
       const uploadResult = await uploadRecipeImages(images);
 
       const uploadedImages = Array.isArray(uploadResult?.images)
@@ -266,7 +222,7 @@ function CreateRecipe() {
         throw new Error("Images upload nahi hui. Please try again.");
       }
 
-      // STEP 2: Clean and prepare form data.
+      // Step 2: Clean and prepare form data.
       const cleanIngredients = ingredients
         .map((item) => item.trim())
         .filter(Boolean);
@@ -277,8 +233,7 @@ function CreateRecipe() {
         Object.entries(nutrients).map(([key, value]) => [key, value.trim()]),
       );
 
-      // STEP 3: Prepare the community recipe.
-      // The recipe is saved as an unpublished draft.
+      // Step 3: Prepare recipe data.
       const recipeData = {
         name: name.trim(),
         description: description.trim(),
@@ -306,11 +261,15 @@ function CreateRecipe() {
         isPublished: false,
       };
 
-      // STEP 4: Save the recipe.
+      // Step 4: Save the recipe.
       await createRecipe(recipeData);
 
-      // STEP 5: Return to My Kitchen.
-      // MyRecipes.jsx will load the latest recipe list.
+      // Step 5: Show success and return to My Kitchen.
+      notify(
+        "Recipe created successfully! You can find it in My Kitchen.",
+        "success",
+      );
+
       navigate("/my-recipes", {
         replace: true,
         state: {
@@ -320,17 +279,14 @@ function CreateRecipe() {
     } catch (submitError) {
       console.error("Create recipe error:", submitError);
 
-      setError(
+      notify(
         submitError?.message || "Failed to create recipe. Please try again.",
+        "error",
       );
     } finally {
       setLoading(false);
     }
   };
-
-  // =====================================
-  // ROUTE GUARDS
-  // =====================================
 
   if (!isLoggedIn) {
     return null;
@@ -340,17 +296,11 @@ function CreateRecipe() {
     return <Navigate to="/my-recipes" replace />;
   }
 
-  // =====================================
-  // UI
-  // =====================================
-
   return (
     <div className="create-recipe-page">
       <Header />
 
       <main className="create-recipe-container">
-        {/* BACK BUTTON */}
-
         <button
           type="button"
           className="create-back-button"
@@ -359,8 +309,6 @@ function CreateRecipe() {
         >
           ← Back to My Kitchen
         </button>
-
-        {/* HEADING */}
 
         <div className="create-recipe-heading">
           <span>SHARE YOUR CREATION</span>
@@ -373,17 +321,7 @@ function CreateRecipe() {
           </p>
         </div>
 
-        {/* ERROR */}
-
-        {error && (
-          <div className="form-error" role="alert">
-            {error}
-          </div>
-        )}
-
         <form className="create-recipe-form" onSubmit={handleSubmit}>
-          {/* BASIC INFORMATION */}
-
           <section className="form-section">
             <div className="form-section-heading">
               <span>01</span>
@@ -504,8 +442,6 @@ function CreateRecipe() {
             </div>
           </section>
 
-          {/* IMAGES */}
-
           <section className="form-section">
             <div className="form-section-heading">
               <span>02</span>
@@ -531,9 +467,7 @@ function CreateRecipe() {
 
               <label htmlFor="recipe-images">
                 <span className="upload-icon">☁️</span>
-
                 <strong>Choose recipe images</strong>
-
                 <small>JPG, PNG or WEBP · Maximum 6 images</small>
               </label>
             </div>
@@ -550,8 +484,6 @@ function CreateRecipe() {
               </div>
             )}
           </section>
-
-          {/* INGREDIENTS */}
 
           <section className="form-section">
             <div className="form-section-heading">
@@ -602,8 +534,6 @@ function CreateRecipe() {
             </button>
           </section>
 
-          {/* COOKING STEPS */}
-
           <section className="form-section">
             <div className="form-section-heading">
               <span>04</span>
@@ -651,8 +581,6 @@ function CreateRecipe() {
             </button>
           </section>
 
-          {/* NUTRITION */}
-
           <section className="form-section">
             <div className="form-section-heading">
               <span>05</span>
@@ -692,8 +620,6 @@ function CreateRecipe() {
             </div>
           </section>
 
-          {/* FORM ACTIONS */}
-
           <div className="create-form-actions">
             <button
               type="button"
@@ -718,8 +644,7 @@ function CreateRecipe() {
 
             <p>
               Your recipe will be saved as a private draft. You can publish it
-              later from <strong>My Kitchen</strong>.!
-              
+              later from <strong>My Kitchen</strong>.
             </p>
           </div>
         </form>

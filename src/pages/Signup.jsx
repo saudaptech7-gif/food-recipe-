@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { signup } from "../services/authApi";
+import { useNotification } from "../context/NotificationContext";
 
 function Signup() {
   const navigate = useNavigate();
+  const { notify } = useNotification();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -12,7 +14,6 @@ function Signup() {
     password: "",
   });
 
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -26,14 +27,21 @@ function Signup() {
     e.preventDefault();
 
     try {
-      setError("");
       setLoading(true);
 
       await signup(formData);
 
+      notify(
+        "Your account has been created successfully. Please sign in.",
+        "success"
+      );
+
       navigate("/login");
     } catch (error) {
-      setError(error.message);
+      notify(
+        error.message || "Account creation failed. Please try again.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -52,48 +60,56 @@ function Signup() {
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="input-group">
-            <label>Name</label>
+            <label htmlFor="signup-name">Name</label>
 
             <input
+              id="signup-name"
               type="text"
               name="name"
               placeholder="Enter your name"
               value={formData.name}
               onChange={handleChange}
+              autoComplete="name"
               required
             />
           </div>
 
           <div className="input-group">
-            <label>Email</label>
+            <label htmlFor="signup-email">Email</label>
 
             <input
+              id="signup-email"
               type="email"
               name="email"
               placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="email"
               required
             />
           </div>
 
           <div className="input-group">
-            <label>Password</label>
+            <label htmlFor="signup-password">Password</label>
 
             <input
+              id="signup-password"
               type="password"
               name="password"
               placeholder="Create a password"
               value={formData.password}
               onChange={handleChange}
+              autoComplete="new-password"
               minLength={8}
               required
             />
           </div>
 
-          {error && <p className="auth-error">{error}</p>}
-
-          <button type="submit" className="auth-submit" disabled={loading}>
+          <button
+            type="submit"
+            className="auth-submit"
+            disabled={loading}
+          >
             {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
@@ -109,3 +125,4 @@ function Signup() {
 }
 
 export default Signup;
+

@@ -4,17 +4,18 @@ import { useDispatch } from "react-redux";
 
 import { login } from "../services/authApi";
 import { setUser } from "../redux/authSlice";
+import { useNotification } from "../context/NotificationContext";
 
 function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { notify } = useNotification();
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -28,16 +29,20 @@ function Login() {
     e.preventDefault();
 
     try {
-      setError("");
       setLoading(true);
 
       const data = await login(formData);
 
       dispatch(setUser(data.user));
 
+      notify("Login successful! Welcome back to Savorly.", "success");
+
       navigate("/");
     } catch (error) {
-      setError(error.message);
+      notify(
+        error.message || "Login failed. Please check your details and try again.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -56,34 +61,40 @@ function Login() {
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="input-group">
-            <label>Email</label>
+            <label htmlFor="login-email">Email</label>
 
             <input
+              id="login-email"
               type="email"
               name="email"
               placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="email"
               required
             />
           </div>
 
           <div className="input-group">
-            <label>Password</label>
+            <label htmlFor="login-password">Password</label>
 
             <input
+              id="login-password"
               type="password"
               name="password"
               placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
+              autoComplete="current-password"
               required
             />
           </div>
 
-          {error && <p className="auth-error">{error}</p>}
-
-          <button type="submit" className="auth-submit" disabled={loading}>
+          <button
+            type="submit"
+            className="auth-submit"
+            disabled={loading}
+          >
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
@@ -99,3 +110,4 @@ function Login() {
 }
 
 export default Login;
+

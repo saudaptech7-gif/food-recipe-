@@ -1,13 +1,17 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
+
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Header from "../components/Header";
 import RecipeCard from "../components/RecipeCard";
 import { getLikedRecipes } from "../services/socialApi";
+import { useNotification } from "../context/NotificationContext";
 
 function LikedRecipes() {
   const navigate = useNavigate();
+  const { notify } = useNotification();
 
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +19,8 @@ function LikedRecipes() {
   const [retry, setRetry] = useState(0);
 
   const loadRecipes = useCallback(async () => {
+    let active = true;
+
     setLoading(true);
     setError("");
 
@@ -28,15 +34,20 @@ function LikedRecipes() {
       setRecipes(list);
     } catch (err) {
       if (err?.status === 401) {
+        notify("Please sign in to view your liked recipes.", "warning");
+
         navigate("/login", { replace: true });
         return;
       }
 
-      setError(err.message || "Could not load liked recipes.");
+      const errorMessage = err?.message || "Could not load liked recipes.";
+
+      setError(errorMessage);
+      notify(errorMessage, "error");
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, notify]);
 
   useEffect(() => {
     loadRecipes();
@@ -74,7 +85,8 @@ function LikedRecipes() {
         ) : error ? (
           <section className="liked-recipes-state">
             <h2>Unable to load recipes</h2>
-            <p>{error}</p>
+
+            <p>Something went wrong while loading your recipes.</p>
 
             <button
               type="button"
@@ -99,8 +111,11 @@ function LikedRecipes() {
           </section>
         ) : (
           <div className="liked-recipes-grid">
-            {recipes.map((recipe) => (
-              <RecipeCard key={recipe._id || recipe.id} recipe={recipe} />
+            {recipes.map((recipe, index) => (
+              <RecipeCard
+                key={recipe._id || recipe.id || `liked-recipe-${index}`}
+                recipe={recipe}
+              />
             ))}
           </div>
         )}

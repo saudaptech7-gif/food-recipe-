@@ -3,17 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import Header from "../components/Header";
+import { useNotification } from "../context/NotificationContext";
 
-import {
-  getRecipeById,
-  rateRecipe,
-  deleteRecipe,
-} from "../services/recipeApi";
+import { getRecipeById, rateRecipe, deleteRecipe } from "../services/recipeApi";
 
-import {
-  addFavorite,
-  removeFavorite,
-} from "../services/favoriteApi";
+import { addFavorite, removeFavorite } from "../services/favoriteApi";
 
 import {
   addFavoriteToState,
@@ -24,12 +18,12 @@ function RecipeDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { notify } = useNotification();
 
   const currentUser = useSelector((state) => state.auth.user);
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
-  const favorites = useSelector(
-    (state) => state.favorites.favorites
-  );
+
+  const favorites = useSelector((state) => state.favorites.favorites);
 
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,30 +33,10 @@ function RecipeDetails() {
   const [ratingLoading, setRatingLoading] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-
-  const [notification, setNotification] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const recipeId = recipe?.id || recipe?._id || id;
   const isCommunityRecipe = recipe?.recipeType === "community";
-
-  const showNotification = (message, type = "error") => {
-    setNotification({
-      message,
-      type,
-      id: Date.now(),
-    });
-  };
-
-  useEffect(() => {
-    if (!notification) return undefined;
-
-    const timer = setTimeout(() => {
-      setNotification(null);
-    }, 4000);
-
-    return () => clearTimeout(timer);
-  }, [notification]);
 
   const isOwnRecipe = useMemo(() => {
     if (!currentUser || !recipe?.createdBy) return false;
@@ -70,9 +44,7 @@ function RecipeDetails() {
     const currentUserId = currentUser.id || currentUser._id;
 
     const ownerId =
-      recipe.createdBy?.id ||
-      recipe.createdBy?._id ||
-      recipe.createdBy;
+      recipe.createdBy?.id || recipe.createdBy?._id || recipe.createdBy;
 
     if (!currentUserId || !ownerId) return false;
 
@@ -80,7 +52,7 @@ function RecipeDetails() {
   }, [currentUser, recipe]);
 
   const isFavorite = favorites?.some(
-    (favoriteId) => String(favoriteId) === String(recipeId)
+    (favoriteId) => String(favoriteId) === String(recipeId),
   );
 
   useEffect(() => {
@@ -101,8 +73,9 @@ function RecipeDetails() {
         if (!mounted) return;
 
         setRecipe(recipeData);
+
         setSelectedRating(
-          Number(recipeData?.userRating || recipeData?.myRating || 0)
+          Number(recipeData?.userRating || recipeData?.myRating || 0),
         );
       } catch (fetchError) {
         console.error("Fetch recipe error:", fetchError);
@@ -124,6 +97,7 @@ function RecipeDetails() {
 
   const handleFavorite = async () => {
     if (!isLoggedIn) {
+      notify("Please log in to save your favorite recipes.", "warning");
       navigate("/login");
       return;
     }
@@ -137,19 +111,17 @@ function RecipeDetails() {
         await removeFavorite(recipeId);
         dispatch(removeFavoriteFromState(String(recipeId)));
 
-        showNotification("Recipe removed from your favorites.", "success");
+        notify("Recipe removed from your favorites.", "success");
       } else {
         await addFavorite(recipeId);
         dispatch(addFavoriteToState(String(recipeId)));
 
-        showNotification("Recipe saved to your favorites.", "success");
+        notify("Recipe saved to your favorites.", "success");
       }
     } catch (favoriteError) {
       console.error("Favorite error:", favoriteError);
 
-      showNotification(
-        favoriteError.message || "Failed to update favorite."
-      );
+      notify(favoriteError.message || "Failed to update favorite.", "error");
     } finally {
       setFavoriteLoading(false);
     }
@@ -157,7 +129,13 @@ function RecipeDetails() {
 
   const handleRating = async (value) => {
     if (!isLoggedIn) {
+      notify("Please log in to rate this recipe.", "warning");
       navigate("/login");
+      return;
+    }
+
+    if (!isCommunityRecipe) {
+      notify("Archive recipes cannot be rated.", "warning");
       return;
     }
 
@@ -186,16 +164,11 @@ function RecipeDetails() {
         voteCount: data?.ratingCount ?? previous?.voteCount ?? 0,
       }));
 
-      showNotification(
-        data?.message || "Your rating has been saved.",
-        "success"
-      );
+      notify(data?.message || "Your rating has been saved.", "success");
     } catch (ratingError) {
       console.error("Rating error:", ratingError);
 
-      showNotification(
-        ratingError.message || "Failed to save rating."
-      );
+      notify(ratingError.message || "Failed to save rating.", "error");
     } finally {
       setRatingLoading(false);
     }
@@ -211,7 +184,7 @@ function RecipeDetails() {
 
       setShowDeleteConfirm(false);
 
-      showNotification("Recipe deleted successfully.", "success");
+      notify("Recipe deleted successfully.", "success");
 
       setTimeout(() => {
         navigate("/community");
@@ -221,9 +194,7 @@ function RecipeDetails() {
 
       setShowDeleteConfirm(false);
 
-      showNotification(
-        deleteError.message || "Failed to delete recipe."
-      );
+      notify(deleteError.message || "Failed to delete recipe.", "error");
     } finally {
       setDeleteLoading(false);
     }
@@ -233,6 +204,7 @@ function RecipeDetails() {
     return (
       <div className="recipe-details-page">
         <Header />
+
         <div className="details-loading">
           <div className="loading-spinner" />
           <p>Loading recipe...</p>
@@ -255,13 +227,6 @@ function RecipeDetails() {
             ← Back to Recipes
           </button>
         </div>
-
-        {notification && (
-          <NotificationCard
-            notification={notification}
-            onClose={() => setNotification(null)}
-          />
-        )}
       </div>
     );
   }
@@ -282,22 +247,13 @@ function RecipeDetails() {
   const steps = Array.isArray(recipe.steps) ? recipe.steps : [];
 
   const averageRatingNumber =
-    Number(
-      recipe.averageRating ??
-      recipe.rating ??
-      recipe.rattings ??
-      0
-    ) || 0;
+    Number(recipe.averageRating ?? recipe.rating ?? recipe.rattings ?? 0) || 0;
 
   const averageRating = averageRatingNumber.toFixed(1);
 
   const ratingCount =
-    Number(
-      recipe.ratingCount ??
-      recipe.voteCount ??
-      recipe.vote_count ??
-      0
-    ) || 0;
+    Number(recipe.ratingCount ?? recipe.voteCount ?? recipe.vote_count ?? 0) ||
+    0;
 
   const category =
     recipe.mainCategory ||
@@ -313,33 +269,24 @@ function RecipeDetails() {
     "—";
 
   const cookingTime =
-    recipe.times?.cooking ||
-    recipe.times?.Cooking ||
-    recipe.cookTime ||
-    "—";
+    recipe.times?.cooking || recipe.times?.Cooking || recipe.cookTime || "—";
 
   const servings = recipe.servings || recipe.serves || "—";
   const difficulty = recipe.difficulty || recipe.difficult || "—";
 
-  const authorName =
-    recipe.createdBy?.name || recipe.author || "Savorly";
+  const authorName = recipe.createdBy?.name || recipe.author || "Savorly";
 
   return (
     <div className="recipe-details-page">
       <Header />
 
-      {notification && (
-        <NotificationCard
-          notification={notification}
-          onClose={() => setNotification(null)}
-        />
-      )}
-
       {showDeleteConfirm && (
         <div
           className="confirm-overlay"
           onClick={() => {
-            if (!deleteLoading) setShowDeleteConfirm(false);
+            if (!deleteLoading) {
+              setShowDeleteConfirm(false);
+            }
           }}
         >
           <div
@@ -354,8 +301,8 @@ function RecipeDetails() {
             <h2 id="delete-confirm-title">Delete this recipe?</h2>
 
             <p>
-              Are you sure you want to delete "{recipe.name}"?
-              This action cannot be undone.
+              Are you sure you want to delete "{recipe.name}"? This action
+              cannot be undone.
             </p>
 
             <div className="confirm-actions">
@@ -401,9 +348,7 @@ function RecipeDetails() {
             />
 
             {images.length > 1 && (
-              <div className="recipe-image-count">
-                +{images.length - 1}
-              </div>
+              <div className="recipe-image-count">+{images.length - 1}</div>
             )}
           </div>
 
@@ -429,12 +374,13 @@ function RecipeDetails() {
             <div className="recipe-rating-summary">
               <div className="rating-stars-display">
                 {"★".repeat(
-                  Math.min(Math.max(Math.round(averageRatingNumber), 0), 5)
+                  Math.min(Math.max(Math.round(averageRatingNumber), 0), 5),
                 )}
+
                 <span>
                   {"★".repeat(
                     5 -
-                    Math.min(Math.max(Math.round(averageRatingNumber), 0), 5)
+                      Math.min(Math.max(Math.round(averageRatingNumber), 0), 5),
                   )}
                 </span>
               </div>
@@ -517,15 +463,17 @@ function RecipeDetails() {
             <p>
               {isOwnRecipe
                 ? "You cannot rate your own recipe."
-                : isLoggedIn
-                  ? selectedRating
-                    ? "You can change your rating anytime."
-                    : "How would you rate this recipe?"
-                  : "Login to leave your rating."}
+                : !isCommunityRecipe
+                  ? "Archive recipes cannot be rated."
+                  : isLoggedIn
+                    ? selectedRating
+                      ? "You can change your rating anytime."
+                      : "How would you rate this recipe?"
+                    : "Login to leave your rating."}
             </p>
           </div>
 
-          {!isOwnRecipe && (
+          {!isOwnRecipe && isCommunityRecipe && (
             <div className="rating-input">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -560,7 +508,7 @@ function RecipeDetails() {
                     key={`${String(
                       typeof ingredient === "object"
                         ? ingredient.name || ingredient.ingredient || index
-                        : ingredient
+                        : ingredient,
                     )}-${index}`}
                   >
                     <input type="checkbox" />
@@ -593,10 +541,7 @@ function RecipeDetails() {
             {steps.length > 0 ? (
               <div className="steps-list">
                 {steps.map((step, index) => (
-                  <div
-                    className="step-item"
-                    key={`${String(step)}-${index}`}
-                  >
+                  <div className="step-item" key={`${String(step)}-${index}`}>
                     <span className="step-number">
                       {String(index + 1).padStart(2, "0")}
                     </span>
@@ -659,39 +604,6 @@ function RecipeDetails() {
           </div>
         </footer>
       </main>
-    </div>
-  );
-}
-
-function NotificationCard({ notification, onClose }) {
-  const isSuccess = notification.type === "success";
-
-  return (
-    <div
-      key={notification.id}
-      className={`custom-notification ${
-        isSuccess ? "success" : "error"
-      }`}
-      role="status"
-      aria-live="polite"
-    >
-      <span className="notification-icon">
-        {isSuccess ? "✓" : "!"}
-      </span>
-
-      <div className="notification-content">
-        <strong>{isSuccess ? "Success" : "Something went wrong"}</strong>
-        <p>{notification.message}</p>
-      </div>
-
-      <button
-        type="button"
-        className="notification-close"
-        onClick={onClose}
-        aria-label="Close notification"
-      >
-        ×
-      </button>
     </div>
   );
 }

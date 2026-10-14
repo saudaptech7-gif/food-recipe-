@@ -5,43 +5,58 @@ import { useNavigate } from "react-router-dom";
 import { getFavorites } from "../services/favoriteApi";
 import RecipeCard from "../components/RecipeCard";
 import Header from "../components/Header";
+import { useNotification } from "../context/NotificationContext";
 
 function Favorites() {
   const navigate = useNavigate();
+  const { notify } = useNotification();
 
   const { isLoggedIn } = useSelector((state) => state.auth);
 
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isLoggedIn) {
+      notify("Please sign in to view your favorite recipes.", "warning");
       navigate("/login");
       return;
     }
 
+    let active = true;
+
     const loadFavorites = async () => {
       try {
         setLoading(true);
-        setError("");
 
         const data = await getFavorites();
 
+        if (!active) return;
+
         setRecipes(data.favorites || []);
       } catch (error) {
-        setError(error.message || "Failed to load favorites.");
+        if (!active) return;
+
+        notify(
+          error.message || "Failed to load your favorite recipes.",
+          "error"
+        );
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
     loadFavorites();
-  }, [isLoggedIn, navigate]);
+
+    return () => {
+      active = false;
+    };
+  }, [isLoggedIn, navigate, notify]);
 
   return (
     <>
-      {/* Header har state mein visible rahega */}
       <Header />
 
       <div className="favorites-page">
@@ -50,19 +65,11 @@ function Favorites() {
             <h1>My Favorites</h1>
             <p>Loading your favorites...</p>
           </div>
-        ) : error ? (
-          <div className="favorites-error">
-            <h1>My Favorites</h1>
-            <p>{error}</p>
-
-            <button onClick={() => navigate("/")}>
-              Back to Home
-            </button>
-          </div>
         ) : (
           <>
             <div className="favorites-header">
               <button
+                type="button"
                 className="back-button"
                 onClick={() => navigate("/")}
               >
@@ -82,7 +89,10 @@ function Favorites() {
 
                 <p>Start saving recipes you love.</p>
 
-                <button onClick={() => navigate("/")}>
+                <button
+                  type="button"
+                  onClick={() => navigate("/")}
+                >
                   Explore Recipes
                 </button>
               </div>

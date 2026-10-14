@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -9,9 +9,10 @@ import RecipeCard from "../components/RecipeCard";
 import RecipeSocial from "../components/RecipeSocial";
 
 import { getUserRecipes } from "../services/recipeApi";
+import { useNotification } from "../context/NotificationContext";
 
 // =====================================
-// HELPERS
+// CONSTANTS
 // =====================================
 
 const COMMUNITY_CATEGORIES = [
@@ -22,6 +23,10 @@ const COMMUNITY_CATEGORIES = [
   "Inspiration",
   "Health",
 ];
+
+// =====================================
+// HELPERS
+// =====================================
 
 function normalizeRecipes(response) {
   if (Array.isArray(response)) {
@@ -71,26 +76,6 @@ function getRecipeName(recipe) {
   return String(recipe?.name || recipe?.title || "Untitled Recipe");
 }
 
-function getRecipeDate(recipe) {
-  const dateValue = recipe?.createdAt || recipe?.updatedAt;
-
-  if (!dateValue) {
-    return "";
-  }
-
-  const date = new Date(dateValue);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 function getRecipeRating(recipe) {
   return Number(recipe?.averageRating || recipe?.rating || 0);
 }
@@ -108,7 +93,6 @@ function categoryMatches(recipeCategory, selectedCategory) {
   }
 
   if (selected === "recipes") {
-    // "Recipes" is a broad collection label.
     return true;
   }
 
@@ -121,17 +105,10 @@ function categoryMatches(recipeCategory, selectedCategory) {
 
 function Community() {
   const navigate = useNavigate();
-
-  const auth = useSelector((state) => state.auth || {});
-
-  const user = auth.user || auth.currentUser || auth.profile || null;
-
-  const isLoggedIn = Boolean(
-    auth.isAuthenticated || auth.isLoggedIn || auth.token || user,
-  );
+  const { notify } = useNotification();
 
   const [recipes, setRecipes] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
 
@@ -141,21 +118,10 @@ function Community() {
 
   // =====================================
   // LOAD COMMUNITY RECIPES
-  // No recipe request for logged-out users.
   // =====================================
 
   useEffect(() => {
     let active = true;
-
-    if (!isLoggedIn) {
-      setRecipes([]);
-      setLoading(false);
-      setError("");
-
-      return () => {
-        active = false;
-      };
-    }
 
     async function loadCommunity() {
       setLoading(true);
@@ -164,21 +130,21 @@ function Community() {
       try {
         const response = await getUserRecipes();
 
-        if (!active) {
-          return;
-        }
+        if (!active) return;
 
         setRecipes(normalizeRecipes(response));
       } catch (requestError) {
-        if (!active) {
-          return;
-        }
+        if (!active) return;
 
         console.error("Failed to load community recipes:", requestError);
 
-        setError(
-          requestError?.message || "Community recipes load nahi ho sakin.",
-        );
+        const errorMessage =
+          requestError?.message || "Community recipes could not be loaded.";
+
+        setRecipes([]);
+        setError(errorMessage);
+
+        notify(errorMessage, "error");
       } finally {
         if (active) {
           setLoading(false);
@@ -191,11 +157,10 @@ function Community() {
     return () => {
       active = false;
     };
-  }, [isLoggedIn, retryCount]);
+  }, [retryCount, notify]);
 
   // =====================================
-  // SEARCH, FILTER AND SORT LOCALLY
-  // These actions don't call the API.
+  // FILTER, SEARCH AND SORT
   // =====================================
 
   const filteredRecipes = useMemo(() => {
@@ -254,7 +219,6 @@ function Community() {
 
   // =====================================
   // COMMUNITY STATS
-  // Calculated from the recipes already loaded.
   // =====================================
 
   const chefCount = useMemo(() => {
@@ -326,12 +290,9 @@ function Community() {
               <button
                 type="button"
                 className="community-button-primary"
-                onClick={() =>
-                  isLoggedIn ? navigate("/create-recipe") : navigate("/login")
-                }
+                onClick={() => navigate("/create-recipe")}
               >
-                {isLoggedIn ? "Share your recipe" : "Join the community"}
-
+                Share your recipe
                 <span aria-hidden="true">↗</span>
               </button>
 
@@ -357,12 +318,15 @@ function Community() {
 
             <div className="community-art-food">
               <span className="community-food-spark spark-one">✦</span>
+
               <span className="community-food-spark spark-two">✧</span>
+
               <span className="community-food-emoji">🥗</span>
             </div>
 
             <div className="community-art-note community-art-note-top">
               <span>🍓</span>
+
               <div>
                 <strong>Fresh inspiration</strong>
                 <small>Every kitchen has a story</small>
@@ -371,6 +335,7 @@ function Community() {
 
             <div className="community-art-note community-art-note-bottom">
               <span className="community-note-heart">♥</span>
+
               <div>
                 <strong>Made with love</strong>
                 <small>Shared by our community</small>
@@ -379,11 +344,12 @@ function Community() {
           </div>
         </section>
 
-        {/* QUICK BENEFITS */}
+        {/* BENEFITS */}
 
         <section className="community-benefits" aria-label="Community benefits">
           <article className="community-benefit">
             <span className="community-benefit-icon">⌕</span>
+
             <div>
               <h2>Discover</h2>
               <p>Find ideas for your next meal.</p>
@@ -392,373 +358,240 @@ function Community() {
 
           <article className="community-benefit">
             <span className="community-benefit-icon">♡</span>
+
             <div>
               <h2>Connect</h2>
-              <p>Follow chefs and exchange ideas.</p>
+              <p>Meet chefs who love good food.</p>
             </div>
           </article>
 
           <article className="community-benefit">
-            <span className="community-benefit-icon">✎</span>
+            <span className="community-benefit-icon">✧</span>
+
             <div>
               <h2>Share</h2>
-              <p>Inspire others with your creations.</p>
+              <p>Inspire others with your recipes.</p>
             </div>
           </article>
         </section>
 
-        {/* DISCOVER SECTION */}
+        {/* DISCOVER RECIPES */}
 
-        <section className="community-discover" id="community-discover">
+        <section id="community-discover" className="community-discover">
           <div className="community-section-heading">
-            <div>
-              <span className="community-eyebrow">
-                FROM OUR KITCHENS TO YOURS
-              </span>
+            <span className="community-section-eyebrow">FROM OUR KITCHENS</span>
 
-              <h2>Explore the community</h2>
+            <h2>Discover Community Recipes</h2>
 
-              <p>Find a recipe, meet its creator, and join the conversation.</p>
-            </div>
-
-            {isLoggedIn && (
-              <button
-                type="button"
-                className="community-create-link"
-                onClick={() => navigate("/create-recipe")}
-              >
-                <span>＋</span> Create recipe
-              </button>
-            )}
+            <p>
+              Explore delicious ideas shared by home chefs in the Savorly
+              community.
+            </p>
           </div>
 
-          {/* SUMMARY */}
+          {/* STATS */}
 
-          {isLoggedIn && !loading && !error && (
-            <div className="community-stat-strip">
-              <div className="community-stat">
-                <span className="community-stat-icon">🍲</span>
-                <div>
-                  <strong>{recipes.length}</strong>
-                  <span>Recipes shared</span>
-                </div>
-              </div>
+          <div className="community-stats">
+            <div className="community-stat">
+              <strong>{recipes.length}</strong>
+              <span>Community Recipes</span>
+            </div>
 
-              <div className="community-stat">
-                <span className="community-stat-icon">👩‍🍳</span>
-                <div>
-                  <strong>{chefCount}</strong>
-                  <span>Community chefs</span>
-                </div>
-              </div>
+            <div className="community-stat">
+              <strong>{chefCount}</strong>
+              <span>Home Chefs</span>
+            </div>
+          </div>
 
-              <div className="community-stat">
-                <span className="community-stat-icon">🔎</span>
-                <div>
-                  <strong>{filteredRecipes.length}</strong>
-                  <span>Matching recipes</span>
-                </div>
-              </div>
+          {/* SEARCH */}
+
+          <div className="community-toolbar">
+            <div className="community-search">
+              <span aria-hidden="true">⌕</span>
+
+              <input
+                type="search"
+                aria-label="Search community recipes"
+                placeholder="Search recipes, ingredients or chefs..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </div>
+
+            <div className="community-sort">
+              <label htmlFor="community-sort">Sort by</label>
+
+              <select
+                id="community-sort"
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value)}
+              >
+                <option value="latest">Latest</option>
+                <option value="rating">Top rated</option>
+                <option value="name">Name A–Z</option>
+              </select>
+            </div>
+          </div>
+
+          {/* CATEGORY FILTERS */}
+
+          <div
+            className="community-categories"
+            aria-label="Filter recipes by category"
+          >
+            {COMMUNITY_CATEGORIES.map((category) => (
+              <button
+                key={category}
+                type="button"
+                className={
+                  activeCategory === category
+                    ? "community-category active"
+                    : "community-category"
+                }
+                aria-pressed={activeCategory === category}
+                onClick={() => setActiveCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          {/* LOADING */}
+
+          {loading && (
+            <div className="community-state">
+              <div className="loading-spinner" />
+
+              <h3>Finding delicious recipes...</h3>
+
+              <p>Please wait while we load the community.</p>
             </div>
           )}
 
-          {/* SIGN-IN PROMPT */}
+          {/* ERROR */}
 
-          {!isLoggedIn && (
-            <section className="community-access-panel">
-              <span className="community-access-icon">✦</span>
+          {!loading && error && (
+            <div className="community-state community-error-state">
+              <span className="community-state-icon">!</span>
 
-              <h3>Your seat at the table is waiting.</h3>
+              <h3>We couldn't load the recipes</h3>
+
+              <p>{error}</p>
+
+              <button
+                type="button"
+                className="community-button-primary"
+                onClick={handleRetry}
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {/* EMPTY RESULTS */}
+
+          {!loading && !error && filteredRecipes.length === 0 && (
+            <div className="community-state community-empty-state">
+              <span className="community-state-icon">♡</span>
+
+              <h3>
+                {recipes.length === 0
+                  ? "No community recipes yet"
+                  : "No recipes found"}
+              </h3>
 
               <p>
-                Sign in to discover community recipes, follow other chefs, like
-                dishes and leave comments.
+                {recipes.length === 0
+                  ? "Be the first to share something delicious with the community."
+                  : "Try another search or category to discover more recipes."}
               </p>
 
-              <div className="community-access-actions">
+              {recipes.length === 0 ? (
                 <button
                   type="button"
                   className="community-button-primary"
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate("/create-recipe")}
                 >
-                  Log in
+                  Share your recipe
                 </button>
-
+              ) : (
                 <button
                   type="button"
-                  className="community-button-secondary"
-                  onClick={() => navigate("/signup")}
+                  className="community-button-primary"
+                  onClick={resetFilters}
                 >
-                  Create an account
+                  Clear filters
                 </button>
-              </div>
-            </section>
+              )}
+            </div>
           )}
 
-          {/* SEARCH AND SORT */}
+          {/* RECIPE GRID */}
 
-          {isLoggedIn && (
+          {!loading && !error && filteredRecipes.length > 0 && (
             <>
-              <div className="community-toolbar">
-                <label className="community-search">
-                  <span className="community-search-icon" aria-hidden="true">
-                    ⌕
-                  </span>
-
-                  <input
-                    type="search"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search recipes, ingredients or chefs..."
-                    aria-label="Search community recipes"
-                  />
-
-                  {search && (
-                    <button
-                      type="button"
-                      className="community-clear-search"
-                      onClick={() => setSearch("")}
-                      aria-label="Clear search"
-                    >
-                      ×
-                    </button>
-                  )}
-                </label>
-
-                <label className="community-sort">
-                  <span>Sort by</span>
-
-                  <select
-                    value={sortBy}
-                    onChange={(event) => setSortBy(event.target.value)}
-                    aria-label="Sort community recipes"
-                  >
-                    <option value="latest">Newest first</option>
-                    <option value="rating">Highest rated</option>
-                    <option value="name">Name A–Z</option>
-                  </select>
-                </label>
-              </div>
-
-              {/* CATEGORY FILTERS */}
-
-              <div className="community-filter-row">
-                <div
-                  className="community-category-filters"
-                  aria-label="Filter recipes by category"
-                >
-                  {COMMUNITY_CATEGORIES.map((category) => (
-                    <button
-                      type="button"
-                      key={category}
-                      className={`community-category-chip ${
-                        activeCategory === category ? "active" : ""
-                      }`}
-                      aria-pressed={activeCategory === category}
-                      onClick={() => setActiveCategory(category)}
-                    >
-                      {category === "All" && <span aria-hidden="true">✦ </span>}
-
-                      {category}
-                    </button>
-                  ))}
-                </div>
+              <div className="community-results-heading">
+                <p>
+                  Showing <strong>{filteredRecipes.length}</strong>{" "}
+                  {filteredRecipes.length === 1 ? "recipe" : "recipes"}
+                </p>
 
                 {(search ||
                   activeCategory !== "All" ||
                   sortBy !== "latest") && (
-                  <button
-                    type="button"
-                    className="community-reset-filters"
-                    onClick={resetFilters}
-                  >
-                    Reset filters
+                  <button type="button" onClick={resetFilters}>
+                    Clear filters
                   </button>
                 )}
               </div>
 
-              {/* LOADING STATE */}
-
-              {loading && (
-                <div
-                  className="community-state community-loading-state"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <span className="community-spinner" />
-
-                  <h3>Setting the table...</h3>
-
-                  <p>We're bringing the community recipes together.</p>
-                </div>
-              )}
-
-              {/* ERROR STATE */}
-
-              {!loading && error && (
-                <div className="community-state community-error-state">
-                  <span className="community-state-icon">!</span>
-
-                  <h3>We couldn't load the recipes.</h3>
-
-                  <p>{error}</p>
-
-                  <button
-                    type="button"
-                    className="community-button-primary"
-                    onClick={handleRetry}
+              <div className="recipes-grid community-recipes-grid">
+                {filteredRecipes.map((recipe, index) => (
+                  <article
+                    className="community-recipe-item"
+                    key={
+                      recipe._id ||
+                      recipe.id ||
+                      `${getRecipeName(recipe)}-${index}`
+                    }
                   >
-                    Try again
-                  </button>
-                </div>
-              )}
+                    <RecipeCard recipe={recipe} />
 
-              {/* RECIPE FEED */}
-
-              {!loading && !error && filteredRecipes.length > 0 && (
-                <>
-                  <div className="community-feed-heading">
-                    <div>
-                      <h3>
-                        {activeCategory === "All"
-                          ? "Made by our chefs"
-                          : `${activeCategory} recipes`}
-                      </h3>
-
-                      <p>
-                        Showing {filteredRecipes.length}{" "}
-                        {filteredRecipes.length === 1 ? "recipe" : "recipes"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="community-recipe-grid">
-                    {filteredRecipes.map((recipe, index) => {
-                      const recipeKey =
-                        recipe._id ||
-                        recipe.id ||
-                        recipe.url ||
-                        `${getRecipeName(recipe)}-${index}`;
-
-                      const chef = getChef(recipe);
-                      const category = getRecipeCategory(recipe);
-                      const createdDate = getRecipeDate(recipe);
-
-                      return (
-                        <article
-                          className="community-recipe-card"
-                          key={recipeKey}
-                        >
-                          <div className="community-recipe-meta">
-                            <span className="community-recipe-category">
-                              {category || "Community recipe"}
-                            </span>
-
-                            {createdDate && <time>{createdDate}</time>}
-                          </div>
-
-                          <div className="community-recipe-card-content">
-                            <RecipeCard recipe={recipe} />
-                          </div>
-
-                          <div className="community-card-chef">
-                            <span className="community-card-chef-avatar">
-                              {chef.name.trim().charAt(0).toUpperCase()}
-                            </span>
-
-                            <div className="community-card-chef-copy">
-                              <span>CREATED BY</span>
-                              <strong>{chef.name}</strong>
-                            </div>
-
-                            {chef.id && (
-                              <button
-                                type="button"
-                                className="community-view-chef"
-                                onClick={() => navigate(`/chefs/${chef.id}`)}
-                              >
-                                View chef ↗
-                              </button>
-                            )}
-                          </div>
-
-                          <RecipeSocial
-                            recipe={recipe}
-                            isLoggedIn={isLoggedIn}
-                          />
-                        </article>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-
-              {/* EMPTY STATE */}
-
-              {!loading && !error && filteredRecipes.length === 0 && (
-                <div className="community-state community-empty-state">
-                  <span className="community-state-icon">⌕</span>
-
-                  <h3>
-                    {recipes.length === 0
-                      ? "The kitchen is ready for its first dish."
-                      : "No recipes match your search."}
-                  </h3>
-
-                  <p>
-                    {recipes.length === 0
-                      ? "Community recipes will appear here once chefs have published them."
-                      : "Try another keyword or reset the filters to discover more recipes."}
-                  </p>
-
-                  {recipes.length > 0 ? (
-                    <button
-                      type="button"
-                      className="community-button-primary"
-                      onClick={resetFilters}
-                    >
-                      Reset filters
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="community-button-primary"
-                      onClick={() => navigate("/create-recipe")}
-                    >
-                      Share the first recipe
-                    </button>
-                  )}
-                </div>
-              )}
+                    <RecipeSocial recipe={recipe} />
+                  </article>
+                ))}
+              </div>
             </>
           )}
         </section>
 
-        {/* BOTTOM CALL TO ACTION */}
+        {/* CALL TO ACTION */}
 
-        <section className="community-bottom-cta">
-          <div className="community-bottom-symbol" aria-hidden="true">
-            ✦
+        <section className="community-cta">
+          <div className="community-cta-content">
+            <span className="community-section-eyebrow">
+              YOUR KITCHEN, YOUR STORY
+            </span>
+
+            <h2>Have a recipe worth sharing?</h2>
+
+            <p>
+              Share your favourite dish and inspire someone else's next meal.
+            </p>
+
+            <button
+              type="button"
+              className="community-button-primary"
+              onClick={() => navigate("/create-recipe")}
+            >
+              Create a recipe
+              <span aria-hidden="true">↗</span>
+            </button>
           </div>
 
-          <div className="community-bottom-copy">
-            <span className="community-eyebrow">YOUR STORY BELONGS HERE</span>
-
-            <h2>Every great recipe has a story.</h2>
-
-            <p>Share yours with the people who love good food.</p>
+          <div className="community-cta-art" aria-hidden="true">
+            👨‍🍳
           </div>
-
-          <button
-            type="button"
-            className="community-button-primary"
-            onClick={() =>
-              isLoggedIn ? navigate("/create-recipe") : navigate("/signup")
-            }
-          >
-            {isLoggedIn ? "Share your recipe" : "Join Savorly"}
-            <span aria-hidden="true">↗</span>
-          </button>
         </section>
       </main>
 

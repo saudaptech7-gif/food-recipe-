@@ -1,4 +1,3 @@
-
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useState } from "react";
@@ -10,7 +9,7 @@ import Footer from "../components/Footer";
 import RecipeCard from "../components/RecipeCard";
 
 import { getMyRecipes, deleteRecipe } from "../services/recipeApi";
-
+import { useNotification } from "../context/NotificationContext";
 
 function normalizeRecipes(response) {
   const data = response?.data ?? response;
@@ -42,7 +41,9 @@ function isRecipePublished(recipe) {
     if (typeof value === "string") {
       const normalized = value.trim().toLowerCase();
 
-      if (["published", "public", "true", "1"].includes(normalized)) {
+      if (
+        ["published", "public", "true", "1"].includes(normalized)
+      ) {
         return true;
       }
 
@@ -97,6 +98,7 @@ async function requestPublishToggle(recipeId) {
 
 function MyRecipes() {
   const navigate = useNavigate();
+  const { notify } = useNotification();
 
   const auth = useSelector((state) => state.auth || {});
 
@@ -116,7 +118,6 @@ function MyRecipes() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState("");
 
   const loadRecipes = useCallback(async () => {
@@ -129,11 +130,15 @@ function MyRecipes() {
     } catch (fetchError) {
       console.error("My Kitchen recipes error:", fetchError);
 
-      setError(fetchError.message || "Unable to load your recipes.");
+      const message =
+        fetchError.message || "Unable to load your recipes.";
+
+      setError(message);
+      notify(message, "error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [notify]);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -159,7 +164,6 @@ function MyRecipes() {
 
     setActionLoadingId(String(recipeId));
     setError("");
-    setNotice("");
 
     try {
       const result = await requestPublishToggle(recipeId);
@@ -180,7 +184,9 @@ function MyRecipes() {
         current.map((item) => {
           const itemId = item._id || item.id;
 
-          if (String(itemId) !== String(recipeId)) return item;
+          if (String(itemId) !== String(recipeId)) {
+            return item;
+          }
 
           return {
             ...item,
@@ -191,18 +197,20 @@ function MyRecipes() {
         }),
       );
 
-      setNotice(
+      notify(
         result.message ||
           (nextStatus
             ? "Recipe published successfully!"
             : "Recipe unpublished successfully."),
+        "success",
       );
     } catch (publishError) {
       console.error("Publish recipe error:", publishError);
 
-      setError(
+      notify(
         publishError.message ||
           "Unable to update recipe publish status.",
+        "error",
       );
     } finally {
       setActionLoadingId("");
@@ -222,7 +230,6 @@ function MyRecipes() {
 
     setActionLoadingId(String(recipeId));
     setError("");
-    setNotice("");
 
     try {
       await deleteRecipe(recipeId);
@@ -233,12 +240,13 @@ function MyRecipes() {
         ),
       );
 
-      setNotice("Recipe deleted successfully.");
+      notify("Recipe deleted successfully.", "success");
     } catch (deleteError) {
       console.error("Delete recipe error:", deleteError);
 
-      setError(
+      notify(
         deleteError.message || "Unable to delete this recipe.",
+        "error",
       );
     } finally {
       setActionLoadingId("");
@@ -283,19 +291,14 @@ function MyRecipes() {
 
             <div>
               <strong>{recipes.length}</strong>
-              <span>{recipes.length === 1 ? "Recipe" : "Recipes"}</span>
+              <span>
+                {recipes.length === 1 ? "Recipe" : "Recipes"}
+              </span>
             </div>
           </div>
 
           <p>Manage and publish your own recipe collection.</p>
         </div>
-
-        {notice && (
-          <div className="my-recipes-feedback success" role="status">
-            <span aria-hidden="true">✓</span>
-            {notice}
-          </div>
-        )}
 
         {loading && (
           <div className="recipes-loading">
@@ -308,7 +311,10 @@ function MyRecipes() {
           <div className="recipe-error" role="alert">
             <p>{error}</p>
 
-            <button type="button" onClick={loadRecipes}>
+            <button
+              type="button"
+              onClick={loadRecipes}
+            >
               Try Again
             </button>
           </div>
@@ -318,7 +324,8 @@ function MyRecipes() {
           <div className="my-recipes-grid">
             {recipes.map((recipe, index) => {
               const recipeId = recipe._id || recipe.id;
-              const isWorking = actionLoadingId === String(recipeId);
+              const isWorking =
+                actionLoadingId === String(recipeId);
               const published = isRecipePublished(recipe);
 
               return (
@@ -334,7 +341,10 @@ function MyRecipes() {
                         published ? "is-published" : "is-draft"
                       }`}
                     >
-                      <span className="status-dot" aria-hidden="true" />
+                      <span
+                        className="status-dot"
+                        aria-hidden="true"
+                      />
                       {published ? "Published" : "Draft"}
                     </span>
 

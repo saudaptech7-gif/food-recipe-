@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 
 import Header from "../components/Header";
 import { getMyProfile, updateMyProfile } from "../services/socialApi";
+import { useNotification } from "../context/NotificationContext";
 
 function extractProfile(result) {
   return result?.profile || result?.data?.profile || result?.user || null;
@@ -11,17 +12,15 @@ function extractProfile(result) {
 
 function Profile() {
   const navigate = useNavigate();
+  const { notify } = useNotification();
 
   const auth = useSelector((state) => state.auth || {});
-
   const reduxUser = auth.user || auth.currentUser || auth.profile || null;
 
   const [profile, setProfile] = useState(reduxUser);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
 
   const [form, setForm] = useState({
     name: reduxUser?.name || "",
@@ -34,7 +33,6 @@ function Profile() {
 
     async function loadProfile() {
       setLoading(true);
-      setError("");
 
       try {
         const result = await getMyProfile();
@@ -50,18 +48,25 @@ function Profile() {
 
         setForm({
           name: currentProfile.name || "",
-          chef: currentProfile.chef || currentProfile.chefName || "Home Chef",
+          chef:
+            currentProfile.chef ||
+            currentProfile.chefName ||
+            "Home Chef",
           bio: currentProfile.bio || "",
         });
       } catch (err) {
         if (!active) return;
 
         if (err?.status === 401) {
+          notify("Please sign in to view your profile.", "warning");
           navigate("/login", { replace: true });
           return;
         }
 
-        setError(err.message || "Could not load your profile.");
+        notify(
+          err.message || "Could not load your profile.",
+          "error"
+        );
       } finally {
         if (active) {
           setLoading(false);
@@ -74,12 +79,18 @@ function Profile() {
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [navigate, notify]);
 
   const displayName =
-    profile?.name || profile?.username || reduxUser?.name || "Savorly User";
+    profile?.name ||
+    profile?.username ||
+    reduxUser?.name ||
+    "Savorly User";
 
-  const email = profile?.email || reduxUser?.email || "Email not available";
+  const email =
+    profile?.email ||
+    reduxUser?.email ||
+    "Email not available";
 
   const chefName =
     profile?.chef ||
@@ -100,47 +111,68 @@ function Profile() {
   const handleSave = async (event) => {
     event.preventDefault();
 
+    const name = form.name.trim();
+    const chef = form.chef.trim();
+    const bio = form.bio.trim();
+
+    if (!name || !chef) {
+      notify("Name and Chef Name are required.", "warning");
+      return;
+    }
+
     setSaving(true);
-    setError("");
-    setMessage("");
 
     try {
       const result = await updateMyProfile({
-        name: form.name.trim(),
-        chef: form.chef.trim(),
-        bio: form.bio.trim(),
+        name,
+        chef,
+        bio,
       });
 
       const updatedProfile = extractProfile(result) || {
         ...profile,
-        name: form.name.trim(),
-        chef: form.chef.trim(),
-        bio: form.bio.trim(),
+        name,
+        chef,
+        bio,
       };
 
       setProfile(updatedProfile);
 
       setForm({
-        name: updatedProfile.name || form.name,
-        chef: updatedProfile.chef || updatedProfile.chefName || form.chef,
-        bio: updatedProfile.bio || form.bio,
+        name: updatedProfile.name || name,
+        chef: updatedProfile.chef || updatedProfile.chefName || chef,
+        bio: updatedProfile.bio ?? bio,
       });
 
       setEditing(false);
-      setMessage("Profile updated successfully.");
 
       window.dispatchEvent(
         new CustomEvent("savorly:user-updated", {
           detail: {
             profile: updatedProfile,
           },
-        }),
+        })
       );
+
+      notify("Profile updated successfully.", "success");
     } catch (err) {
-      setError(err.message || "Could not update your profile.");
+      notify(
+        err.message || "Could not update your profile.",
+        "error"
+      );
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+
+    setForm({
+      name: profile?.name || "",
+      chef: profile?.chef || profile?.chefName || "Home Chef",
+      bio: profile?.bio || "",
+    });
   };
 
   return (
@@ -160,7 +192,8 @@ function Profile() {
           <span>YOUR ACCOUNT</span>
           <h1>My Profile</h1>
           <p>
-            Manage your account and explore your personal recipe collections.
+            Manage your account and explore your personal recipe
+            collections.
           </p>
         </header>
 
@@ -171,16 +204,6 @@ function Profile() {
           </div>
         ) : (
           <>
-            {error && (
-              <div className="profile-alert profile-alert-error">{error}</div>
-            )}
-
-            {message && (
-              <div className="profile-alert profile-alert-success">
-                {message}
-              </div>
-            )}
-
             <section className="profile-card">
               <div className="profile-user-header">
                 <div className="profile-avatar">
@@ -188,7 +211,9 @@ function Profile() {
                 </div>
 
                 <div className="profile-user-copy">
-                  <span className="profile-welcome-label">WELCOME BACK</span>
+                  <span className="profile-welcome-label">
+                    WELCOME BACK
+                  </span>
 
                   <h2>{displayName}</h2>
                   <p>{email}</p>
@@ -198,11 +223,7 @@ function Profile() {
                   <button
                     type="button"
                     className="profile-secondary-button"
-                    onClick={() => {
-                      setError("");
-                      setMessage("");
-                      setEditing(true);
-                    }}
+                    onClick={() => setEditing(true)}
                   >
                     Edit Profile
                   </button>
@@ -239,12 +260,17 @@ function Profile() {
                     <span className="profile-info-icon">📝</span>
                     <div>
                       <small>About Me</small>
-                      <strong>{profile?.bio || "No bio added yet"}</strong>
+                      <strong>
+                        {profile?.bio || "No bio added yet"}
+                      </strong>
                     </div>
                   </div>
                 </div>
               ) : (
-                <form className="profile-edit-form" onSubmit={handleSave}>
+                <form
+                  className="profile-edit-form"
+                  onSubmit={handleSave}
+                >
                   <div className="profile-form-field">
                     <label htmlFor="profile-name">Full Name</label>
                     <input
@@ -295,17 +321,7 @@ function Profile() {
                       type="button"
                       className="profile-secondary-button"
                       disabled={saving}
-                      onClick={() => {
-                        setEditing(false);
-                        setError("");
-
-                        setForm({
-                          name: profile?.name || "",
-                          chef:
-                            profile?.chef || profile?.chefName || "Home Chef",
-                          bio: profile?.bio || "",
-                        });
-                      }}
+                      onClick={handleCancel}
                     >
                       Cancel
                     </button>
@@ -318,7 +334,9 @@ function Profile() {
               <div className="profile-section-heading">
                 <span>YOUR COLLECTIONS</span>
                 <h2>Your Recipe Activity</h2>
-                <p>Liked recipes and saved favorites are separate.</p>
+                <p>
+                  Liked recipes and saved favorites are separate.
+                </p>
               </div>
 
               <div className="profile-collection-grid">
@@ -328,10 +346,14 @@ function Profile() {
                   onClick={() => navigate("/liked-recipes")}
                 >
                   <span className="profile-collection-icon">❤️</span>
+
                   <span className="profile-collection-copy">
                     <strong>Liked Recipes</strong>
-                    <small>Community recipes you have liked.</small>
+                    <small>
+                      Community recipes you have liked.
+                    </small>
                   </span>
+
                   <span className="profile-collection-arrow">→</span>
                 </button>
 
@@ -341,10 +363,14 @@ function Profile() {
                   onClick={() => navigate("/favorites")}
                 >
                   <span className="profile-collection-icon">🔖</span>
+
                   <span className="profile-collection-copy">
                     <strong>Favorites</strong>
-                    <small>Recipes saved using Add to Favorites.</small>
+                    <small>
+                      Recipes saved using Add to Favorites.
+                    </small>
                   </span>
+
                   <span className="profile-collection-arrow">→</span>
                 </button>
               </div>
@@ -357,3 +383,4 @@ function Profile() {
 }
 
 export default Profile;
+
