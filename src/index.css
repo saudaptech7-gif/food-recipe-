@@ -30454,3 +30454,50 @@ textarea,
   outline: 2px solid #e87924;
   outline-offset: 3px;
 }
+
+/* Savorly: fix sticky scroll cooking animation */
+.home-page .hero-scroll-section {
+  position: relative !important;
+  height: 230vh !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+.home-page .hero-sticky {
+  position: sticky !important;
+  top: 0 !important;
+  height: 100vh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.home-page .hero-scroll-section .hero-section {
+  min-height: 100vh !important;
+  height: 100vh !important;
+  box-sizing: border-box !important;
+}
+
+.home-page .cooking-scene {
+  position: relative !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.home-page .pro-plate,
+.home-page .pro-pan,
+.home-page .pro-lid,
+.home-page .final-food {
+  transform-origin: center center !important;
+  will-change: transform, opacity !important;
+}
+
+@media (max-width: 600px) {
+  .home-page .hero-scroll-section {
+    height: 190vh !important;
+  }
+
+  .home-page .hero-scroll-section .hero-section {
+    height: 100vh !important;
+    min-height: 0 !important;
+  }
+}
