@@ -41,16 +41,12 @@ function isRecipePublished(recipe) {
     if (typeof value === "string") {
       const normalized = value.trim().toLowerCase();
 
-      if (
-        ["published", "public", "true", "1"].includes(normalized)
-      ) {
+      if (["published", "public", "true", "1"].includes(normalized)) {
         return true;
       }
 
       if (
-        ["draft", "unpublished", "private", "false", "0"].includes(
-          normalized,
-        )
+        ["draft", "unpublished", "private", "false", "0"].includes(normalized)
       ) {
         return false;
       }
@@ -78,7 +74,7 @@ function getRecipesEndpoint() {
 
 async function requestPublishToggle(recipeId) {
   const response = await fetch(
-    `${getRecipesEndpoint()}/${encodeURIComponent(recipeId)}/publish`,
+    `${getRecipesEndpoint()}/${encodeURIComponent(String(recipeId))}/publish`,
     {
       method: "PATCH",
       credentials: "include",
@@ -88,9 +84,7 @@ async function requestPublishToggle(recipeId) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(
-      data.message || "Could not update recipe publish status.",
-    );
+    throw new Error(data.message || "Could not update recipe publish status.");
   }
 
   return data;
@@ -102,23 +96,19 @@ function MyRecipes() {
 
   const auth = useSelector((state) => state.auth || {});
 
-  const user =
-    auth.user ||
-    auth.currentUser ||
-    auth.profile ||
-    null;
+  const user = auth.user || auth.currentUser || auth.profile || null;
 
   const isLoggedIn = Boolean(
-    auth.isAuthenticated ||
-      auth.isLoggedIn ||
-      auth.token ||
-      user,
+    auth.isAuthenticated || auth.isLoggedIn || auth.token || user,
   );
 
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState("");
+
+  // Custom delete confirmation card.
+  const [recipeToDelete, setRecipeToDelete] = useState(null);
 
   const loadRecipes = useCallback(async () => {
     setLoading(true);
@@ -130,8 +120,7 @@ function MyRecipes() {
     } catch (fetchError) {
       console.error("My Kitchen recipes error:", fetchError);
 
-      const message =
-        fetchError.message || "Unable to load your recipes.";
+      const message = fetchError.message || "Unable to load your recipes.";
 
       setError(message);
       notify(message, "error");
@@ -155,6 +144,7 @@ function MyRecipes() {
     });
   };
 
+  // Publish or unpublish a recipe.
   const handleTogglePublish = async (recipe) => {
     const recipeId = recipe._id || recipe.id;
 
@@ -208,8 +198,7 @@ function MyRecipes() {
       console.error("Publish recipe error:", publishError);
 
       notify(
-        publishError.message ||
-          "Unable to update recipe publish status.",
+        publishError.message || "Unable to update recipe publish status.",
         "error",
       );
     } finally {
@@ -217,16 +206,24 @@ function MyRecipes() {
     }
   };
 
-  const handleDelete = async (recipe) => {
+  // Open the custom confirmation card.
+  const openDeleteConfirmation = (recipe) => {
+    if (actionLoadingId) return;
+    setRecipeToDelete(recipe);
+  };
+
+  // Delete only after the user confirms inside the card.
+  const handleDelete = async () => {
+    if (!recipeToDelete || actionLoadingId) return;
+
+    const recipe = recipeToDelete;
     const recipeId = recipe._id || recipe.id;
 
-    if (!recipeId || actionLoadingId) return;
-
-    const confirmed = window.confirm(
-      `Delete "${recipe.name || "this recipe"}"? This cannot be undone.`,
-    );
-
-    if (!confirmed) return;
+    if (!recipeId) {
+      setRecipeToDelete(null);
+      notify("Recipe ID is missing.", "error");
+      return;
+    }
 
     setActionLoadingId(String(recipeId));
     setError("");
@@ -240,22 +237,79 @@ function MyRecipes() {
         ),
       );
 
+      setRecipeToDelete(null);
+
       notify("Recipe deleted successfully.", "success");
     } catch (deleteError) {
       console.error("Delete recipe error:", deleteError);
 
-      notify(
-        deleteError.message || "Unable to delete this recipe.",
-        "error",
-      );
+      setRecipeToDelete(null);
+
+      notify(deleteError.message || "Unable to delete this recipe.", "error");
     } finally {
       setActionLoadingId("");
     }
   };
 
+  if (!isLoggedIn) {
+    return null;
+  }
+
   return (
     <div className="my-recipes-page">
       <Header />
+
+      {/* Custom Delete Confirmation Card */}
+      {recipeToDelete && (
+        <div
+          className="confirm-overlay"
+          onClick={() => {
+            if (!actionLoadingId) {
+              setRecipeToDelete(null);
+            }
+          }}
+        >
+          <div
+            className="confirm-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="my-delete-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="confirm-icon" aria-hidden="true">
+              !
+            </div>
+
+            <h2 id="my-delete-title">Delete this recipe?</h2>
+
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>{recipeToDelete.name || "this recipe"}</strong>? This
+              action cannot be undone.
+            </p>
+
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="confirm-cancel"
+                disabled={Boolean(actionLoadingId)}
+                onClick={() => setRecipeToDelete(null)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="confirm-delete"
+                disabled={Boolean(actionLoadingId)}
+                onClick={handleDelete}
+              >
+                {actionLoadingId ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="my-recipes-container">
         <button
@@ -272,8 +326,8 @@ function MyRecipes() {
           <h1>My Kitchen</h1>
 
           <p>
-            Your recipes, your creations. Keep everything you
-            have cooked and shared in one place.
+            Your recipes, your creations. Keep everything you have cooked and
+            shared in one place.
           </p>
 
           <button
@@ -291,9 +345,7 @@ function MyRecipes() {
 
             <div>
               <strong>{recipes.length}</strong>
-              <span>
-                {recipes.length === 1 ? "Recipe" : "Recipes"}
-              </span>
+              <span>{recipes.length === 1 ? "Recipe" : "Recipes"}</span>
             </div>
           </div>
 
@@ -311,10 +363,7 @@ function MyRecipes() {
           <div className="recipe-error" role="alert">
             <p>{error}</p>
 
-            <button
-              type="button"
-              onClick={loadRecipes}
-            >
+            <button type="button" onClick={loadRecipes}>
               Try Again
             </button>
           </div>
@@ -324,15 +373,13 @@ function MyRecipes() {
           <div className="my-recipes-grid">
             {recipes.map((recipe, index) => {
               const recipeId = recipe._id || recipe.id;
-              const isWorking =
-                actionLoadingId === String(recipeId);
+
+              const isWorking = actionLoadingId === String(recipeId);
+
               const published = isRecipePublished(recipe);
 
               return (
-                <article
-                  className="my-recipe-item"
-                  key={recipeId || index}
-                >
+                <article className="my-recipe-item" key={recipeId || index}>
                   <RecipeCard recipe={recipe} />
 
                   <div className="my-recipe-publication">
@@ -341,10 +388,7 @@ function MyRecipes() {
                         published ? "is-published" : "is-draft"
                       }`}
                     >
-                      <span
-                        className="status-dot"
-                        aria-hidden="true"
-                      />
+                      <span className="status-dot" aria-hidden="true" />
                       {published ? "Published" : "Draft"}
                     </span>
 
@@ -354,7 +398,7 @@ function MyRecipes() {
                         className={`my-recipe-publish-button ${
                           published ? "is-published" : "is-draft"
                         }`}
-                        disabled={isWorking}
+                        disabled={Boolean(actionLoadingId)}
                         onClick={() => handleTogglePublish(recipe)}
                       >
                         {isWorking ? (
@@ -381,10 +425,17 @@ function MyRecipes() {
                     <button
                       type="button"
                       className="my-recipe-edit"
-                      disabled={isWorking}
-                      onClick={() =>
-                        navigate(`/edit-recipe/${recipeId}`)
-                      }
+                      disabled={Boolean(actionLoadingId)}
+                      onClick={() => {
+                        if (!recipeId) {
+                          notify("Recipe ID is missing.", "error");
+                          return;
+                        }
+
+                        navigate(
+                          `/edit-recipe/${encodeURIComponent(String(recipeId))}`,
+                        );
+                      }}
                     >
                       Edit Recipe
                     </button>
@@ -392,10 +443,10 @@ function MyRecipes() {
                     <button
                       type="button"
                       className="my-recipe-delete"
-                      disabled={isWorking}
-                      onClick={() => handleDelete(recipe)}
+                      disabled={Boolean(actionLoadingId)}
+                      onClick={() => openDeleteConfirmation(recipe)}
                     >
-                      {isWorking ? "Please wait..." : "Delete"}
+                      Delete
                     </button>
                   </div>
                 </article>
@@ -410,9 +461,7 @@ function MyRecipes() {
 
             <h2>Your cookbook is waiting!</h2>
 
-            <p>
-              Create your first recipe and it will appear here.
-            </p>
+            <p>Create your first recipe and it will appear here.</p>
 
             <button
               type="button"

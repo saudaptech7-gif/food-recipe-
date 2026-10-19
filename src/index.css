@@ -30501,3 +30501,150 @@ textarea,
     min-height: 0 !important;
   }
 }
+
+/* =====================================
+   SAVORLY DELETE CONFIRMATION CARD
+===================================== */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 20, 25, 0.58);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  animation: confirmOverlayIn 0.2s ease;
+}
+
+.confirm-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  text-align: center;
+  animation: confirmCardIn 0.25s ease;
+}
+
+.confirm-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 20px;
+  border-radius: 22px;
+  background: #fff0ed;
+  color: #dc3f32;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.confirm-card h2 {
+  margin: 0 0 12px;
+  color: #242424;
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: -0.6px;
+}
+
+.confirm-card p {
+  margin: 0;
+  color: #77727a;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.confirm-actions button {
+  flex: 1;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 13px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.confirm-cancel {
+  background: #f3f2f4;
+  color: #45414a;
+}
+
+.confirm-cancel:hover {
+  background: #e9e7eb;
+  transform: translateY(-2px);
+}
+
+.confirm-delete {
+  background: #dc4438;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(220, 68, 56, 0.2);
+}
+
+.confirm-delete:hover {
+  background: #c83228;
+  transform: translateY(-2px);
+  box-shadow: 0 9px 20px rgba(220, 68, 56, 0.28);
+}
+
+.confirm-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+@keyframes confirmOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes confirmCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .confirm-card {
+    padding: 26px 20px;
+    border-radius: 20px;
+  }
+
+  .confirm-card h2 {
+    font-size: 21px;
+  }
+
+  .confirm-actions {
+    flex-direction: column-reverse;
+  }
+}
