@@ -8,6 +8,7 @@ import Profile from "./pages/Profile";
 import Community from "./pages/Community";
 import MyRecipes from "./pages/MyRecipes";
 import CreateRecipe from "./pages/CreateRecipe";
+import EditRecipe from "./pages/EditRecipe";
 import Favorites from "./pages/Favorites";
 import LikedRecipes from "./pages/LikedRecipes";
 
@@ -27,17 +28,14 @@ function App() {
         <Route path="/my-recipes" element={<MyRecipes />} />
         <Route path="/create-recipe" element={<CreateRecipe />} />
 
-        {/* Favorites */}
-        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/edit-recipe/:id" element={<EditRecipe />} />
 
-        {/* Liked community recipes */}
+        <Route path="/favorites" element={<Favorites />} />
         <Route path="/liked-recipes" element={<LikedRecipes />} />
 
-        {/* Recipe details */}
         <Route path="/recipe/:id" element={<RecipeDetails />} />
         <Route path="/recipes/:id" element={<RecipeDetails />} />
 
-        {/* Unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </NotificationProvider>

@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -5,9 +7,16 @@ import { useDispatch, useSelector } from "react-redux";
 import Header from "../components/Header";
 import { useNotification } from "../context/NotificationContext";
 
-import { getRecipeById, rateRecipe, deleteRecipe } from "../services/recipeApi";
+import {
+  getRecipeById,
+  rateRecipe,
+  deleteRecipe,
+} from "../services/recipeApi";
 
-import { addFavorite, removeFavorite } from "../services/favoriteApi";
+import {
+  addFavorite,
+  removeFavorite,
+} from "../services/favoriteApi";
 
 import {
   addFavoriteToState,
@@ -35,7 +44,7 @@ function RecipeDetails() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const recipeId = recipe?.id || recipe?._id || id;
+  const recipeId = recipe?._id || recipe?.id || id;
   const isCommunityRecipe = recipe?.recipeType === "community";
 
   const isOwnRecipe = useMemo(() => {
@@ -43,46 +52,62 @@ function RecipeDetails() {
       return false;
     }
 
-    const currentUserId = currentUser.id || currentUser._id;
-
-    const ownerId =
+    const currentUserId = currentUser._id || currentUser.id;
+    const owner =
       typeof recipe.createdBy === "object"
         ? recipe.createdBy._id || recipe.createdBy.id
         : recipe.createdBy;
 
     return Boolean(
-      currentUserId && ownerId && String(currentUserId) === String(ownerId),
+      currentUserId &&
+        owner &&
+        String(currentUserId) === String(owner),
     );
   }, [currentUser, recipe]);
 
   const isFavorite = Array.isArray(favorites)
     ? favorites.some((favorite) => {
         const favoriteId =
-          typeof favorite === "object" ? favorite.id || favorite._id : favorite;
+          typeof favorite === "object" && favorite !== null
+            ? favorite._id || favorite.id || favorite.recipeId
+            : favorite;
 
-        return String(favoriteId) === String(recipeId);
+        const normalizedId =
+          typeof favoriteId === "object" && favoriteId !== null
+            ? favoriteId._id || favoriteId.id
+            : favoriteId;
+
+        return String(normalizedId) === String(recipeId);
       })
     : false;
 
+  // Load recipe details.
   useEffect(() => {
     let mounted = true;
 
-    const fetchRecipe = async () => {
+    async function fetchRecipe() {
       try {
         setLoading(true);
         setError("");
 
         const data = await getRecipeById(id);
-        const recipeData = data?.recipe || data;
+        const recipeData =
+          data?.recipe ||
+          data?.data?.recipe ||
+          data?.data ||
+          data;
 
-        if (!recipeData) {
+        if (
+          !recipeData ||
+          typeof recipeData !== "object" ||
+          Array.isArray(recipeData)
+        ) {
           throw new Error("Recipe data was not returned by the server.");
         }
 
         if (!mounted) return;
 
         setRecipe(recipeData);
-
         setSelectedRating(
           Number(recipeData.userRating || recipeData.myRating || 0),
         );
@@ -97,7 +122,13 @@ function RecipeDetails() {
           setLoading(false);
         }
       }
-    };
+    }
+
+    if (!id) {
+      setError("Recipe ID is missing.");
+      setLoading(false);
+      return undefined;
+    }
 
     fetchRecipe();
 
@@ -106,6 +137,7 @@ function RecipeDetails() {
     };
   }, [id]);
 
+  // Add or remove favorites.
   const handleFavorite = async () => {
     if (!isLoggedIn) {
       notify("Please log in to save your favorite recipes.", "warning");
@@ -132,12 +164,16 @@ function RecipeDetails() {
     } catch (favoriteError) {
       console.error("Favorite error:", favoriteError);
 
-      notify(favoriteError.message || "Failed to update favorite.", "error");
+      notify(
+        favoriteError.message || "Failed to update favorite.",
+        "error",
+      );
     } finally {
       setFavoriteLoading(false);
     }
   };
 
+  // Submit rating.
   const handleRating = async (value) => {
     if (!isLoggedIn) {
       notify("Please log in to rate this recipe.", "warning");
@@ -158,7 +194,7 @@ function RecipeDetails() {
       return;
     }
 
-    if (ratingLoading) return;
+    if (ratingLoading || !recipeId) return;
 
     try {
       setRatingLoading(true);
@@ -192,16 +228,32 @@ function RecipeDetails() {
     } catch (ratingError) {
       console.error("Rating error:", ratingError);
 
-      notify(ratingError.message || "Failed to submit rating.", "error");
+      notify(
+        ratingError.message || "Failed to submit rating.",
+        "error",
+      );
     } finally {
       setRatingLoading(false);
     }
   };
 
+  // Delete recipe.
   const handleDelete = async () => {
-    if (!isOwnRecipe || !isCommunityRecipe || deleteLoading) {
+    if (!isLoggedIn) {
+      notify("Please log in first.", "warning");
+      navigate("/login");
       return;
     }
+
+    if (!isOwnRecipe || !isCommunityRecipe) {
+      notify(
+        "You can only delete your own community recipes.",
+        "warning",
+      );
+      return;
+    }
+
+    if (!recipeId || deleteLoading) return;
 
     try {
       setDeleteLoading(true);
@@ -218,7 +270,10 @@ function RecipeDetails() {
 
       setShowDeleteConfirm(false);
 
-      notify(deleteError.message || "Failed to delete recipe.", "error");
+      notify(
+        deleteError.message || "Failed to delete recipe.",
+        "error",
+      );
     } finally {
       setDeleteLoading(false);
     }
@@ -257,27 +312,34 @@ function RecipeDetails() {
 
   const images =
     Array.isArray(recipe.images) && recipe.images.length > 0
-      ? recipe.images
+      ? recipe.images.filter(Boolean)
       : recipe.image
         ? [recipe.image]
         : ["/fallback.jpg"];
 
   const nutrients = recipe.nutrients || {};
-
   const ingredients = Array.isArray(recipe.ingredients)
     ? recipe.ingredients
     : [];
-
   const steps = Array.isArray(recipe.steps) ? recipe.steps : [];
 
   const averageRatingNumber =
-    Number(recipe.averageRating ?? recipe.rating ?? recipe.rattings ?? 0) || 0;
+    Number(
+      recipe.averageRating ??
+        recipe.rating ??
+        recipe.rattings ??
+        0,
+    ) || 0;
 
   const averageRating = averageRatingNumber.toFixed(1);
 
   const ratingCount =
-    Number(recipe.ratingCount ?? recipe.voteCount ?? recipe.vote_count ?? 0) ||
-    0;
+    Number(
+      recipe.ratingCount ??
+        recipe.voteCount ??
+        recipe.vote_count ??
+        0,
+    ) || 0;
 
   const category =
     recipe.mainCategory ||
@@ -293,17 +355,57 @@ function RecipeDetails() {
     "—";
 
   const cookingTime =
-    recipe.times?.cooking || recipe.times?.Cooking || recipe.cookTime || "—";
+    recipe.times?.cooking ||
+    recipe.times?.Cooking ||
+    recipe.cookTime ||
+    "—";
 
   const servings = recipe.servings || recipe.serves || "—";
   const difficulty = recipe.difficulty || recipe.difficult || "—";
 
-  const authorName = recipe.createdBy?.name || recipe.author || "Savorly";
+  const authorName =
+    typeof recipe.createdBy === "object" && recipe.createdBy !== null
+      ? recipe.createdBy.name || recipe.author || "Savorly"
+      : recipe.author || "Savorly";
 
   const displayedRating = Math.min(
     Math.max(Math.round(averageRatingNumber), 0),
     5,
   );
+
+  const getIngredientText = (ingredient) => {
+    if (typeof ingredient === "string" || typeof ingredient === "number") {
+      return String(ingredient);
+    }
+
+    if (ingredient && typeof ingredient === "object") {
+      return (
+        ingredient.name ||
+        ingredient.ingredient ||
+        ingredient.text ||
+        JSON.stringify(ingredient)
+      );
+    }
+
+    return "";
+  };
+
+  const getStepText = (step) => {
+    if (typeof step === "string" || typeof step === "number") {
+      return String(step);
+    }
+
+    if (step && typeof step === "object") {
+      return (
+        step.step ||
+        step.description ||
+        step.text ||
+        JSON.stringify(step)
+      );
+    }
+
+    return "";
+  };
 
   return (
     <div className="recipe-details-page">
@@ -313,9 +415,7 @@ function RecipeDetails() {
         <div
           className="confirm-overlay"
           onClick={() => {
-            if (!deleteLoading) {
-              setShowDeleteConfirm(false);
-            }
+            if (!deleteLoading) setShowDeleteConfirm(false);
           }}
         >
           <div
@@ -382,7 +482,9 @@ function RecipeDetails() {
             </span>
 
             {images.length > 1 && (
-              <div className="recipe-image-count">+{images.length - 1}</div>
+              <div className="recipe-image-count">
+                +{images.length - 1}
+              </div>
             )}
           </div>
 
@@ -456,7 +558,21 @@ function RecipeDetails() {
                   <button
                     type="button"
                     className="edit-recipe-button"
-                    onClick={() => navigate(`/edit-recipe/${recipeId}`)}
+                    onClick={() => {
+                      const editId = recipe._id || recipe.id;
+
+                      if (!editId) {
+                        notify(
+                          "Recipe ID is missing. Cannot open the edit page.",
+                          "error",
+                        );
+                        return;
+                      }
+
+                      navigate(
+                        `/edit-recipe/${encodeURIComponent(String(editId))}`,
+                      );
+                    }}
                   >
                     ✎ Edit
                   </button>
@@ -519,27 +635,20 @@ function RecipeDetails() {
           )}
         </section>
 
-        {/* Ingredients and method */}
         <section className="recipe-main-grid">
           <div className="recipe-section">
             <span className="section-eyebrow">WHAT YOU NEED</span>
-
             <h2>Ingredients</h2>
 
             {ingredients.length > 0 ? (
               <div className="ingredients-list">
                 {ingredients.map((ingredient, index) => {
-                  const ingredientName =
-                    ingredient && typeof ingredient === "object"
-                      ? ingredient.name ||
-                        ingredient.ingredient ||
-                        JSON.stringify(ingredient)
-                      : ingredient;
+                  const ingredientName = getIngredientText(ingredient);
 
                   return (
                     <label
                       className="ingredient-item"
-                      key={`${String(ingredientName ?? index)}-${index}`}
+                      key={`${ingredientName}-${index}`}
                     >
                       <input
                         type="checkbox"
@@ -550,7 +659,9 @@ function RecipeDetails() {
                         🍲
                       </span>
 
-                      <span className="ingredient-text">{ingredientName}</span>
+                      <span className="ingredient-text">
+                        {ingredientName}
+                      </span>
                     </label>
                   );
                 })}
@@ -562,33 +673,22 @@ function RecipeDetails() {
 
           <div className="recipe-section">
             <span className="section-eyebrow">LET'S COOK</span>
-
             <h2>Method</h2>
 
             {steps.length > 0 ? (
               <div className="steps-list">
-                {steps.map((step, index) => {
-                  const stepText =
-                    step && typeof step === "object"
-                      ? step.step ||
-                        step.description ||
-                        step.text ||
-                        JSON.stringify(step)
-                      : step;
+                {steps.map((step, index) => (
+                  <div
+                    className="step-item"
+                    key={`${getStepText(step)}-${index}`}
+                  >
+                    <span className="step-number">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
 
-                  return (
-                    <div
-                      className="step-item"
-                      key={`${String(stepText ?? index)}-${index}`}
-                    >
-                      <span className="step-number">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-
-                      <p>{stepText}</p>
-                    </div>
-                  );
-                })}
+                    <p>{getStepText(step)}</p>
+                  </div>
+                ))}
               </div>
             ) : (
               <p>No cooking steps available.</p>
@@ -615,7 +715,6 @@ function RecipeDetails() {
             ].map(([label, value, unit]) => (
               <div className="nutrition-item" key={label}>
                 <small>{label}</small>
-
                 <strong>
                   {value !== undefined && value !== null && value !== ""
                     ? `${value} ${unit}`.trim()
@@ -628,7 +727,7 @@ function RecipeDetails() {
 
         <footer className="recipe-author-footer">
           <div className="author-avatar">
-            {authorName?.charAt(0)?.toUpperCase() || "S"}
+            {authorName.charAt(0).toUpperCase() || "S"}
           </div>
 
           <div>
